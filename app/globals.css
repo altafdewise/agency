@@ -1,0 +1,81 @@
+:root {
+  --bg: #060605;
+  --bg-center: #100f0d;
+  --light: #f2ede3;
+  --muted: rgba(242, 237, 227, 0.52);
+  --faint: rgba(242, 237, 227, 0.28);
+  --gold: #d6b36a;
+  --gold-bright: #f0d998;
+  --gold-deep: #a87f3d;
+  --gold-dim: rgba(214, 179, 106, 0.35);
+  --hairline: rgba(242, 237, 227, 0.12);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  overflow: hidden; /* single screen, never scrolls */
+}
+
+body {
+  min-height: 100dvh;
+  background-color: var(--bg);
+  background-image: radial-gradient(
+    ellipse at center,
+    var(--bg-center) 0%,
+    var(--bg) 72%
+  );
+  color: var(--light);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--gold);
+  color: #0a0a08;
+}
+
+/* Pull focus to the centre and deepen the corners. */
+.vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 36%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+}
+
+/* Film grain — a tactile, premium texture sitting over everything. */
+.grain {
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  z-index: 6;
+  opacity: 0.05;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grain {
+    animation: none;
+  }
+}

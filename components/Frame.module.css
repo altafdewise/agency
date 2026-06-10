@@ -1,0 +1,88 @@
+.frame {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.corner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+  pointer-events: auto;
+}
+
+.tl {
+  top: clamp(18px, 3.5vmin, 34px);
+  left: clamp(18px, 3.5vmin, 34px);
+}
+
+.tr {
+  top: clamp(18px, 3.5vmin, 34px);
+  right: clamp(18px, 3.5vmin, 34px);
+  text-align: right;
+}
+
+.br {
+  bottom: clamp(18px, 3.5vmin, 34px);
+  right: clamp(18px, 3.5vmin, 34px);
+  text-align: right;
+}
+
+.brand {
+  font-family: var(--font-serif), serif;
+  font-weight: 600;
+  font-size: clamp(0.95rem, 2.2vmin, 1.15rem);
+  letter-spacing: 0.02em;
+  color: var(--light);
+}
+
+.reg {
+  font-size: 0.55em;
+  vertical-align: super;
+  color: var(--gold);
+}
+
+.label {
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(0.52rem, 1.2vmin, 0.6rem);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.sub {
+  font-family: var(--font-sans), sans-serif;
+  font-weight: 400;
+  font-size: clamp(0.58rem, 1.3vmin, 0.68rem);
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.clock {
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(0.7rem, 1.6vmin, 0.85rem);
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+}
+
+.mail {
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(0.6rem, 1.4vmin, 0.72rem);
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 2px;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+
+.mail:hover,
+.mail:focus-visible {
+  color: var(--gold-bright);
+  border-color: var(--gold-dim);
+  outline: none;
+}
+
