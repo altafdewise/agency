@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { Brief, Estimate } from "@/lib/brief";
 import { createBooking } from "@/lib/bookings";
+import { sendBookingEmails } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -114,6 +115,12 @@ export async function POST(req: Request) {
       brief,
       estimate: (body.estimate as Estimate | null | undefined) ?? null,
     });
+
+    try {
+      await sendBookingEmails(booking);
+    } catch (emailError) {
+      console.error("[bookings] booked call but email failed:", emailError);
+    }
 
     return NextResponse.json({ booking });
   } catch (error) {
