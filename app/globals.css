@@ -1,81 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens (raw RGB channels so Tailwind alpha modifiers work) ───── */
 :root {
-  --bg: #060605;
-  --bg-center: #100f0d;
-  --light: #f2ede3;
-  --muted: rgba(242, 237, 227, 0.52);
-  --faint: rgba(242, 237, 227, 0.28);
-  --gold: #d6b36a;
-  --gold-bright: #f0d998;
-  --gold-deep: #a87f3d;
-  --gold-dim: rgba(214, 179, 106, 0.35);
-  --hairline: rgba(242, 237, 227, 0.12);
+  --background: 10 10 10; /* #0A0A0A */
+  --background-center: 20 20 20; /* #141414 */
+  --foreground: 242 238 227; /* #F2EEE3 — bone */
+  --muted: 155 155 155; /* #9B9B9B */
+  --accent: 255 68 56; /* #FF4438 — signal red */
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    min-height: 100dvh;
+    /* Near-black with a subtle radial lift toward the centre for depth. */
+    background-color: rgb(var(--background));
+    background-image: radial-gradient(
+      ellipse 90% 80% at 50% 42%,
+      rgb(var(--background-center)) 0%,
+      rgb(var(--background)) 70%
+    );
+    background-attachment: fixed;
+    color: rgb(var(--foreground));
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+      var(--font-sans), "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: rgb(var(--accent));
+    color: rgb(var(--background));
+  }
+
+  /* Visible, on-brand focus ring for keyboard users only. */
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
 }
 
-html,
-body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+@layer components {
+  /* Small tracked uppercase label / eyebrow. */
+  .eyebrow {
+    @apply font-sans text-[0.7rem] font-medium uppercase tracking-eyebrow text-muted;
+  }
+
+  /* The giant headline — SF Pro Display, Apple-tight but breathing. */
+  .headline {
+    @apply font-display font-semibold leading-[1.04] tracking-tightest text-foreground;
+    font-size: clamp(2.75rem, 9vw, 8rem);
+  }
+
+  /* A more contained headline for inner steps. */
+  .headline-md {
+    @apply font-display font-semibold leading-[1.05] tracking-tightest text-foreground;
+    font-size: clamp(2.25rem, 6.5vw, 4.75rem);
+  }
+
+  .body-muted {
+    @apply font-sans text-base font-light leading-relaxed text-muted sm:text-lg;
+  }
 }
 
-html {
-  overflow: hidden; /* single screen, never scrolls */
+@layer utilities {
+  /* Tasteful warm-white glow for light elements (logo, dot). */
+  .glow-soft {
+    filter: drop-shadow(0 0 14px rgb(var(--foreground) / 0.3));
+  }
+  .glow-strong {
+    filter: drop-shadow(0 0 16px rgb(var(--foreground) / 0.45))
+      drop-shadow(0 0 4px rgb(var(--foreground) / 0.35));
+  }
+  .glow-accent {
+    filter: drop-shadow(0 0 18px rgb(var(--accent) / 0.5));
+  }
+
+  /* Hide scrollbars on the internal timeline scroller while keeping it scrollable. */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-body {
-  min-height: 100dvh;
-  background-color: var(--bg);
-  background-image: radial-gradient(
-    ellipse at center,
-    var(--bg-center) 0%,
-    var(--bg) 72%
-  );
-  color: var(--light);
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
-  overflow: hidden;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
-
-::selection {
-  background: var(--gold);
-  color: #0a0a08;
-}
-
-/* Pull focus to the centre and deepen the corners. */
-.vignette {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 4;
-  background: radial-gradient(
-    ellipse at center,
-    transparent 36%,
-    rgba(0, 0, 0, 0.6) 100%
-  );
-}
-
-/* Film grain — a tactile, premium texture sitting over everything. */
+/* Film grain — a tactile, premium texture over everything. */
 .grain {
   position: fixed;
   inset: -50%;
   width: 200%;
   height: 200%;
   pointer-events: none;
-  z-index: 6;
-  opacity: 0.05;
+  z-index: 60;
+  opacity: 0.04;
   mix-blend-mode: soft-light;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .grain {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
