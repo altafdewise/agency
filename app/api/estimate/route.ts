@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import type { Brief, Estimate, EstimateTier } from "@/lib/brief";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
@@ -49,14 +50,46 @@ const PRICING_TABLE = {
 } as const;
 
 type PricingKey = keyof typeof PRICING_TABLE;
+type PricingTable = typeof PRICING_TABLE;
 const PRICING_KEYS = Object.keys(PRICING_TABLE) as PricingKey[];
 
+async function loadPricingTable(): Promise<PricingTable> {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return PRICING_TABLE;
+
+  try {
+    const { data, error } = await supabase
+      .from("pricing_config")
+      .select("service_key,tier,price_low,price_high");
+
+    if (error || !data?.length) return PRICING_TABLE;
+
+    const table = JSON.parse(JSON.stringify(PRICING_TABLE)) as Record<
+      PricingKey,
+      Record<EstimateTier, [number, number]>
+    >;
+
+    for (const row of data) {
+      const service = row.service_key as PricingKey;
+      const tier = row.tier as EstimateTier;
+      if (table[service]?.[tier]) {
+        table[service][tier] = [Number(row.price_low), Number(row.price_high)];
+      }
+    }
+
+    return table as PricingTable;
+  } catch (error) {
+    console.error("[estimate] pricing_config read failed:", error);
+    return PRICING_TABLE;
+  }
+}
+
 /* ── The estimator's brief (system prompt) ────────────────────────────────── */
-function systemPrompt(): string {
+function systemPrompt(pricingTable: PricingTable): string {
   return `You are the project estimator for "maggie", a premium creative studio (maggie.agency) based in India. You read a prospective client's brief and return a single, grounded price estimate.
 
 PRICING TABLE (INR) — these are your ONLY source of truth for numbers. Each service has simple / medium / complex bands as [low, high]:
-${JSON.stringify(PRICING_TABLE, null, 2)}
+${JSON.stringify(pricingTable, null, 2)}
 
 Scope guide per tier:
 - brand_logo: simple = logo only (2-3 concepts); medium = logo + colors + fonts (mini kit); complex = full identity system + guidelines.
@@ -133,7 +166,7 @@ function validate(obj: unknown): Estimate | null {
 }
 
 /* ── Deterministic fallback, straight from PRICING_TABLE ──────────────────── */
-function heuristic(brief: Brief): Estimate {
+function heuristic(brief: Brief, pricingTable: PricingTable): Estimate {
   const keys = brief.needs.filter((n): n is PricingKey =>
     PRICING_KEYS.includes(n as PricingKey)
   );
@@ -171,7 +204,7 @@ function heuristic(brief: Brief): Estimate {
   let low = 0;
   let high = 0;
   for (const k of usedKeys) {
-    const band = PRICING_TABLE[k][tier];
+    const band = pricingTable[k][tier];
     low += band[0];
     high += band[1];
   }
@@ -207,6 +240,33 @@ function heuristic(brief: Brief): Estimate {
   return { tier, priceLow: low, priceHigh: high, timeline, summary, included };
 }
 
+async function recordLead(brief: Brief, estimate: Estimate) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  try {
+    const { error } = await supabase.from("leads").insert({
+      name: brief.contact?.name ?? null,
+      contact_email: brief.contact?.email ?? null,
+      contact_phone: null,
+      persona: brief.customPersona || brief.persona || null,
+      needs: brief.needs ?? [],
+      stage: brief.stage || null,
+      brief_text: brief.description || null,
+      ai_tier: estimate.tier,
+      ai_price_low: estimate.priceLow,
+      ai_price_high: estimate.priceHigh,
+      ai_summary: estimate.summary,
+      ai_included: estimate.included,
+      status: "new",
+    });
+
+    if (error) throw error;
+  } catch (error) {
+    console.error("[estimate] lead insert failed:", error);
+  }
+}
+
 export async function POST(req: Request) {
   let brief: Brief;
   try {
@@ -216,10 +276,13 @@ export async function POST(req: Request) {
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
+  const pricingTable = await loadPricingTable();
 
   // No key yet → still return a grounded number so the path works end-to-end.
   if (!apiKey) {
-    return NextResponse.json(heuristic(brief));
+    const estimate = heuristic(brief, pricingTable);
+    await recordLead(brief, estimate);
+    return NextResponse.json(estimate);
   }
 
   try {
@@ -228,7 +291,7 @@ export async function POST(req: Request) {
       model: MODEL,
       max_tokens: 800,
       temperature: 0.4,
-      system: systemPrompt(),
+      system: systemPrompt(pricingTable),
       messages: [{ role: "user", content: userContent(brief) }],
     });
 
@@ -240,10 +303,13 @@ export async function POST(req: Request) {
     const parsed = validate(JSON.parse(extractJson(text)));
     if (!parsed) throw new Error("Model returned unparseable estimate.");
 
+    await recordLead(brief, parsed);
     return NextResponse.json(parsed);
   } catch (err) {
     console.error("[estimate] falling back to heuristic:", err);
     // Graceful: hand back a grounded estimate rather than failing the journey.
-    return NextResponse.json(heuristic(brief));
+    const estimate = heuristic(brief, pricingTable);
+    await recordLead(brief, estimate);
+    return NextResponse.json(estimate);
   }
 }

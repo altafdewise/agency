@@ -31,6 +31,8 @@ const TIME_SLOTS = [
   { value: "18:00", label: "6:00 PM" },
 ];
 
+type BookingStep = "date" | "time" | "details";
+
 function pad(n: number) {
   return String(n).padStart(2, "0");
 }
@@ -346,6 +348,7 @@ function BookingScheduler({
   const [touched, setTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mobileStep, setMobileStep] = useState<BookingStep>("date");
   const [booked, setBooked] = useState<{ date: string; time: string } | null>(
     null
   );
@@ -426,8 +429,29 @@ function BookingScheduler({
     );
   }
 
+  const bookingButton = (
+    <Button
+      className="w-full sm:w-auto"
+      size="lg"
+      onClick={submit}
+      disabled={loading || !availableSlots.length}
+    >
+      {loading ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
+          booking
+        </>
+      ) : (
+        <>
+          <CalendarClock className="h-5 w-5" strokeWidth={1.75} />
+          Book call
+        </>
+      )}
+    </Button>
+  );
+
   return (
-    <div className="mt-8 flex flex-col gap-9">
+    <div className="mt-8 flex flex-col gap-8 lg:gap-9">
       <div>
         <p className="eyebrow">Schedule the call</p>
         <p className="mt-2 text-sm font-light text-muted">
@@ -435,7 +459,72 @@ function BookingScheduler({
         </p>
       </div>
 
-      <div className="grid gap-9 lg:grid-cols-[auto_1fr] lg:gap-14">
+      <div className="lg:hidden">
+        {mobileStep === "date" && (
+          <div>
+            <CalendarPicker value={date} onChange={setDate} />
+            <Button
+              className="mt-8 w-full"
+              size="lg"
+              onClick={() => setMobileStep("time")}
+            >
+              next: choose time
+            </Button>
+          </div>
+        )}
+
+        {mobileStep === "time" && (
+          <div>
+            <div className="flex items-baseline justify-between gap-4">
+              <p className="eyebrow">Choose time</p>
+              <p className="text-xs font-light text-muted/70">30 min slots</p>
+            </div>
+            <div className="mt-5">
+              <TimeSlotPicker
+                availableSlots={availableSlots}
+                time={time}
+                onChange={setTime}
+              />
+            </div>
+            <div className="mt-8 grid grid-cols-2 gap-3">
+              <Button variant="ghost" onClick={() => setMobileStep("date")}>
+                back
+              </Button>
+              <Button onClick={() => setMobileStep("details")}>
+                next: details
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {mobileStep === "details" && (
+          <div>
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <p className="eyebrow">Your details</p>
+              <button
+                type="button"
+                onClick={() => setMobileStep("time")}
+                className="text-xs font-medium uppercase tracking-[0.16em] text-muted transition-colors hover:text-foreground"
+              >
+                back to time
+              </button>
+            </div>
+            <ContactFields
+              idPrefix="mobile-call"
+              name={name}
+              setName={setName}
+              email={email}
+              setEmail={setEmail}
+              phone={phone}
+              setPhone={setPhone}
+              touched={touched}
+              setTouched={setTouched}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="hidden gap-9 lg:grid lg:grid-cols-[auto_1fr] lg:gap-14">
         <CalendarPicker value={date} onChange={setDate} />
 
         <div>
@@ -459,10 +548,10 @@ function BookingScheduler({
         </div>
       </div>
 
-      <div>
+      <div className="hidden lg:block">
         <p className="eyebrow mb-6">Your details</p>
         <ContactFields
-          idPrefix="call"
+          idPrefix="desktop-call"
           name={name}
           setName={setName}
           email={email}
@@ -476,26 +565,8 @@ function BookingScheduler({
 
       {error && <p className="text-sm font-light text-accent">{error}</p>}
 
-      <div>
-        <Button
-          className="w-full sm:w-auto"
-          size="lg"
-          onClick={submit}
-          disabled={loading || !availableSlots.length}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
-              booking
-            </>
-          ) : (
-            <>
-              <CalendarClock className="h-5 w-5" strokeWidth={1.75} />
-              Book call
-            </>
-          )}
-        </Button>
-      </div>
+      <div className="hidden lg:block">{bookingButton}</div>
+      {mobileStep === "details" && <div className="lg:hidden">{bookingButton}</div>}
     </div>
   );
 }

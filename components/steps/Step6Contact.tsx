@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { StepShell } from "@/components/ui/StepShell";
 import { TextInput } from "@/components/ui/inputs";
 import { Button } from "@/components/ui/Button";
@@ -88,6 +89,19 @@ export function Step6Contact() {
         <Button variant="link" onClick={skip}>
           skip →
         </Button>
+      </Reveal>
+
+      <Reveal className="mt-6" delay={0.6}>
+        <p className="text-xs font-light text-muted/70">
+          we don&apos;t spam, we don&apos;t share your{" "}
+          <Link
+            href="/legal"
+            className="underline underline-offset-2 transition-colors hover:text-foreground"
+          >
+            info
+          </Link>
+          .
+        </p>
       </Reveal>
     </StepShell>
   );

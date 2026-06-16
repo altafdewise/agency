@@ -4,11 +4,14 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
 import { useMotionValue, type MotionValue } from "framer-motion";
 import { EMPTY_BRIEF, TOTAL_STEPS, type Brief, type Estimate } from "@/lib/brief";
+import { tick } from "@/lib/haptics";
+import { trackFunnelEvent } from "@/lib/analytics-client";
 
 interface PathContextValue {
   brief: Brief;
@@ -54,6 +57,10 @@ export function PathProvider({ children }: { children: React.ReactNode }) {
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const subProgress = useMotionValue(0);
 
+  useEffect(() => {
+    trackFunnelEvent("step_1", "entered");
+  }, []);
+
   const update = useCallback((patch: Partial<Brief>) => {
     if (affectsEstimate(patch)) setEstimate(null);
     setBrief((b) => ({ ...b, ...patch }));
@@ -64,6 +71,11 @@ export function PathProvider({ children }: { children: React.ReactNode }) {
       subProgress.set(0); // leaving a step resets its sub-progress
       setStep((current) => {
         const clamped = Math.max(0, Math.min(TOTAL_STEPS - 1, target));
+        if (clamped !== current) {
+          tick(); // subtle confirm on step change
+          trackFunnelEvent(`step_${current + 1}`, "completed");
+          trackFunnelEvent(`step_${clamped + 1}`, "entered");
+        }
         setDirection(clamped >= current ? 1 : -1);
         return clamped;
       });

@@ -11,6 +11,7 @@ import {
 import { usePath } from "@/components/PathProvider";
 import { TOTAL_STEPS } from "@/lib/brief";
 import { PERSONA_STAGES } from "@/lib/content";
+import { tick } from "@/lib/haptics";
 import { cn } from "@/lib/cn";
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -155,6 +156,7 @@ export function Progress() {
     if (stage !== stageRef.current) {
       stageRef.current = stage;
       setActiveStage(stage);
+      tick(); // dot reached a new timeline stage
       triggerPulse(guidePct(currentStep, stage / Math.max(1, stageCount - 1)), "stage");
     }
   });

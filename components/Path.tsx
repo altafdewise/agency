@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
 import { usePath } from "@/components/PathProvider";
-import { Ambient } from "@/components/Ambient";
 import { Progress } from "@/components/Progress";
 import { Step1Needs } from "@/components/steps/Step1Needs";
 import { Step2Persona } from "@/components/steps/Step2Persona";
@@ -38,9 +36,12 @@ const EXIT_MS = 400;
  * Implemented by hand rather than with AnimatePresence mode="wait", which fails
  * to complete its exit under React 19 + Next 15 here (the next panel never
  * mounts). This produces the identical motion, deterministically.
+ *
+ * The logo + back affordance live in <SiteNav> (global). The ambient background
+ * lives in the root layout.
  */
 export function Path() {
-  const { step, back } = usePath();
+  const { step } = usePath();
   const reduce = useReducedMotion();
   const [shown, setShown] = useState(step);
   const [exiting, setExiting] = useState(false);
@@ -65,22 +66,7 @@ export function Path() {
 
   return (
     <main className="relative min-h-[100dvh] w-full">
-      <Ambient />
       <Progress />
-
-      {/* Back affordance — persistent, above the scenes. */}
-      <div className="pointer-events-none fixed inset-0 z-50">
-        {step > 0 && (
-          <button
-            type="button"
-            onClick={back}
-            className="pointer-events-auto absolute left-5 top-5 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-muted transition-colors duration-200 hover:text-foreground sm:left-8 sm:top-8"
-            aria-label="Go back a step"
-          >
-            <ArrowLeft className="h-5 w-5" strokeWidth={1.5} />
-          </button>
-        )}
-      </div>
 
       <motion.div
         key={shown}
