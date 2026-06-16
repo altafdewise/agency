@@ -97,6 +97,20 @@ export interface SiteSettingRow {
   updated_at: string;
 }
 
+export interface BookingRow {
+  id: string;
+  created_at: string;
+  date: string;
+  time: string;
+  timezone: string;
+  contact_name: string | null;
+  contact_email: string;
+  contact_phone: string | null;
+  note: string | null;
+  brief: Json;
+  estimate: Json | null;
+}
+
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row & Record<string, unknown>;
   Insert: Insert & Record<string, unknown>;
@@ -143,6 +157,12 @@ export interface Database {
         SiteSettingRow,
         Pick<SiteSettingRow, "key" | "value">,
         Partial<SiteSettingRow>
+      >;
+      bookings: Table<
+        BookingRow,
+        Partial<BookingRow> &
+          Pick<BookingRow, "date" | "time" | "timezone" | "contact_email" | "brief">,
+        Partial<BookingRow>
       >;
     };
     Views: Record<string, never>;
