@@ -3,9 +3,16 @@ import { listBookings } from "@/lib/bookings";
 
 export const runtime = "nodejs";
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "@ThyMaggie";
-
 export async function POST(req: Request) {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) {
+    console.error("[bookings/admin] ADMIN_PASSWORD env var is not configured");
+    return NextResponse.json(
+      { error: "Admin booking access is not configured." },
+      { status: 403 }
+    );
+  }
+
   let password = "";
 
   try {
@@ -15,7 +22,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  if (password !== ADMIN_PASSWORD) {
+  if (password !== adminPassword) {
     return NextResponse.json({ error: "Wrong password." }, { status: 401 });
   }
 

@@ -159,7 +159,7 @@ export function SiteNav() {
               href={item.href}
               tabIndex={open ? 0 : -1}
               onClick={() => setOpen(false)}
-              className="font-display text-5xl font-semibold leading-none tracking-tightest text-foreground transition-colors duration-200 hover:text-accent sm:text-7xl"
+              className="font-display text-3xl font-semibold leading-none tracking-tightest text-foreground transition-colors duration-200 hover:text-accent sm:text-5xl"
             >
               {item.label}
             </Link>
@@ -168,7 +168,7 @@ export function SiteNav() {
             href={mailtoHref("Hello maggie")}
             tabIndex={open ? 0 : -1}
             onClick={() => setOpen(false)}
-            className="font-display text-5xl font-semibold leading-none tracking-tightest text-foreground transition-colors duration-200 hover:text-accent sm:text-7xl"
+            className="font-display text-3xl font-semibold leading-none tracking-tightest text-foreground transition-colors duration-200 hover:text-accent sm:text-5xl"
           >
             Contact
           </a>

@@ -75,8 +75,8 @@ export function LeadsInbox({
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_390px]">
-      <section className="rounded-lg border border-border bg-[#141414]/72">
+    <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
+      <section className="min-w-0 rounded-lg border border-border bg-[#141414]/72">
         <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center">
           <label className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
@@ -101,7 +101,7 @@ export function LeadsInbox({
           </select>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="w-full max-w-full overflow-x-auto">
           <table className="w-full min-w-[780px] text-left text-sm">
             <thead className="text-[0.64rem] uppercase tracking-[0.2em] text-muted">
               <tr className="border-b border-border">
@@ -169,7 +169,7 @@ export function LeadsInbox({
         )}
       </section>
 
-      <aside className="rounded-lg border border-border bg-[#141414]/72 p-5 xl:sticky xl:top-24 xl:self-start">
+      <aside className="min-w-0 rounded-lg border border-border bg-[#141414]/72 p-5 xl:sticky xl:top-24 xl:self-start">
         {selected ? (
           <>
             <div className="flex items-start justify-between gap-4">

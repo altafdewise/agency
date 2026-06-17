@@ -10,7 +10,8 @@ import { usePath } from "@/components/PathProvider";
 import { whatsappHref, mailtoHref } from "@/lib/contact";
 import type { Estimate } from "@/lib/brief";
 
-const ESTIMATE_TIMEOUT_MS = 10000;
+const ESTIMATE_TIMEOUT_MS = 25000;
+const SLOW_MESSAGE_MS = 6000;
 
 const inr = (n: number) =>
   new Intl.NumberFormat("en-IN", {
@@ -39,6 +40,7 @@ function isValidEstimate(data: unknown): data is Estimate {
 export function Step7Estimate() {
   const { brief, next, estimate, setEstimate } = usePath();
   const [error, setError] = useState(false);
+  const [showSlowMessage, setShowSlowMessage] = useState(false);
   // Snapshot the brief so the fetch body is stable across StrictMode remounts.
   const briefRef = useRef(brief);
 
@@ -48,6 +50,10 @@ export function Step7Estimate() {
     const ctrl = new AbortController();
     let active = true;
     let timedOut = false;
+    setShowSlowMessage(false);
+    const slowTimer = setTimeout(() => {
+      if (active) setShowSlowMessage(true);
+    }, SLOW_MESSAGE_MS);
     const timer = setTimeout(() => {
       timedOut = true;
       ctrl.abort();
@@ -66,6 +72,7 @@ export function Step7Estimate() {
         if (!isValidEstimate(data)) throw new Error("Unparseable estimate.");
         if (active) {
           setError(false);
+          setShowSlowMessage(false);
           setEstimate(data);
         }
       } catch (err) {
@@ -77,12 +84,14 @@ export function Step7Estimate() {
           setError(true);
         }
       } finally {
+        clearTimeout(slowTimer);
         clearTimeout(timer);
       }
     })();
 
     return () => {
       active = false;
+      clearTimeout(slowTimer);
       clearTimeout(timer);
       ctrl.abort();
     };
@@ -100,6 +109,11 @@ export function Step7Estimate() {
           <p className="body-muted mt-4">
             Reading your brief and working out a fair range.
           </p>
+          {showSlowMessage && (
+            <p className="mt-4 text-sm font-light text-muted/70">
+              Still thinking it through...
+            </p>
+          )}
         </div>
       </StepShell>
     );

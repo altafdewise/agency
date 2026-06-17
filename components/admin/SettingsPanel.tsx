@@ -4,19 +4,14 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { TextInput } from "@/components/ui/inputs";
 import type { PricingConfigRow, SiteSettingRow } from "@/lib/supabase/database.types";
+import {
+  PRICING_KEYS,
+  PRICING_TABLE,
+  PRICING_TIERS,
+  isValidPriceRange,
+  type PricingKey,
+} from "@/lib/pricing";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-
-const SERVICES = [
-  "brand_logo",
-  "website",
-  "app",
-  "design_prototype",
-  "ai_integration",
-  "content",
-  "security",
-];
-
-const TIERS = ["simple", "medium", "complex"] as const;
 
 const SETTING_FIELDS = [
   { key: "cal_url", label: "Cal.com URL", placeholder: "https://cal.com/..." },
@@ -46,25 +41,32 @@ export function SettingsPanel({
   const [saving, setSaving] = useState(false);
 
   const normalizedRows = useMemo(() => {
-    return SERVICES.flatMap((service) =>
-      TIERS.map((tier) => {
-        return (
-          rows.find((row) => row.service_key === service && row.tier === tier) || {
-            id: `${service}-${tier}`,
-            service_key: service,
-            tier,
-            price_low: 0,
-            price_high: 0,
-            label: null,
-            updated_at: new Date().toISOString(),
-          }
+    return PRICING_KEYS.flatMap((service) =>
+      PRICING_TIERS.map((tier) => {
+        const existing = rows.find(
+          (row) => row.service_key === service && row.tier === tier
         );
+        const [defaultLow, defaultHigh] = PRICING_TABLE[service][tier];
+
+        if (existing && isValidPriceRange(existing.price_low, existing.price_high)) {
+          return existing;
+        }
+
+        return {
+          id: existing?.id || `${service}-${tier}`,
+          service_key: service,
+          tier,
+          price_low: defaultLow,
+          price_high: defaultHigh,
+          label: existing?.label ?? null,
+          updated_at: existing?.updated_at || new Date().toISOString(),
+        };
       })
     );
   }, [rows]);
 
   const setPrice = (
-    serviceKey: string,
+    serviceKey: PricingKey,
     tier: PricingConfigRow["tier"],
     field: "price_low" | "price_high",
     value: string
@@ -109,6 +111,17 @@ export function SettingsPanel({
       label: row.label,
     }));
 
+    const invalidRow = pricingPayload.find(
+      (row) => !isValidPriceRange(row.price_low, row.price_high)
+    );
+    if (invalidRow) {
+      setSaving(false);
+      setToast(
+        `Fix pricing for ${invalidRow.service_key} / ${invalidRow.tier}: values must be greater than 0 and high must be at least low.`
+      );
+      return;
+    }
+
     const { error: pricingError } = await supabase
       .from("pricing_config")
       .upsert(pricingPayload, { onConflict: "service_key,tier" });
@@ -141,7 +154,7 @@ export function SettingsPanel({
         <div className="border-b border-border p-5">
           <p className="eyebrow">Pricing table</p>
           <p className="mt-2 text-sm text-muted">
-            These rows override the estimator's code defaults when Supabase is connected.
+            These rows override the estimator&apos;s code defaults when Supabase is connected.
           </p>
         </div>
         <div className="overflow-x-auto">
@@ -164,7 +177,12 @@ export function SettingsPanel({
                       type="number"
                       value={row.price_low}
                       onChange={(event) =>
-                        setPrice(row.service_key, row.tier, "price_low", event.target.value)
+                        setPrice(
+                          row.service_key as PricingKey,
+                          row.tier,
+                          "price_low",
+                          event.target.value
+                        )
                       }
                       className="h-10 w-36 rounded-md border border-border bg-background/40 px-3 outline-none focus:border-accent"
                     />
@@ -174,7 +192,12 @@ export function SettingsPanel({
                       type="number"
                       value={row.price_high}
                       onChange={(event) =>
-                        setPrice(row.service_key, row.tier, "price_high", event.target.value)
+                        setPrice(
+                          row.service_key as PricingKey,
+                          row.tier,
+                          "price_high",
+                          event.target.value
+                        )
                       }
                       className="h-10 w-36 rounded-md border border-border bg-background/40 px-3 outline-none focus:border-accent"
                     />

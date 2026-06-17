@@ -575,6 +575,8 @@ export function Step8Close() {
   const { brief, estimate, goTo } = usePath();
   const [showScheduler, setShowScheduler] = useState(false);
   const isSimple = estimate?.tier === "simple";
+  const simpleTimeline = estimate?.timeline?.trim() || "";
+  const hasTwentyFourHourPromise = /24\s*hour/i.test(simpleTimeline);
 
   return (
     <StepShell innerClassName="max-w-3xl">
@@ -585,9 +587,13 @@ export function Step8Close() {
       {isSimple ? (
         <Reveal className="mt-10" delay={0.2}>
           <p className="font-display text-3xl font-semibold tracking-tight text-accent sm:text-4xl">
-            delivered in 24 hours.
+            delivered in {hasTwentyFourHourPromise ? "24 hours" : simpleTimeline}.
           </p>
-          <p className="body-muted mt-3">show up, brief us, we deliver.</p>
+          <p className="body-muted mt-3">
+            {hasTwentyFourHourPromise
+              ? "show up, brief us, we deliver."
+              : "we will keep the scope tight and the timing honest."}
+          </p>
         </Reveal>
       ) : (
         estimate && (

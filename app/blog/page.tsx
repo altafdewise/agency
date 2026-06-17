@@ -18,7 +18,15 @@ export default async function BlogIndex() {
       <h1 className="headline-md mt-5 text-balance">notes from the studio.</h1>
 
       {posts.length === 0 ? (
-        <p className="body-muted mt-10">First post coming soon.</p>
+        <section className="mt-10 rounded-lg border border-border bg-foreground/[0.025] p-6">
+          <p className="font-display text-2xl font-semibold tracking-tight text-foreground">
+            first post coming soon.
+          </p>
+          <p className="mt-4 max-w-xl text-sm font-light leading-relaxed text-muted">
+            Studio notes are being prepared. This page is intentionally quiet
+            until there is something useful to read.
+          </p>
+        </section>
       ) : (
         <div className="mt-12 flex flex-col">
           {posts.map((post) => (

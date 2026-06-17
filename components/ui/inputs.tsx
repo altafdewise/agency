@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useRef } from "react";
+import { forwardRef, useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/cn";
 
 /* Shared underline-style field — transparent, hairline base, accent on focus. */
@@ -38,15 +38,15 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
   ({ className, autoGrow = true, onInput, value, ...rest }, ref) => {
     const innerRef = useRef<HTMLTextAreaElement | null>(null);
 
-    const resize = (el: HTMLTextAreaElement | null) => {
+    const resize = useCallback((el: HTMLTextAreaElement | null) => {
       if (!el || !autoGrow) return;
       el.style.height = "auto";
       el.style.height = `${el.scrollHeight}px`;
-    };
+    }, [autoGrow]);
 
     useEffect(() => {
       resize(innerRef.current);
-    }, [value]);
+    }, [resize, value]);
 
     return (
       <textarea

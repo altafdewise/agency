@@ -101,7 +101,6 @@ for (let i = 0; i < S * S; i++) {
 comps.sort((a, b) => b.count - a.count);
 // The "7" is the largest component. The dot is a smaller, roughly square,
 // lower-right component. Score the rest by roundness + lower-right position.
-const seven = comps[0];
 const candidates = comps.slice(1).filter((c) => c.count > 4);
 const score = (c) => {
   const w = c.bx1 - c.bx0 + 1, h = c.by1 - c.by0 + 1;

@@ -2,8 +2,50 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import sanitizeHtml from "sanitize-html";
 import { PageShell } from "@/components/ui/PageShell";
 import { getPost, getSlugs, formatDate } from "@/lib/posts";
+
+function sanitizePostHtml(html: string) {
+  return sanitizeHtml(html, {
+    allowedTags: [
+      "p",
+      "br",
+      "strong",
+      "em",
+      "b",
+      "i",
+      "u",
+      "s",
+      "h2",
+      "h3",
+      "h4",
+      "ul",
+      "ol",
+      "li",
+      "blockquote",
+      "a",
+      "img",
+      "code",
+      "pre",
+    ],
+    allowedAttributes: {
+      a: ["href", "name", "target", "rel"],
+      img: ["src", "alt", "title", "width", "height"],
+      code: ["class"],
+      pre: ["class"],
+    },
+    allowedSchemes: ["http", "https", "mailto", "tel"],
+    allowedSchemesByTag: {
+      img: ["http", "https"],
+    },
+    transformTags: {
+      a: sanitizeHtml.simpleTransform("a", {
+        rel: "noopener noreferrer",
+      }),
+    },
+  });
+}
 
 export async function generateStaticParams() {
   return (await getSlugs()).map((slug) => ({ slug }));
@@ -28,6 +70,7 @@ export default async function BlogPost({
   const { slug } = await params;
   const post = await getPost(slug);
   if (!post) notFound();
+  const safeHtml = sanitizePostHtml(post.html);
 
   return (
     <PageShell className="max-w-2xl">
@@ -49,7 +92,7 @@ export default async function BlogPost({
 
         <div
           className="mt-10 text-base font-light leading-relaxed text-muted [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2 [&_h2]:mt-12 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-foreground [&_h3]:mt-8 [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-foreground [&_li]:mt-2 [&_ol]:mt-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mt-5 [&_strong]:font-medium [&_strong]:text-foreground [&_ul]:mt-5 [&_ul]:list-disc [&_ul]:pl-5"
-          dangerouslySetInnerHTML={{ __html: post.html }}
+          dangerouslySetInnerHTML={{ __html: safeHtml }}
         />
       </article>
     </PageShell>

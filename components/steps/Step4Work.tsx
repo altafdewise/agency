@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { ImageIcon } from "lucide-react";
 import { StepShell } from "@/components/ui/StepShell";
 import { Button } from "@/components/ui/Button";
 import { Reveal, RevealGroup } from "@/components/ui/Reveal";
@@ -28,7 +29,7 @@ export function Step4Work() {
         </p>
       </Reveal>
 
-      {/* Masonry via CSS columns — varied heights, fully responsive. */}
+      {/* Masonry via CSS columns â€” varied heights, fully responsive. */}
       <RevealGroup
         className="mt-12 columns-1 gap-4 sm:columns-2 lg:columns-3"
         stagger={0.08}
@@ -67,13 +68,16 @@ function WorkCard({ sample }: { sample: WorkSample }) {
         }}
         aria-hidden
       />
-      {/* The real image layer — fill from /public/work; transparent if absent. */}
       <div
-        className="absolute inset-0 bg-cover bg-center transition-transform duration-500 ease-out-soft group-hover:scale-[1.04]"
-        style={{ backgroundImage: `url(${sample.src})` }}
+        className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center transition-transform duration-500 ease-out-soft group-hover:scale-[1.02]"
         role="img"
-        aria-label={`${sample.title} — ${sample.tag}`}
-      />
+        aria-label={`${sample.title} - ${sample.tag}. Case study coming soon.`}
+      >
+        <ImageIcon className="h-8 w-8 text-muted/45" strokeWidth={1.4} />
+        <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted/65">
+          case study coming soon
+        </span>
+      </div>
       {/* Bottom scrim + label */}
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent p-5 pt-12">
         <figcaption className="flex items-baseline justify-between gap-3">
