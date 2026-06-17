@@ -528,7 +528,9 @@ const COMPACT_PROMPT_SLOTS = [250, 290, 70, 110, 240, 300, 60, 120];
 // `animate` prop — deliberately NOT AnimatePresence, whose exit never completes
 // in this React 19 + Next 15 + framer-motion 12 stack.
 function FloatingPrompts({ radius }: { radius: number }) {
-  const [idx, setIdx] = useState(0);
+  const [idx, setIdx] = useState(() =>
+    Math.floor(Math.random() * EXAMPLE_PROMPTS.length)
+  );
   const [visible, setVisible] = useState(true);
   const [compact, setCompact] = useState(false);
 
@@ -796,11 +798,11 @@ export default function AyraOrb() {
     touchOrigin.current = { x: e.clientX, y: e.clientY };
     touchPhase.current = "pending";
     tapStart.current = { x: e.clientX, y: e.clientY, time: performance.now() };
-    // Seed label position at touch-down point so the spring starts in the right place.
+    // Mobile: seed label centered horizontally and above the finger.
     const rootRect = rootRef.current?.getBoundingClientRect();
     if (rootRect) {
-      const lx = e.clientX - rootRect.left + CURSOR_LABEL_OFFSET;
-      const ly = e.clientY - rootRect.top + CURSOR_LABEL_OFFSET;
+      const lx = e.clientX - rootRect.left;
+      const ly = e.clientY - rootRect.top - 56;
       mx.set(lx);
       my.set(ly);
       if (!reduced) { sx.jump(lx); sy.jump(ly); }
@@ -847,8 +849,8 @@ export default function AyraOrb() {
     if (touchPhase.current !== "idle") {
       const rootRect = rootRef.current?.getBoundingClientRect();
       if (rootRect) {
-        mx.set(e.clientX - rootRect.left + CURSOR_LABEL_OFFSET);
-        my.set(e.clientY - rootRect.top + CURSOR_LABEL_OFFSET);
+        mx.set(e.clientX - rootRect.left);
+        my.set(e.clientY - rootRect.top - 56);
       }
     }
     handleTouchDragMove(e.clientX, e.clientY);
@@ -995,7 +997,8 @@ export default function AyraOrb() {
         />
       )}
 
-      {(desktopHitEnabled || mobileTapEnabled) && (
+      {/* Desktop: label follows cursor (offset down-right). */}
+      {desktopHitEnabled && (
         <motion.div
           className="pointer-events-none absolute left-0 top-0 z-40"
           style={{ x: labelX, y: labelY }}
@@ -1015,6 +1018,33 @@ export default function AyraOrb() {
           >
             <span className={PILL_CLASS}>press and hold</span>
           </motion.div>
+        </motion.div>
+      )}
+
+      {/* Mobile: label centered above the tap point. Inner div handles -50% centering
+          separately from framer-motion's x/y so the two transforms don't conflict. */}
+      {mobileTapEnabled && !desktopHitEnabled && (
+        <motion.div
+          className="pointer-events-none absolute left-0 top-0 z-40"
+          style={{ x: labelX, y: labelY }}
+          aria-hidden
+        >
+          <div style={{ transform: "translateX(-50%)" }}>
+            <motion.div
+              initial={false}
+              animate={
+                showAnyLabel
+                  ? { opacity: 1, scale: 1 }
+                  : { opacity: 0, scale: reduced ? 1 : 0.95 }
+              }
+              transition={{
+                duration: reduced ? 0 : showAnyLabel ? 0.15 : 0.1,
+                ease: showAnyLabel ? [0.22, 1, 0.36, 1] : [0.64, 0, 0.78, 0],
+              }}
+            >
+              <span className={PILL_CLASS}>press and hold</span>
+            </motion.div>
+          </div>
         </motion.div>
       )}
     </div>

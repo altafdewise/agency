@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, createRef } from "react";
 import dynamic from "next/dynamic";
 import { useReducedMotion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
@@ -11,6 +11,7 @@ import { OtherInput } from "@/components/ui/OtherInput";
 import { Reveal, RevealGroup } from "@/components/ui/Reveal";
 import { usePath } from "@/components/PathProvider";
 import { SERVICES } from "@/lib/content";
+import { ServiceThread } from "./ServiceThread";
 
 // WebGL hero orb — client-only (no SSR for the Three.js canvas).
 const AyraOrb = dynamic(() => import("@/components/AyraOrb"), { ssr: false });
@@ -51,6 +52,10 @@ export function Step1Needs() {
   const reduce = useReducedMotion();
   const [showOther, setShowOther] = useState(brief.needs.includes("other"));
   const [other, setOther] = useState(brief.customNeed ?? "");
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  // One ref per service card — used by ServiceThread to measure badge positions.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef(SERVICES.map(() => createRef<HTMLDivElement>())).current;
 
   const choose = (key: string) => {
     if (key === "other") {
@@ -115,31 +120,47 @@ export function Step1Needs() {
             </Reveal>
           </RevealGroup>
 
-          <RevealGroup
-            className="mt-14 grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4"
-            stagger={0.08}
-            delay={0.45}
-          >
-            {SERVICES.map((s, index) => {
-              const layout = SERVICE_CARD_LAYOUT[s.key];
-
-              return (
-                <Reveal key={s.key} className={layout?.className}>
-                  <OptionCard
-                    title={s.title}
-                    blurb={s.blurb}
-                    brief={s.brief}
-                    Icon={s.Icon}
-                    index={String(index + 1).padStart(2, "0")}
-                    signal
-                    featured={layout?.featured}
-                    selected={s.key === "other" && showOther}
-                    onClick={() => choose(s.key)}
-                  />
-                </Reveal>
-              );
-            })}
-          </RevealGroup>
+          {/* Thread container — relative so the SVG overlay can use absolute inset-0. */}
+          <div ref={containerRef} className="relative mt-14">
+            <RevealGroup
+              className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4"
+              stagger={0.08}
+              delay={0.45}
+            >
+              {SERVICES.map((s, index) => {
+                const layout = SERVICE_CARD_LAYOUT[s.key];
+                return (
+                  <div
+                    key={s.key}
+                    ref={cardRefs[index]}
+                    className={layout?.className}
+                    onMouseEnter={() => setHoveredIndex(index)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                  >
+                    <Reveal>
+                      <OptionCard
+                        title={s.title}
+                        blurb={s.blurb}
+                        brief={s.brief}
+                        Icon={s.Icon}
+                        index={String(index + 1).padStart(2, "0")}
+                        signal
+                        featured={layout?.featured}
+                        selected={s.key === "other" && showOther}
+                        onClick={() => choose(s.key)}
+                      />
+                    </Reveal>
+                  </div>
+                );
+              })}
+            </RevealGroup>
+            <ServiceThread
+              containerRef={containerRef}
+              cardRefs={cardRefs}
+              hoveredIndex={hoveredIndex}
+              reduced={reduce ?? false}
+            />
+          </div>
 
           {showOther && (
             <OtherInput
