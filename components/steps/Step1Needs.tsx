@@ -6,45 +6,13 @@ import { useReducedMotion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import Logo from "@/components/Logo";
 import { StepShell } from "@/components/ui/StepShell";
-import { OptionCard } from "@/components/ui/OptionCard";
 import { OtherInput } from "@/components/ui/OtherInput";
 import { Reveal, RevealGroup } from "@/components/ui/Reveal";
 import { usePath } from "@/components/PathProvider";
-import { SERVICES } from "@/lib/content";
+import { ServiceList } from "./ServiceList";
 
 // WebGL hero orb — client-only (no SSR for the Three.js canvas).
 const AyraOrb = dynamic(() => import("@/components/AyraOrb"), { ssr: false });
-
-const SERVICE_CARD_LAYOUT: Record<
-  string,
-  { className: string; featured?: boolean }
-> = {
-  ai_integration: {
-    className: "lg:col-span-2",
-    featured: true,
-  },
-  website: {
-    className: "lg:col-span-1",
-  },
-  app: {
-    className: "lg:col-span-1",
-  },
-  design_prototype: {
-    className: "lg:col-span-1",
-  },
-  brand_logo: {
-    className: "lg:col-span-1",
-  },
-  content: {
-    className: "lg:col-span-1",
-  },
-  security: {
-    className: "lg:col-span-1",
-  },
-  other: {
-    className: "lg:col-span-4",
-  },
-};
 
 export function Step1Needs() {
   const { update, next, brief, step } = usePath();
@@ -115,31 +83,7 @@ export function Step1Needs() {
             </Reveal>
           </RevealGroup>
 
-          <RevealGroup
-            className="mt-14 grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4"
-            stagger={0.08}
-            delay={0.45}
-          >
-            {SERVICES.map((s, index) => {
-              const layout = SERVICE_CARD_LAYOUT[s.key];
-
-              return (
-                <Reveal key={s.key} className={layout?.className}>
-                  <OptionCard
-                    title={s.title}
-                    blurb={s.blurb}
-                    brief={s.brief}
-                    Icon={s.Icon}
-                    index={String(index + 1).padStart(2, "0")}
-                    signal
-                    featured={layout?.featured}
-                    selected={s.key === "other" && showOther}
-                    onClick={() => choose(s.key)}
-                  />
-                </Reveal>
-              );
-            })}
-          </RevealGroup>
+          <ServiceList onChoose={choose} showOther={showOther} />
 
           {showOther && (
             <OtherInput
