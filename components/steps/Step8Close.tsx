@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   CalendarClock,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Gamepad2,
   Loader2,
   RotateCcw,
 } from "lucide-react";
@@ -334,9 +336,11 @@ function ContactFields({
 function BookingScheduler({
   brief,
   estimate,
+  onBooked,
 }: {
   brief: Brief;
   estimate: Estimate | null;
+  onBooked: () => void;
 }) {
   const startingDate = initialDate();
   const [date, setDate] = useState(startingDate);
@@ -403,6 +407,7 @@ function BookingScheduler({
       }
 
       setBooked({ date: data.booking.date, time: data.booking.time });
+      onBooked();
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -573,7 +578,9 @@ function BookingScheduler({
 
 export function Step8Close() {
   const { brief, estimate, goTo } = usePath();
+  const router = useRouter();
   const [showScheduler, setShowScheduler] = useState(false);
+  const [booked, setBooked] = useState(false);
   const isSimple = estimate?.tier === "simple";
   const simpleTimeline = estimate?.timeline?.trim() || "";
   const hasTwentyFourHourPromise = /24\s*hour/i.test(simpleTimeline);
@@ -621,16 +628,28 @@ export function Step8Close() {
           </Button>
         )}
         {showScheduler && (
-          <BookingScheduler brief={brief} estimate={estimate ?? null} />
+          <BookingScheduler
+            brief={brief}
+            estimate={estimate ?? null}
+            onBooked={() => setBooked(true)}
+          />
         )}
       </Reveal>
 
-      <Reveal className="mt-14" delay={0.5}>
-        <Button variant="link" onClick={() => goTo(0)}>
-          <RotateCcw className="h-4 w-4" strokeWidth={1.5} />
-          start over
-        </Button>
-      </Reveal>
+      {booked && (
+        <Reveal className="mt-14" delay={0.1}>
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+            <Button variant="link" onClick={() => goTo(0)}>
+              <RotateCcw className="h-4 w-4" strokeWidth={1.5} />
+              start over
+            </Button>
+            <Button variant="link" onClick={() => router.push("/game")}>
+              <Gamepad2 className="h-4 w-4" strokeWidth={1.5} />
+              play a quick game
+            </Button>
+          </div>
+        </Reveal>
+      )}
     </StepShell>
   );
 }
