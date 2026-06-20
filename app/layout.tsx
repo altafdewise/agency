@@ -22,9 +22,9 @@ const mono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
-const TITLE = "maggie — one studio. from idea to launch.";
+const TITLE = "maggie — for brands ready to move.";
 const DESCRIPTION =
-  "One studio, from idea to launch — websites, apps, AI, brand and more. Tell us what you're building and get an instant, grounded estimate.";
+  "For brands ready to move — websites, apps, AI, brand and more. Tell us what you're building and get an instant, grounded estimate.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://maggie.agency"),

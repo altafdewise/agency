@@ -111,6 +111,12 @@ export interface BookingRow {
   estimate: Json | null;
 }
 
+export interface FeedbackRow {
+  id: string;
+  message: string;
+  created_at: string;
+}
+
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row & Record<string, unknown>;
   Insert: Insert & Record<string, unknown>;
@@ -163,6 +169,11 @@ export interface Database {
         Partial<BookingRow> &
           Pick<BookingRow, "date" | "time" | "timezone" | "contact_email" | "brief">,
         Partial<BookingRow>
+      >;
+      feedback: Table<
+        FeedbackRow,
+        Partial<FeedbackRow> & Pick<FeedbackRow, "message">,
+        Partial<FeedbackRow>
       >;
     };
     Views: Record<string, never>;

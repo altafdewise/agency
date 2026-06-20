@@ -53,6 +53,7 @@ import * as THREE from "three";
 const BONE = new THREE.Color("#F2EEE3");
 const SPHERE_R = 1.12; // converged sphere radius (world units)
 const CONVERGE_MS = 780; // idle ↔ converged transition duration
+const DESKTOP_BREAKPOINT = 1024;
 
 const EXAMPLE_PROMPTS = [
   "i need a logo for my business",
@@ -76,9 +77,41 @@ function pickParticleCount(): number {
     w < 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   if (mobile || mem <= 4 || cores <= 4) return 6200; // mobile / low-end floor
-  if (w < 1280 || mem <= 6 || cores <= 6) return 12000;
-  if (mem >= 8 && cores >= 8) return 18000;
-  return 15000;
+  if (w < DESKTOP_BREAKPOINT) return 14000;
+  if (w < 1280 || mem <= 6 || cores <= 6) return 17000;
+  if (mem >= 8 && cores >= 8) return 28000;
+  return 22000;
+}
+
+type OrbViewportProfile = {
+  canvasHeight: string;
+  canvasWidth: string;
+  idleWildness: number;
+  pointSize: number;
+  radius: number;
+};
+
+const MOBILE_ORB_PROFILE: OrbViewportProfile = {
+  canvasHeight: "min(58vh, 460px)",
+  canvasWidth: "min(94vw, 720px)",
+  idleWildness: 0.48,
+  pointSize: 7.6,
+  radius: 150,
+};
+
+const DESKTOP_ORB_PROFILE: OrbViewportProfile = {
+  canvasHeight: "min(72vh, 640px)",
+  canvasWidth: "min(96vw, 980px)",
+  idleWildness: 1,
+  pointSize: 8.15,
+  radius: 196,
+};
+
+function pickOrbViewportProfile(): OrbViewportProfile {
+  if (typeof window === "undefined") return MOBILE_ORB_PROFILE;
+  return window.innerWidth >= DESKTOP_BREAKPOINT
+    ? DESKTOP_ORB_PROFILE
+    : MOBILE_ORB_PROFILE;
 }
 
 /* ────────────────────────────────────────────────────────────────────────── */
@@ -108,6 +141,9 @@ function buildAttributes(count: number) {
   const tailDir = new THREE.Vector3(1, 0.42, -0.18).normalize();
   const crossA = new THREE.Vector3(-tailDir.y, tailDir.x, 0).normalize();
   const crossB = new THREE.Vector3().crossVectors(tailDir, crossA).normalize();
+  const organic = count >= 10000 ? 1 : 0.62;
+  const ambientChance = count >= 10000 ? 0.06 : 0.022;
+  const tailCutoff = 1 - ambientChance;
 
   for (let i = 0; i < count; i++) {
     const o = i * 3;
@@ -115,39 +151,77 @@ function buildAttributes(count: number) {
     /* ── IDLE: dense gaussian core + a thin, thinning tail ──────────────── */
     const r = Math.random();
     let idleDensity = 0.45;
-    if (r < 0.68) {
-      const x = gauss() * 0.38 + 0.08;
-      const y = gauss() * 0.34;
-      const z = gauss() * 0.36;
+    if (r < 0.62) {
+      const pocket = Math.random() < 0.22 * organic ? Math.random() : 0;
+      const pocketX = pocket ? Math.cos(pocket * Math.PI * 2.0) * 0.22 * organic : 0;
+      const pocketY = pocket ? Math.sin(pocket * Math.PI * 1.6) * 0.16 * organic : 0;
+      const x = gauss() * (0.4 + organic * 0.04) + 0.08 + pocketX;
+      const y = gauss() * (0.35 + organic * 0.04) + pocketY;
+      const z = gauss() * (0.37 + organic * 0.04);
       idle[o] = x;
       idle[o + 1] = y;
       idle[o + 2] = z;
       const coreDist = Math.sqrt(x * x * 1.35 + y * y * 1.6 + z * z * 1.45);
       idleDensity = THREE.MathUtils.clamp(1.22 - coreDist * 0.58, 0.56, 1.18);
-    } else if (r < 0.9) {
+    } else if (r < 0.84) {
       // Core: anisotropic blob, densest at centre, scattering thin at edges.
-      const x = gauss() * 0.78 + 0.13;
-      const y = gauss() * 0.58;
-      const z = gauss() * 0.62;
+      const x = gauss() * (0.82 + organic * 0.08) + 0.13;
+      const y = gauss() * (0.6 + organic * 0.08);
+      const z = gauss() * (0.64 + organic * 0.08);
       idle[o] = x;
       idle[o + 1] = y;
       idle[o + 2] = z;
       const haloDist = Math.sqrt(x * x * 0.75 + y * y + z * z);
       idleDensity = THREE.MathUtils.clamp(0.78 - haloDist * 0.16, 0.34, 0.72);
-    } else {
-      const t = Math.pow(Math.random(), 1.55);
-      const along = 0.34 + t * 2.05;
-      const spread = (1 - t) * 0.2 + 0.018;
-      const swirl = Math.sin(t * Math.PI * 2.2 + i * 0.021) * 0.08 * (1 - t);
+    } else if (r < tailCutoff) {
+      const t = Math.pow(Math.random(), 1.42);
+      const along = 0.32 + t * (2.18 + organic * 0.38);
+      const spread = (1 - t) * (0.2 + organic * 0.06) + 0.018;
+      const swirl =
+        Math.sin(t * Math.PI * 2.55 + i * 0.027) *
+        (0.08 + organic * 0.06) *
+        (1 - t);
       const sideA = gauss() * spread + swirl;
-      const sideB = gauss() * spread * 0.78;
+      const sideB = gauss() * spread * (0.78 + organic * 0.12);
       idle[o] = tailDir.x * along + crossA.x * sideA + crossB.x * sideB;
       idle[o + 1] =
         tailDir.y * along + crossA.y * sideA + crossB.y * sideB;
       idle[o + 2] =
         tailDir.z * along + crossA.z * sideA + crossB.z * sideB;
       idleDensity = THREE.MathUtils.clamp(0.66 - t * 0.42, 0.16, 0.52);
+    } else {
+      // Sparse ambient specks: mostly desktop, lightly scattered around the
+      // main wisp so the hero feels wider without becoming noisy.
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 1.2 + Math.pow(Math.random(), 0.38) * 2.25;
+      const x = Math.cos(angle) * radius * 1.08 + gauss() * 0.08;
+      const y = Math.sin(angle) * radius * 0.62 + gauss() * 0.08;
+      const z = gauss() * 0.72;
+      idle[o] = x;
+      idle[o + 1] = y;
+      idle[o + 2] = z;
+      idleDensity = THREE.MathUtils.clamp(
+        0.23 - radius * 0.028 + Math.random() * 0.07,
+        0.1,
+        0.24
+      );
     }
+
+    const edge = THREE.MathUtils.clamp(
+      Math.sqrt(
+        idle[o] * idle[o] * 0.42 +
+          idle[o + 1] * idle[o + 1] * 0.66 +
+          idle[o + 2] * idle[o + 2] * 0.52
+      ) / 2.4,
+      0,
+      1
+    );
+    const curlA = Math.sin(idle[o + 1] * 2.2 + idle[o + 2] * 1.4 + i * 0.013);
+    const curlB = Math.sin(idle[o] * 2.45 - idle[o + 2] * 1.2 + i * 0.017);
+    const warp = organic * (0.55 + edge * 0.75);
+    idle[o] += (gauss() * 0.052 + curlA * 0.07) * warp;
+    idle[o + 1] += (gauss() * 0.044 + curlB * 0.052) * warp;
+    idle[o + 2] += (gauss() * 0.056 + (curlA - curlB) * 0.028) * warp;
 
     /* ── CONVERGED: lat/long sphere with low-frequency organic lumps ────── */
     const u = (i + 0.5) / count;
@@ -236,6 +310,7 @@ uniform float uTime;
 uniform float uConverge;   // 0 idle … 1 converged (already eased on CPU)
 uniform float uSize;
 uniform float uPixelRatio;
+uniform float uIdleWildness;
 uniform vec2 uCursor;
 uniform float uCursorActive;
 
@@ -259,8 +334,10 @@ void main() {
   float n1 = snoise(seed + vec3(0.0, 0.0, t * 0.16));
   float n2 = snoise(seed.yzx * 1.25 + vec3(t * 0.13, 0.0, 0.0));
   float n3 = snoise(seed.zxy * 0.9 - vec3(0.0, t * 0.15, 0.0));
-  vec3 wander = vec3(n1, n2, n3) * 0.145;
-  float breathe = 1.0 + 0.025 * sin(t * 0.5 + aRnd.x * 6.28);
+  float wild = uIdleWildness * (1.0 - e);
+  vec3 wander = vec3(n1, n2, n3) * mix(0.145, 0.232, uIdleWildness);
+  wander += vec3(n2 * n3, n1 * n3, n1 * n2) * (0.052 * wild);
+  float breathe = 1.0 + mix(0.025, 0.04, uIdleWildness) * sin(t * 0.5 + aRnd.x * 6.28);
   vec3 idleAnim = idlePos * breathe + wander;
 
   /* DESKTOP IDLE: nearby particles lean softly toward the cursor. */
@@ -290,7 +367,10 @@ void main() {
 
   /* Size: fine, sharp particles; density carries the form, not blob size. */
   float sizeVar = mix(0.72, 1.28, aRnd.y);
-  float size = uSize * sizeVar * mix(1.0, 0.66, e);
+  float idleFlicker = sin(t * (0.34 + aRnd.y * 0.32) + aRnd.x * 6.283);
+  idleFlicker += 0.5 * sin(t * (0.21 + aRnd.z * 0.18) + aRnd.z * 8.1);
+  idleFlicker *= 0.666;
+  float size = uSize * sizeVar * mix(1.0 + idleFlicker * 0.075 * wild, 0.66, e);
   gl_PointSize = clamp(size * uPixelRatio / -mv.z, 0.65, 4.8 * uPixelRatio);
 
   /* Luminance: idle density gradient + converged Fresnel/depth glow. */
@@ -298,6 +378,8 @@ void main() {
   float idleCore = smoothstep(2.35, 0.06, distC);
   float idleAlpha = clamp(aShade.x * (0.34 + idleCore * 0.92), 0.08, 1.12);
   float idleBright = aShade.x * (0.58 + 0.74 * idleCore + 0.38 * aRnd.z);
+  idleAlpha *= 1.0 + idleFlicker * 0.085 * wild;
+  idleBright *= 1.0 + idleFlicker * 0.15 * wild;
 
   vec3 viewNormal = normalize(mat3(modelViewMatrix) * dir);
   float front = smoothstep(-0.35, 0.95, viewNormal.z);
@@ -341,6 +423,7 @@ const OrbMaterial = shaderMaterial(
     uConverge: 0,
     uSize: 7.6,
     uPixelRatio: 1,
+    uIdleWildness: MOBILE_ORB_PROFILE.idleWildness,
     uCursor: new THREE.Vector2(0, 0),
     uCursorActive: 0,
     uColor: BONE.clone(),
@@ -362,7 +445,9 @@ declare module "@react-three/fiber" {
 type OrbMaterialImpl = THREE.ShaderMaterial & {
   uTime: number;
   uConverge: number;
+  uIdleWildness: number;
   uPixelRatio: number;
+  uSize: number;
   uCursor: THREE.Vector2;
   uCursorActive: number;
 };
@@ -385,11 +470,15 @@ type CursorState = {
 function OrbPoints({
   count,
   converged,
+  idleWildness,
+  pointSize,
   reduced,
   cursorRef,
 }: {
   count: number;
   converged: boolean;
+  idleWildness: number;
+  pointSize: number;
   reduced: boolean;
   cursorRef: MutableRefObject<CursorState>;
 }) {
@@ -446,6 +535,8 @@ function OrbPoints({
 
     mat.uConverge = conv.current;
     mat.uTime = time;
+    mat.uIdleWildness = idleWildness;
+    mat.uSize = pointSize;
 
     const cursor = cursorRef.current;
     const cursorTargetActive = !reduced && !converged && cursor.active ? 1 : 0;
@@ -608,10 +699,6 @@ function ConvergedLabel({ show, radius }: { show: boolean; radius: number }) {
 /* AyraOrb — the self-contained, drop-in component                             */
 /* ────────────────────────────────────────────────────────────────────────── */
 
-// On-screen radius (px) of the orb core, used to place the DOM overlay around
-// it. Roughly matches the sphere's projected size for the box below.
-const ORB_PX_RADIUS = 150;
-const CURSOR_ZONE_RADIUS = ORB_PX_RADIUS + 96;
 const CURSOR_LABEL_OFFSET = 18;
 const DRAG_THRESHOLD_PX = 8;   // px of movement before a touch is classified as drag
 const HOLD_MS = 300;            // ms of stillness before touch becomes hold-to-converge
@@ -635,6 +722,7 @@ export default function AyraOrb() {
 
   const [mounted, setMounted] = useState(false);
   const [count, setCount] = useState(4200);
+  const [orbProfile, setOrbProfile] = useState<OrbViewportProfile>(MOBILE_ORB_PROFILE);
   const [converged, setConverged] = useState(false);
   const [isFinePointer, setIsFinePointer] = useState(false);
   const [supportsCoarsePointer, setSupportsCoarsePointer] = useState(false);
@@ -652,6 +740,7 @@ export default function AyraOrb() {
   // Client-only: pick particle count once we know the device.
   useEffect(() => {
     setCount(pickParticleCount());
+    setOrbProfile(pickOrbViewportProfile());
     setMounted(true);
   }, []);
 
@@ -698,6 +787,9 @@ export default function AyraOrb() {
   const mobileTapEnabled = mounted && supportsCoarsePointer;
   const showCursorLabel = desktopEffectsEnabled && cursorNear && !converged;
   const showAnyLabel = showCursorLabel || (mobileLabelVisible && !converged && !reduced);
+  const orbRadius = orbProfile.radius;
+  const promptRadius = orbRadius + (orbRadius > MOBILE_ORB_PROFILE.radius ? 78 : 64);
+  const cursorZoneRadius = orbRadius + (orbRadius > MOBILE_ORB_PROFILE.radius ? 108 : 96);
 
   useEffect(() => {
     if (!desktopEffectsEnabled || converged) {
@@ -930,8 +1022,8 @@ export default function AyraOrb() {
         ref={orbRef}
         className="pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2"
         style={{
-          width: "min(94vw, 720px)",
-          height: "min(58vh, 460px)",
+          width: orbProfile.canvasWidth,
+          height: orbProfile.canvasHeight,
         }}
         aria-hidden
       >
@@ -946,6 +1038,8 @@ export default function AyraOrb() {
             <OrbPoints
               count={count}
               converged={converged}
+              idleWildness={orbProfile.idleWildness}
+              pointSize={orbProfile.pointSize}
               reduced={reduced}
               cursorRef={cursorRef}
             />
@@ -972,9 +1066,9 @@ export default function AyraOrb() {
         aria-hidden
       >
         {mounted && !reduced && !converged && !showAnyLabel && (
-          <FloatingPrompts radius={ORB_PX_RADIUS + 64} />
+          <FloatingPrompts radius={promptRadius} />
         )}
-        <ConvergedLabel show={converged} radius={ORB_PX_RADIUS} />
+        <ConvergedLabel show={converged} radius={orbRadius} />
       </div>
 
       {desktopHitEnabled && (
@@ -982,8 +1076,8 @@ export default function AyraOrb() {
           className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2
                      cursor-pointer rounded-full"
           style={{
-            width: CURSOR_ZONE_RADIUS * 2,
-            height: CURSOR_ZONE_RADIUS * 2,
+            width: cursorZoneRadius * 2,
+            height: cursorZoneRadius * 2,
             touchAction: "pan-y",
           }}
           onPointerEnter={onDesktopEnter}

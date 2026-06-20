@@ -425,8 +425,7 @@ function BookingScheduler({
               Call booked for {prettyDate(booked.date)} at {slotLabel(booked.time)}.
             </p>
             <p className="mt-2 text-sm font-light leading-relaxed text-muted">
-              It is saved in your admin page. We will use {email.trim()} for the
-              follow-up.
+              You&apos;re all set. We will use {email.trim()} for the follow-up.
             </p>
           </div>
         </div>

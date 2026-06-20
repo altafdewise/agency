@@ -6,6 +6,7 @@ import {
   Shapes,
   Clapperboard,
   ShieldCheck,
+  Scale,
   PenLine,
   Rocket,
   Building2,
@@ -88,6 +89,14 @@ export const SERVICES: Service[] = [
     blurb: "audits, pen testing",
     brief: "Find the weak spots before customers or attackers do.",
     Icon: ShieldCheck,
+  },
+  {
+    key: "legal_help",
+    pricingKey: null,
+    title: "Legal help",
+    blurb: "I need legal help",
+    brief: "For legal clarity, documents, or lawyer-ready next steps.",
+    Icon: Scale,
   },
   {
     key: "other",

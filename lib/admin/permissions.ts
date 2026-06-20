@@ -6,6 +6,7 @@ export type AdminSection =
   | "projects"
   | "blog"
   | "analytics"
+  | "feedback"
   | "team"
   | "settings";
 
@@ -26,6 +27,7 @@ export const ADMIN_NAV: Array<{
   { section: "projects", label: "Projects", href: "/admin/projects" },
   { section: "blog", label: "Blog", href: "/admin/blog" },
   { section: "analytics", label: "Analytics", href: "/admin/analytics" },
+  { section: "feedback", label: "Feedback", href: "/admin/feedback" },
   { section: "team", label: "Team", href: "/admin/team" },
   { section: "settings", label: "Settings", href: "/admin/settings" },
 ];
@@ -36,6 +38,7 @@ const ACCESS: Record<AdminSection, AppRole[]> = {
   projects: ["owner", "project_lead", "viewer"],
   blog: ["owner", "editor"],
   analytics: ["owner", "project_lead", "viewer"],
+  feedback: ["owner", "project_lead"],
   team: ["owner"],
   settings: ["owner"],
 };

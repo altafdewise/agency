@@ -8,6 +8,9 @@ import { SERVICES } from "@/lib/content";
 interface ServiceListProps {
   onChoose: (key: string) => void;
   showOther: boolean;
+  className?: string;
+  listClassName?: string;
+  forceScrollFocus?: boolean;
 }
 
 /**
@@ -27,7 +30,13 @@ interface ServiceListProps {
  * colour) animate. Honours prefers-reduced-motion (static, equal, every
  * subtitle shown).
  */
-export function ServiceList({ onChoose, showOther }: ServiceListProps) {
+export function ServiceList({
+  onChoose,
+  showOther,
+  className,
+  listClassName,
+  forceScrollFocus = false,
+}: ServiceListProps) {
   const reduce = useReducedMotion() ?? false;
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -138,7 +147,9 @@ export function ServiceList({ onChoose, showOther }: ServiceListProps) {
   // desktop with cursor away → neutral (no row focused).
   const focusDriver = reduce
     ? null
-    : isFine
+    : forceScrollFocus
+      ? scrollIndex
+      : isFine
       ? pointerActive
         ? cursorIndex
         : null
@@ -165,12 +176,12 @@ export function ServiceList({ onChoose, showOther }: ServiceListProps) {
   return (
     <div
       ref={containerRef}
-      className="relative mt-16"
+      className={cn("relative mt-16", className)}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
     >
       <motion.ul
-        className="mx-auto flex w-full max-w-xl flex-col gap-7 sm:gap-9"
+        className={cn("mx-auto flex w-full max-w-xl flex-col gap-7 sm:gap-9", listClassName)}
         variants={groupVariants}
         initial="hidden"
         whileInView="show"

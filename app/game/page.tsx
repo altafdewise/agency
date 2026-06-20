@@ -3,14 +3,14 @@ import { GameClient } from "@/components/game/GameClient";
 
 export const metadata: Metadata = {
   title: "Quick game",
-  description: "One move to win — a quick mate-in-one to end on.",
+  description: "One move to win - a quick mate-in-one to end on.",
   robots: { index: false, follow: false },
 };
 
 export default function GamePage() {
   return (
-    <main className="relative flex min-h-[100dvh] w-full flex-col justify-center px-6 py-28 sm:px-10 sm:py-24">
-      <div className="mx-auto w-full max-w-path">
+    <main className="relative flex min-h-[100dvh] w-full flex-col justify-center px-6 py-20 sm:px-10">
+      <div className="mx-auto w-full">
         <GameClient />
       </div>
     </main>

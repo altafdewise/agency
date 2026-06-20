@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageSquareText,
   Settings,
   Users,
   X,
@@ -27,6 +28,7 @@ const ICONS = {
   projects: BriefcaseBusiness,
   blog: BookOpenText,
   analytics: BarChart3,
+  feedback: MessageSquareText,
   team: Users,
   settings: Settings,
 };
