@@ -76,11 +76,11 @@ function pickParticleCount(): number {
   const mobile =
     w < 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  if (mobile || mem <= 4 || cores <= 4) return 6200; // mobile / low-end floor
-  if (w < DESKTOP_BREAKPOINT) return 14000;
-  if (w < 1280 || mem <= 6 || cores <= 6) return 17000;
-  if (mem >= 8 && cores >= 8) return 28000;
-  return 22000;
+  if (mobile || mem <= 4 || cores <= 4) return 9000; // mobile / low-end floor
+  if (w < DESKTOP_BREAKPOINT) return 18000;
+  if (w < 1280 || mem <= 6 || cores <= 6) return 23000;
+  if (mem >= 8 && cores >= 8) return 38000;
+  return 30000;
 }
 
 type OrbViewportProfile = {
@@ -89,6 +89,7 @@ type OrbViewportProfile = {
   idleWildness: number;
   pointSize: number;
   radius: number;
+  glow: number; // overall opacity multiplier — keeps the dense desktop cloud dark
 };
 
 const MOBILE_ORB_PROFILE: OrbViewportProfile = {
@@ -97,6 +98,7 @@ const MOBILE_ORB_PROFILE: OrbViewportProfile = {
   idleWildness: 0.48,
   pointSize: 7.6,
   radius: 150,
+  glow: 1,
 };
 
 const DESKTOP_ORB_PROFILE: OrbViewportProfile = {
@@ -105,6 +107,9 @@ const DESKTOP_ORB_PROFILE: OrbViewportProfile = {
   idleWildness: 1,
   pointSize: 8.15,
   radius: 196,
+  // Many more particles on desktop, so dim the accumulated additive glow to
+  // keep the field dark with a bright core rather than washing out to grey.
+  glow: 0.72,
 };
 
 function pickOrbViewportProfile(): OrbViewportProfile {
@@ -376,8 +381,9 @@ void main() {
   /* Luminance: idle density gradient + converged Fresnel/depth glow. */
   float distC = length(idlePos * vec3(0.82, 1.08, 0.96));
   float idleCore = smoothstep(2.35, 0.06, distC);
-  float idleAlpha = clamp(aShade.x * (0.34 + idleCore * 0.92), 0.08, 1.12);
-  float idleBright = aShade.x * (0.58 + 0.74 * idleCore + 0.38 * aRnd.z);
+  float hotCore = smoothstep(1.05, 0.02, distC); // tight, bright nucleus
+  float idleAlpha = clamp(aShade.x * (0.34 + idleCore * 1.04 + hotCore * 0.32), 0.08, 1.3);
+  float idleBright = aShade.x * (0.58 + 0.9 * idleCore + 0.6 * hotCore + 0.38 * aRnd.z);
   idleAlpha *= 1.0 + idleFlicker * 0.085 * wild;
   idleBright *= 1.0 + idleFlicker * 0.15 * wild;
 
@@ -448,6 +454,7 @@ type OrbMaterialImpl = THREE.ShaderMaterial & {
   uIdleWildness: number;
   uPixelRatio: number;
   uSize: number;
+  uOpacity: number;
   uCursor: THREE.Vector2;
   uCursorActive: number;
 };
@@ -472,6 +479,7 @@ function OrbPoints({
   converged,
   idleWildness,
   pointSize,
+  glow,
   reduced,
   cursorRef,
 }: {
@@ -479,6 +487,7 @@ function OrbPoints({
   converged: boolean;
   idleWildness: number;
   pointSize: number;
+  glow: number;
   reduced: boolean;
   cursorRef: MutableRefObject<CursorState>;
 }) {
@@ -537,6 +546,7 @@ function OrbPoints({
     mat.uTime = time;
     mat.uIdleWildness = idleWildness;
     mat.uSize = pointSize;
+    mat.uOpacity = glow;
 
     const cursor = cursorRef.current;
     const cursorTargetActive = !reduced && !converged && cursor.active ? 1 : 0;
@@ -1040,6 +1050,7 @@ export default function AyraOrb() {
               converged={converged}
               idleWildness={orbProfile.idleWildness}
               pointSize={orbProfile.pointSize}
+              glow={orbProfile.glow}
               reduced={reduced}
               cursorRef={cursorRef}
             />

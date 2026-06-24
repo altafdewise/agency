@@ -98,6 +98,22 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  .animate-work-teaser-up {
+    animation: work-teaser-up 36s linear infinite;
+  }
+
+  .animate-work-teaser-down {
+    animation: work-teaser-down 36s linear infinite;
+  }
+
+  .animate-work-teaser-marquee-left {
+    animation: work-teaser-marquee-left 36s linear infinite;
+  }
+
+  .animate-work-teaser-marquee-right {
+    animation: work-teaser-marquee-right 36s linear infinite;
+  }
 }
 
 /* Film grain — a tactile, premium texture over everything. */
@@ -121,5 +137,51 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .animate-work-teaser-up,
+  .animate-work-teaser-down,
+  .animate-work-teaser-marquee-left,
+  .animate-work-teaser-marquee-right {
+    animation: none !important;
+    transform: translate3d(0, 0, 0) !important;
+  }
+}
+
+@keyframes work-teaser-up {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -50%, 0);
+  }
+}
+
+@keyframes work-teaser-down {
+  from {
+    transform: translate3d(0, -50%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Horizontal marquees for the mobile work rail (content duplicated ×2, so
+   -50% is exactly one full set). */
+@keyframes work-teaser-marquee-left {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes work-teaser-marquee-right {
+  from {
+    transform: translate3d(-50%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
   }
 }

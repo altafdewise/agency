@@ -181,7 +181,7 @@ export function ServiceList({
       onPointerLeave={handlePointerLeave}
     >
       <motion.ul
-        className={cn("mx-auto flex w-full max-w-xl flex-col gap-7 sm:gap-9", listClassName)}
+        className={cn("mx-auto flex w-full max-w-xl flex-col gap-6 sm:gap-9", listClassName)}
         variants={groupVariants}
         initial="hidden"
         whileInView="show"
@@ -215,7 +215,7 @@ export function ServiceList({
                 }
                 transition={{ duration: reduce ? 0 : 0.25, ease: [0.22, 1, 0.36, 1] }}
                 style={{ transformOrigin: "left center" }}
-                className="group flex w-full cursor-pointer items-start gap-4 text-left sm:gap-6"
+                className="group flex w-full cursor-pointer items-start gap-3.5 text-left sm:gap-6"
               >
                 <span
                   className={cn(
@@ -229,7 +229,7 @@ export function ServiceList({
                 {Icon && (
                   <Icon
                     className={cn(
-                      "mt-px h-5 w-5 shrink-0 transition-colors duration-200",
+                      "mt-px h-[18px] w-[18px] shrink-0 transition-colors duration-200 sm:h-5 sm:w-5",
                       accent ? "text-accent" : "text-muted"
                     )}
                     strokeWidth={1.5}
@@ -238,7 +238,7 @@ export function ServiceList({
                 )}
 
                 <span className="flex min-w-0 flex-col gap-1">
-                  <span className="font-sans text-lg font-medium leading-snug text-foreground sm:text-xl">
+                  <span className="font-sans text-base font-medium leading-snug text-foreground sm:text-xl">
                     {s.title}
                   </span>
                   {subtitle && (

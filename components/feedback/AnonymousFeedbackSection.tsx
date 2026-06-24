@@ -95,7 +95,7 @@ export function AnonymousFeedbackSection() {
           transition={{ duration: reduce ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] }}
           className="mx-auto mt-9 max-w-xl sm:mt-10"
         >
-          <div className="rounded-3xl border border-foreground/[0.07] bg-foreground/[0.015] p-6 sm:p-8">
+          <div className="rounded-3xl border border-foreground/[0.07] bg-foreground/[0.015] p-5 sm:p-8">
             <div className="flex items-center justify-between gap-4">
               <div className="flex min-w-0 items-center gap-3">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-foreground/[0.09] bg-foreground/[0.03] text-accent">
@@ -110,7 +110,7 @@ export function AnonymousFeedbackSection() {
               </span>
             </div>
 
-            <div className="mt-8 grid grid-cols-3 gap-2.5">
+            <div className="mt-8 grid grid-cols-3 gap-2">
               {FEEDBACK_TYPES.map((item) => {
                 const selected = item.key === type;
 
@@ -123,7 +123,7 @@ export function AnonymousFeedbackSection() {
                       if (status === "done") setStatus("idle");
                     }}
                     className={cn(
-                      "min-h-[44px] rounded-full border px-2.5 py-2.5 text-center transition-colors duration-200",
+                      "min-h-[46px] rounded-2xl border px-2.5 py-3 text-center transition-colors duration-200",
                       selected
                         ? "border-accent bg-accent/[0.08] text-foreground"
                         : "border-foreground/[0.1] bg-transparent text-muted hover:border-foreground/[0.22] hover:text-foreground"

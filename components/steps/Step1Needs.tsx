@@ -13,6 +13,10 @@ import { usePath } from "@/components/PathProvider";
 import { ServiceList } from "./ServiceList";
 import { TestimonialsSection } from "@/components/testimonials/TestimonialsSection";
 import { ImpactStatSection } from "@/components/impact/ImpactStatSection";
+import { WorkTeaserSection } from "@/components/home/WorkTeaserSection";
+import { ProcessArcSection } from "@/components/home/ProcessArcSection";
+import { ClosingCtaSection } from "@/components/home/ClosingCtaSection";
+import { FaqSection } from "@/components/faq/FaqSection";
 import { AnonymousFeedbackSection } from "@/components/feedback/AnonymousFeedbackSection";
 import { SiteFooter } from "@/components/SiteFooter";
 
@@ -108,7 +112,7 @@ export function Step1Needs() {
           className="relative hidden w-full px-10 lg:block"
           aria-label="What brings you here?"
         >
-          <div className="mx-auto grid min-h-[172dvh] w-full max-w-path grid-cols-[minmax(300px,0.86fr)_minmax(430px,1fr)] gap-14 xl:gap-20">
+          <div className="mx-auto grid min-h-[200dvh] w-full max-w-path grid-cols-[minmax(300px,0.86fr)_minmax(430px,1fr)] gap-14 xl:gap-20">
             <div className="sticky top-0 flex h-[100dvh] items-center">
               <RevealGroup
                 className="relative z-10 max-w-[620px] text-left"
@@ -134,7 +138,7 @@ export function Step1Needs() {
               </RevealGroup>
             </div>
 
-            <div className="flex min-h-[172dvh] flex-col justify-center py-[24dvh]">
+            <div className="flex min-h-[200dvh] flex-col justify-center py-[36dvh]">
               <ServiceList
                 onChoose={choose}
                 showOther={showOther}
@@ -163,8 +167,19 @@ export function Step1Needs() {
       {/* Section 4 — impact stat. */}
       <ImpactStatSection />
 
+      <WorkTeaserSection />
+
+      {/* Process / how it works — scroll-driven curved arc. */}
+      <ProcessArcSection />
+
+      {/* FAQ — numbered single-open accordion. */}
+      <FaqSection />
+
       {/* Section 5 — anonymous issue / feedback drop. */}
       <AnonymousFeedbackSection />
+
+      {/* Closing CTA — sends visitors back up to the funnel (#tap-funnel). */}
+      <ClosingCtaSection onStart={scrollToFunnel} />
 
       <SiteFooter />
     </>
