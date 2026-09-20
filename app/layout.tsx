@@ -84,7 +84,6 @@ export default function RootLayout({
           <SiteChrome />
           {children}
         </PathProvider>
-        <div className="grain" aria-hidden />
       </body>
     </html>
   );

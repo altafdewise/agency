@@ -6,12 +6,14 @@ import { SiteNav } from "@/components/SiteNav";
 
 export function SiteChrome() {
   const pathname = usePathname();
-  if (pathname.startsWith("/admin")) return null;
+  if (pathname === "/portfolio" || pathname.startsWith("/portfolio/")) return null;
+  if (pathname.startsWith("/admin")) return <div className="grain" aria-hidden />;
 
   return (
     <>
       <Ambient />
       <SiteNav />
+      <div className="grain" aria-hidden />
     </>
   );
 }
