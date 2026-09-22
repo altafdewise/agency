@@ -41,6 +41,17 @@
     overflow-x: hidden;
   }
 
+  /* The personal portfolio is a deliberately light, self-contained story. */
+  body.portfolio-theme {
+    background: #f2efe7;
+    color: #171713;
+  }
+
+  body.portfolio-theme ::selection {
+    background: #ff4d3d;
+    color: #171713;
+  }
+
   ::selection {
     background: rgb(var(--accent));
     color: rgb(var(--background));
