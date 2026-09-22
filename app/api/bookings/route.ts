@@ -8,6 +8,8 @@ export const runtime = "nodejs";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_ZONE = "Asia/Kolkata";
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT_MAX = 5;
 const TIME_SLOTS = [
   "14:00",
   "14:30",
@@ -19,6 +21,8 @@ const TIME_SLOTS = [
   "17:30",
   "18:00",
 ];
+
+const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 
 type BookingBody = {
   date?: unknown;
@@ -50,11 +54,53 @@ function getKolkataNow() {
   };
 }
 
+function getClientIp(req: Request) {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
+  return req.headers.get("x-real-ip") || "unknown";
+}
+
+function checkRateLimit(ip: string) {
+  const now = Date.now();
+  const current = rateBuckets.get(ip);
+
+  if (!current || current.resetAt <= now) {
+    rateBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return null;
+  }
+
+  if (current.count >= RATE_LIMIT_MAX) {
+    return Math.max(1, Math.ceil((current.resetAt - now) / 1000));
+  }
+
+  current.count += 1;
+  return null;
+}
+
+function isCalendarDate(value: string) {
+  if (!DATE_RE.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  return (
+    parsed.getUTCFullYear() === year &&
+    parsed.getUTCMonth() === month - 1 &&
+    parsed.getUTCDate() === day
+  );
+}
+
 function invalid(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
 }
 
 export async function POST(req: Request) {
+  const retryAfter = checkRateLimit(getClientIp(req));
+  if (retryAfter) {
+    return NextResponse.json(
+      { error: "Too many booking attempts. Please wait a few minutes and try again." },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
+
   let body: BookingBody;
 
   try {
@@ -65,16 +111,13 @@ export async function POST(req: Request) {
 
   const date = typeof body.date === "string" ? body.date : "";
   const time = typeof body.time === "string" ? body.time : "";
-  const timezone =
-    typeof body.timezone === "string" && body.timezone.trim()
-      ? body.timezone.trim()
-      : TIME_ZONE;
+  const timezone = TIME_ZONE;
   const note =
     typeof body.note === "string" && body.note.trim()
       ? body.note.trim().slice(0, 500)
       : undefined;
 
-  if (!DATE_RE.test(date)) return invalid("Choose a valid date.");
+  if (!isCalendarDate(date)) return invalid("Choose a valid date.");
   if (!TIME_SLOTS.includes(time)) {
     return invalid("Choose a time between 2 PM and 6 PM.");
   }
@@ -88,9 +131,12 @@ export async function POST(req: Request) {
     body.contact && typeof body.contact === "object"
       ? (body.contact as Record<string, unknown>)
       : {};
-  const email = typeof contact.email === "string" ? contact.email.trim() : "";
-  const name = typeof contact.name === "string" ? contact.name.trim() : "";
-  const phone = typeof contact.phone === "string" ? contact.phone.trim() : "";
+  const email =
+    typeof contact.email === "string" ? contact.email.trim().slice(0, 254) : "";
+  const name =
+    typeof contact.name === "string" ? contact.name.trim().slice(0, 120) : "";
+  const phone =
+    typeof contact.phone === "string" ? contact.phone.trim().slice(0, 40) : "";
 
   if (!EMAIL_RE.test(email)) {
     return invalid("Add a valid email for the call booking.");

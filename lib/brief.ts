@@ -33,7 +33,9 @@ export const EMPTY_BRIEF: Brief = {
   contact: null,
 };
 
-export const TOTAL_STEPS = 8;
+/** Keep the unpublished case-study step in the codebase, but out of the live flow. */
+export const SHOW_CASE_STUDIES = false;
+export const TOTAL_STEPS = SHOW_CASE_STUDIES ? 8 : 7;
 
 /* The shape the estimate API returns. Shared by the route and Step 7. */
 export type EstimateTier = "simple" | "medium" | "complex";

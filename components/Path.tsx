@@ -12,12 +12,13 @@ import { Step5Brief } from "@/components/steps/Step5Brief";
 import { Step6Contact } from "@/components/steps/Step6Contact";
 import { Step7Estimate } from "@/components/steps/Step7Estimate";
 import { Step8Close } from "@/components/steps/Step8Close";
+import { SHOW_CASE_STUDIES } from "@/lib/brief";
 
 const STEPS = [
   Step1Needs,
   Step2Persona,
   Step3Stage,
-  Step4Work,
+  ...(SHOW_CASE_STUDIES ? [Step4Work] : []),
   Step5Brief,
   Step6Contact,
   Step7Estimate,

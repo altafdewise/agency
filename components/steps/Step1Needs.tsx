@@ -23,6 +23,13 @@ import { SiteFooter } from "@/components/SiteFooter";
 // WebGL hero orb — client-only (no SSR for the Three.js canvas).
 const AyraOrb = dynamic(() => import("@/components/AyraOrb"), { ssr: false });
 
+const HIDDEN_HOME_SECTIONS = {
+  opening: true,
+  testimonials: true,
+  selectedWork: true,
+  faq: true,
+} as const;
+
 export function Step1Needs() {
   const router = useRouter();
   const { update, next, brief, step } = usePath();
@@ -59,20 +66,22 @@ export function Step1Needs() {
 
   return (
     <>
-      <section
-        className="relative isolate flex min-h-[100dvh] w-full items-center justify-center overflow-hidden"
-        aria-label="Ayra assistant"
-      >
-        <AyraOrb />
-        <button
-          type="button"
-          onClick={scrollToFunnel}
-          className="absolute bottom-7 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-[13px] font-light text-foreground/70 shadow-[0_8px_30px_-18px_rgba(0,0,0,0.9)] backdrop-blur-md transition-colors duration-200 hover:border-white/18 hover:text-foreground focus-visible:text-foreground sm:bottom-9"
+      {!HIDDEN_HOME_SECTIONS.opening && (
+        <section
+          className="relative isolate flex min-h-[100dvh] w-full items-center justify-center overflow-hidden"
+          aria-label="Ayra assistant"
         >
-          <span>or, tap to explore</span>
-          <ChevronDown className="h-3.5 w-3.5" strokeWidth={1.6} aria-hidden />
-        </button>
-      </section>
+          <AyraOrb />
+          <button
+            type="button"
+            onClick={scrollToFunnel}
+            className="absolute bottom-7 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-[13px] font-light text-foreground/70 shadow-[0_8px_30px_-18px_rgba(0,0,0,0.9)] backdrop-blur-md transition-colors duration-200 hover:border-white/18 hover:text-foreground focus-visible:text-foreground sm:bottom-9"
+          >
+            <span>or, tap to explore</span>
+            <ChevronDown className="h-3.5 w-3.5" strokeWidth={1.6} aria-hidden />
+          </button>
+        </section>
+      )}
 
       <div id="tap-funnel">
         <StepShell className="lg:hidden">
@@ -162,18 +171,18 @@ export function Step1Needs() {
       </div>
 
       {/* Section 3 — client testimonials (stacked-card carousel). */}
-      <TestimonialsSection />
+      {!HIDDEN_HOME_SECTIONS.testimonials && <TestimonialsSection />}
 
       {/* Section 4 — impact stat. */}
       <ImpactStatSection />
 
-      <WorkTeaserSection />
+      {!HIDDEN_HOME_SECTIONS.selectedWork && <WorkTeaserSection />}
 
       {/* Process / how it works — scroll-driven curved arc. */}
       <ProcessArcSection />
 
       {/* FAQ — numbered single-open accordion. */}
-      <FaqSection />
+      {!HIDDEN_HOME_SECTIONS.faq && <FaqSection />}
 
       {/* Section 5 — anonymous issue / feedback drop. */}
       <AnonymousFeedbackSection />

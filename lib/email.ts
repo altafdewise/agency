@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import type { Booking } from "@/lib/bookings";
+import type { Brief, Estimate } from "@/lib/brief";
 
 const DEFAULT_FROM = "Maggie's Agency <admin@maggie.agency>";
 
@@ -11,6 +12,14 @@ function getResend() {
 
   resendClient ??= new Resend(key);
   return resendClient;
+}
+
+function getFromAddress() {
+  return (
+    process.env.EMAIL_FROM ||
+    process.env.BOOKING_EMAIL_FROM ||
+    DEFAULT_FROM
+  );
 }
 
 function escapeHtml(value: string) {
@@ -113,6 +122,39 @@ function adminHtml(booking: Booking) {
   });
 }
 
+function formatInr(value: number) {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function estimateHtml(brief: Brief, estimate: Estimate) {
+  const name = brief.contact?.name?.trim() || "there";
+  const range = `${formatInr(estimate.priceLow)} – ${formatInr(estimate.priceHigh)}`;
+  const included = estimate.included
+    .map(
+      (item) =>
+        `<li style="margin:0 0 9px;font-size:14px;line-height:1.55;color:#333;">${escapeHtml(item)}</li>`
+    )
+    .join("");
+
+  return emailShell({
+    preview: `Your Maggie project estimate is ${range}.`,
+    children: `
+      <h1 style="margin:0 0 18px;font-size:26px;line-height:1.15;font-weight:700;">Your project estimate.</h1>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#333;">Hi ${escapeHtml(name)}, here is the estimate from the brief you shared with Maggie's Agency.</p>
+      <p style="margin:24px 0 8px;font-size:30px;line-height:1.1;font-weight:700;color:#ff4438;">${escapeHtml(range)}</p>
+      <p style="margin:0 0 24px;font-size:13px;line-height:1.6;color:#777;">Indicative range · ${escapeHtml(estimate.timeline)}</p>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.7;color:#333;">${escapeHtml(estimate.summary)}</p>
+      <ul style="margin:0;padding:20px 20px 12px 38px;border-top:1px solid #eee;border-bottom:1px solid #eee;">${included}</ul>
+      <p style="margin:22px 0 0;font-size:13px;line-height:1.6;color:#777;">This is an initial range. We will confirm the final scope and price before work begins.</p>
+      <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#888;">Maggie's Agency</p>
+    `,
+  });
+}
+
 export async function sendBookingEmails(booking: Booking) {
   const resend = getResend();
   if (!resend) {
@@ -120,7 +162,7 @@ export async function sendBookingEmails(booking: Booking) {
     return { skipped: true };
   }
 
-  const from = process.env.BOOKING_EMAIL_FROM || DEFAULT_FROM;
+  const from = getFromAddress();
   const adminTo =
     process.env.BOOKING_NOTIFY_EMAIL ||
     process.env.NEXT_PUBLIC_CONTACT_EMAIL ||
@@ -140,6 +182,28 @@ export async function sendBookingEmails(booking: Booking) {
       html: adminHtml(booking),
     },
   ]);
+
+  if (error) throw new Error(error.message);
+
+  return { skipped: false };
+}
+
+export async function sendEstimateEmail(brief: Brief, estimate: Estimate) {
+  const email = brief.contact?.email?.trim();
+  if (!email) return { skipped: true };
+
+  const resend = getResend();
+  if (!resend) {
+    console.info("[email] RESEND_API_KEY missing; skipped estimate email.");
+    return { skipped: true };
+  }
+
+  const { error } = await resend.emails.send({
+    from: getFromAddress(),
+    to: email,
+    subject: "Your Maggie project estimate",
+    html: estimateHtml(brief, estimate),
+  });
 
   if (error) throw new Error(error.message);
 

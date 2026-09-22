@@ -12,10 +12,12 @@ import {
   type PricingTable,
 } from "@/lib/pricing";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { sendEstimateEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 
 const MODEL = "claude-sonnet-4-6";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_DESCRIPTION_CHARS = 2000;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT_MAX = 5;
@@ -179,6 +181,14 @@ function validateBrief(input: unknown): { brief: Brief } | { error: string } {
   const persona = typeof candidate.persona === "string" ? candidate.persona.trim() : "";
   const description =
     typeof candidate.description === "string" ? candidate.description.trim() : "";
+  const rawContact =
+    candidate.contact && typeof candidate.contact === "object"
+      ? (candidate.contact as Record<string, unknown>)
+      : null;
+  const contactEmail =
+    typeof rawContact?.email === "string" ? rawContact.email.trim() : "";
+  const contactName =
+    typeof rawContact?.name === "string" ? rawContact.name.trim().slice(0, 120) : "";
 
   if (!needs.length) {
     return { error: "Choose at least one service before requesting an estimate." };
@@ -208,10 +218,9 @@ function validateBrief(input: unknown): { brief: Brief } | { error: string } {
           : undefined,
       stage: typeof candidate.stage === "string" ? candidate.stage.trim() : "",
       description,
-      contact:
-        candidate.contact && typeof candidate.contact === "object"
-          ? candidate.contact
-          : null,
+      contact: EMAIL_RE.test(contactEmail)
+        ? { email: contactEmail.slice(0, 254), ...(contactName ? { name: contactName } : {}) }
+        : null,
     },
   };
 }
@@ -318,6 +327,19 @@ async function recordLead(brief: Brief, estimate: Estimate) {
   }
 }
 
+async function completeEstimate(brief: Brief, estimate: Estimate) {
+  await recordLead(brief, estimate);
+
+  try {
+    await sendEstimateEmail(brief, estimate);
+  } catch (error) {
+    // The estimate must still reach the browser even if email delivery is down.
+    console.error("[estimate] estimate email failed:", error);
+  }
+
+  return NextResponse.json(estimate);
+}
+
 export async function POST(req: Request) {
   const retryAfter = checkRateLimit(getClientIp(req));
   if (retryAfter) {
@@ -349,8 +371,7 @@ export async function POST(req: Request) {
   // No key yet â†’ still return a grounded number so the path works end-to-end.
   if (!apiKey) {
     const estimate = heuristic(brief, pricingTable);
-    await recordLead(brief, estimate);
-    return NextResponse.json(estimate);
+    return completeEstimate(brief, estimate);
   }
 
   try {
@@ -371,13 +392,11 @@ export async function POST(req: Request) {
     const parsed = validate(JSON.parse(extractJson(text)));
     if (!parsed) throw new Error("Model returned unparseable estimate.");
 
-    await recordLead(brief, parsed);
-    return NextResponse.json(parsed);
+    return completeEstimate(brief, parsed);
   } catch (err) {
     console.error("[estimate] falling back to heuristic:", err);
     // Graceful: hand back a grounded estimate rather than failing the journey.
     const estimate = heuristic(brief, pricingTable);
-    await recordLead(brief, estimate);
-    return NextResponse.json(estimate);
+    return completeEstimate(brief, estimate);
   }
 }
