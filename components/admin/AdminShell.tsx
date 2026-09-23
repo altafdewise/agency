@@ -16,6 +16,8 @@ import {
   Users,
   X,
   Inbox,
+  CalendarDays,
+  FileText,
 } from "lucide-react";
 import type { AppRole, ProfileRow } from "@/lib/supabase/database.types";
 import { ADMIN_NAV, ROLE_LABELS, canAccess } from "@/lib/admin/permissions";
@@ -25,6 +27,8 @@ import { cn } from "@/lib/cn";
 const ICONS = {
   dashboard: LayoutDashboard,
   leads: Inbox,
+  estimates: FileText,
+  bookings: CalendarDays,
   projects: BriefcaseBusiness,
   blog: BookOpenText,
   analytics: BarChart3,
@@ -63,6 +67,8 @@ export function AdminShell({
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [authNotice, setAuthNotice] = useState("");
   const role = profile.role as AppRole;
 
   const links = useMemo(
@@ -71,7 +77,14 @@ export function AdminShell({
   );
 
   const logout = async () => {
-    await createSupabaseBrowserClient().auth.signOut();
+    setSigningOut(true);
+    setAuthNotice("");
+    const { error } = await createSupabaseBrowserClient().auth.signOut();
+    if (error) {
+      setAuthNotice("Could not sign out. Please try again.");
+      setSigningOut(false);
+      return;
+    }
     router.push("/admin/login");
     router.refresh();
   };
@@ -106,7 +119,7 @@ export function AdminShell({
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-border bg-[#111]/95 px-4 py-5 backdrop-blur lg:block">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 overflow-y-auto border-r border-border bg-[#111]/95 px-4 py-5 backdrop-blur lg:block">
         <div className="flex h-full flex-col">
           <Link
             href="/"
@@ -126,11 +139,13 @@ export function AdminShell({
             <button
               type="button"
               onClick={logout}
+              disabled={signingOut}
               className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-muted transition-colors hover:text-accent"
             >
               <LogOut className="h-3.5 w-3.5" />
-              logout
+              {signingOut ? "signing out" : "sign out"}
             </button>
+            {authNotice && <p role="alert" className="mt-2 text-xs text-accent">{authNotice}</p>}
           </div>
         </div>
       </aside>
@@ -170,7 +185,7 @@ export function AdminShell({
             className="absolute inset-0 bg-background/75 backdrop-blur"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute inset-y-0 left-0 w-[82vw] max-w-xs border-r border-border bg-[#111] p-5">
+          <div className="absolute inset-y-0 left-0 flex w-[82vw] max-w-xs flex-col overflow-y-auto border-r border-border bg-[#111] p-5">
             <div className="mb-8 flex items-center justify-between">
               <AdminMark className="h-7 w-5" />
               <button
@@ -183,6 +198,14 @@ export function AdminShell({
               </button>
             </div>
             {nav}
+            <div className="mt-auto border-t border-border pt-5">
+              <p className="truncate text-sm text-foreground">{profile.name || profile.email}</p>
+              <p className="mt-1 text-xs text-muted">{ROLE_LABELS[role]}</p>
+              <button type="button" onClick={logout} disabled={signingOut} className="mt-5 inline-flex items-center gap-2 text-sm text-muted hover:text-accent disabled:opacity-50">
+                <LogOut className="h-4 w-4" /> {signingOut ? "Signing out" : "Sign out"}
+              </button>
+              {authNotice && <p role="alert" className="mt-2 text-xs text-accent">{authNotice}</p>}
+            </div>
           </div>
         </div>
       )}

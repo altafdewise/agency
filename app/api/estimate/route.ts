@@ -317,6 +317,7 @@ async function recordLead(brief: Brief, estimate: Estimate) {
       ai_price_low: estimate.priceLow,
       ai_price_high: estimate.priceHigh,
       ai_summary: estimate.summary,
+      ai_timeline: estimate.timeline,
       ai_included: estimate.included,
       status: "new",
     });

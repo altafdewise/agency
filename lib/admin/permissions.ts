@@ -3,6 +3,8 @@ import type { AppRole } from "@/lib/supabase/database.types";
 export type AdminSection =
   | "dashboard"
   | "leads"
+  | "estimates"
+  | "bookings"
   | "projects"
   | "blog"
   | "analytics"
@@ -22,8 +24,10 @@ export const ADMIN_NAV: Array<{
   label: string;
   href: string;
 }> = [
-  { section: "dashboard", label: "Dashboard", href: "/admin" },
+  { section: "dashboard", label: "Overview", href: "/admin" },
   { section: "leads", label: "Leads", href: "/admin/leads" },
+  { section: "estimates", label: "Estimates", href: "/admin/estimates" },
+  { section: "bookings", label: "Bookings", href: "/admin/bookings" },
   { section: "projects", label: "Projects", href: "/admin/projects" },
   { section: "blog", label: "Blog", href: "/admin/blog" },
   { section: "analytics", label: "Analytics", href: "/admin/analytics" },
@@ -35,6 +39,8 @@ export const ADMIN_NAV: Array<{
 const ACCESS: Record<AdminSection, AppRole[]> = {
   dashboard: ["owner", "project_lead", "editor", "viewer"],
   leads: ["owner", "project_lead", "viewer"],
+  estimates: ["owner", "project_lead", "viewer"],
+  bookings: ["owner", "project_lead", "viewer"],
   projects: ["owner", "project_lead", "viewer"],
   blog: ["owner", "editor"],
   analytics: ["owner", "project_lead", "viewer"],

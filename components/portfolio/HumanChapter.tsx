@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { fadeIn, fadeOut } from "@/lib/portfolio-motion";
+import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { cn } from "@/lib/cn";
 import { StoryChapter } from "./StoryChapter";
 import { StoryReveal } from "./StoryReveal";
@@ -44,6 +45,7 @@ function BoxingScene() {
 export function HumanChapter() {
   const chapterRef = useRef<HTMLElement>(null);
   const reduce = Boolean(useReducedMotion());
+  const mobile = usePortfolioMobile();
   const { scrollYProgress } = useScroll({
     target: chapterRef,
     offset: ["start start", "end end"],
@@ -58,7 +60,7 @@ export function HumanChapter() {
   );
   const boxingScale = useTransform(scrollYProgress, [0.31, 0.62], [0.94, 1]);
 
-  if (reduce) {
+  if (reduce || mobile) {
     return (
       <StoryChapter
         ref={chapterRef}

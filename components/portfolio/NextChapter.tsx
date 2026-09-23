@@ -6,6 +6,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion
 import { ArrowUpRight } from "lucide-react";
 import { mailtoHref } from "@/lib/contact";
 import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
+import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { cn } from "@/lib/cn";
 import { StoryChapter } from "./StoryChapter";
 import styles from "./portfolio.module.css";
@@ -63,6 +64,7 @@ function ClosingScene() {
 export function NextChapter() {
   const chapterRef = useRef<HTMLElement>(null);
   const reduce = Boolean(useReducedMotion());
+  const mobile = usePortfolioMobile();
   const { scrollYProgress } = useScroll({
     target: chapterRef,
     offset: ["start start", "end end"],
@@ -85,7 +87,7 @@ export function NextChapter() {
   const closingY = useTransform(scrollYProgress, [0.69, 0.82], [70, 0]);
   const lessonOffsets = [lessonOne, lessonTwo, lessonThree, lessonFour];
 
-  if (reduce) {
+  if (reduce || mobile) {
     return (
       <StoryChapter
         ref={chapterRef}

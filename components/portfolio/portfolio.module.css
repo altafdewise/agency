@@ -2488,6 +2488,47 @@
   letter-spacing: -0.04em;
 }
 
+.reducedGameMedia {
+  position: relative;
+  grid-column: 1 / -1;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.mobileOpening > p {
+  max-width: 32ch;
+  margin: 1.5rem 0 0;
+  color: var(--ink-soft);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.reducedMaggieProjects[hidden] {
+  display: none;
+}
+
+.reducedAgencyCta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  padding: 7rem var(--page-gutter) 3rem;
+  background: var(--accent);
+  color: var(--ink);
+  text-align: center;
+}
+
+.reducedAgencyCta > p {
+  max-width: 34rem;
+  margin: 0 0 2.2rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.1rem, 2vw, 1.7rem);
+  font-style: italic;
+}
+
 .reducedChapter.cybersecurityChapter,
 .reducedChapter.voidChapter,
 .reducedChapter.gamesChapter,
@@ -3520,6 +3561,169 @@
     margin-inline: -1.1rem;
     width: calc(100% + 2.2rem);
   }
+}
+
+/* Mobile uses natural document flow: no 390–650svh tracks or clipped scenes.
+   Taller chapters remain readable; the scroll controller only assists their edges. */
+@media (max-width: 640px) {
+  .page {
+    --page-gutter: clamp(1.1rem, 5vw, 1.5rem);
+  }
+
+  .reducedChapter {
+    height: auto;
+    min-height: 100svh;
+    padding: calc(7rem + env(safe-area-inset-top, 0px)) var(--page-gutter)
+      calc(2.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .reducedChapter .chapterLabel {
+    top: calc(4.65rem + env(safe-area-inset-top, 0px));
+    left: var(--page-gutter);
+  }
+
+  .reducedStory {
+    gap: clamp(1.75rem, 5svh, 2.75rem);
+    min-width: 0;
+  }
+
+  .reducedStory > * {
+    min-width: 0;
+  }
+
+  .reducedTitle {
+    font-size: clamp(2.35rem, 11vw, 3.5rem);
+    line-height: 1.02;
+    overflow-wrap: break-word;
+  }
+
+  .reducedIdentity {
+    gap: 1.5rem;
+  }
+
+  .reducedIdentity .mediaFrame {
+    width: clamp(6rem, 28vw, 8rem);
+    grid-row: 1;
+  }
+
+  .reducedIdentity .identityName {
+    font-size: clamp(3rem, 15vw, 4.1rem);
+    line-height: 0.95;
+  }
+
+  .reducedIdentity .roles {
+    margin-top: 1.15rem;
+    font-size: 0.65rem;
+  }
+
+  .reducedMediaGrid {
+    gap: 1.75rem;
+  }
+
+  .reducedMediaGrid .mediaFrame {
+    width: 100%;
+  }
+
+  .reducedDevelopmentCopy p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .reducedMetrics span {
+    font-size: 0.65rem;
+  }
+
+  .reducedStory .securityWorkspace,
+  .reducedStory .voidSystem {
+    position: relative;
+    inset: auto;
+    height: auto;
+    padding: 0;
+  }
+
+  .reducedStory .securityMap {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 4 / 3;
+  }
+
+  .reducedStory .voidFooter {
+    position: static;
+    margin-top: 1.75rem;
+  }
+
+  .reducedStory .securityDisciplineList li,
+  .reducedStory .voidPipeline li p,
+  .reducedStory .gameSkillGrid p {
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+
+  .reducedStory .voidPipeline ol {
+    gap: 0.8rem;
+  }
+
+  .reducedGameList li {
+    margin-bottom: 1.5rem;
+  }
+
+  .reducedStory .gameSkills,
+  .reducedBoxingScene .boxingScene {
+    position: relative;
+    inset: auto;
+    height: auto;
+  }
+
+  .reducedBoxingScene .boxingArtwork {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .reducedBoxingScene .boxingCanvas {
+    aspect-ratio: 4 / 3;
+  }
+
+  .reducedBoxingScene .boxingArtwork figcaption span {
+    display: inline;
+  }
+
+  .reducedChapter.nextChapter {
+    padding-bottom: 0;
+  }
+
+  .reducedChapter.maggieChapter {
+    padding-bottom: 0;
+  }
+
+  .reducedAgencyCta {
+    align-items: flex-start;
+    width: calc(100% + 2 * var(--page-gutter));
+    margin-inline: calc(-1 * var(--page-gutter));
+    padding: 6.5rem var(--page-gutter) clamp(3.5rem, 10vh, 6rem);
+    text-align: left;
+  }
+
+  .reducedAgencyCta > p {
+    max-width: 20rem;
+    margin-bottom: clamp(1.5rem, 4vh, 2.25rem);
+    font-size: clamp(0.9rem, 4vw, 1.05rem);
+    line-height: 1.4;
+  }
+
+  .reducedChapter.nextChapter .closingScene {
+    position: relative;
+    margin-inline: calc(-1 * var(--page-gutter));
+    width: calc(100% + 2 * var(--page-gutter));
+    min-height: 100svh;
+    padding: 4.5rem var(--page-gutter) 2rem;
+    gap: 2.5rem;
+  }
+
+  .reducedChapter .closingColophon {
+    position: static;
+    font-size: 0.5rem;
+  }
+
 }
 
 @media (prefers-reduced-motion: reduce) {

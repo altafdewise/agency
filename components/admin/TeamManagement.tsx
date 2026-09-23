@@ -32,7 +32,8 @@ export function TeamManagement({ profiles }: { profiles: ProfileRow[] }) {
       .eq("id", profile.id);
     if (error) {
       setItems(previous);
-      setToast(error.message);
+      console.error("[admin/team] role update failed:", error);
+      setToast("Could not update the role. Please try again.");
     } else {
       setToast("Role updated.");
     }

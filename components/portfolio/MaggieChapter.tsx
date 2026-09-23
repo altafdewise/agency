@@ -178,7 +178,7 @@ export function MaggieChapter() {
   );
   const ctaY = useTransform(scrollYProgress, [0.7, 0.8], ["100%", "0%"]);
 
-  if (reduce) {
+  if (reduce || mobile) {
     return (
       <StoryChapter
         ref={chapterRef}
@@ -206,7 +206,10 @@ export function MaggieChapter() {
               </article>
             ))}
           </div>
-          <AgencyLink />
+          <div id="maggie-visit" className={styles.reducedAgencyCta} data-chapter="maggie">
+            <p>The agency became another way to keep building.</p>
+            <AgencyLink />
+          </div>
         </div>
       </StoryChapter>
     );

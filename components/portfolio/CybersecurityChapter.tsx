@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { SECURITY_DISCIPLINES, SECURITY_TOOLS } from "@/lib/portfolio";
+import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
 import { cn } from "@/lib/cn";
 import { StoryChapter } from "./StoryChapter";
@@ -46,6 +47,7 @@ function SecurityWorkspace() {
 export function CybersecurityChapter() {
   const chapterRef = useRef<HTMLElement>(null);
   const reduce = Boolean(useReducedMotion());
+  const mobile = usePortfolioMobile();
   const { scrollYProgress } = useScroll({
     target: chapterRef,
     offset: ["start start", "end end"],
@@ -64,7 +66,7 @@ export function CybersecurityChapter() {
   );
   const workspaceY = useTransform(scrollYProgress, [0.5, 0.7], [70, 0]);
 
-  if (reduce) {
+  if (reduce || mobile) {
     return (
       <StoryChapter
         ref={chapterRef}

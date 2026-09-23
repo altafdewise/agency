@@ -10,29 +10,6 @@ const ROLES: AppRole[] = ["owner", "project_lead", "editor", "viewer"];
 const INVITER_EMAIL = process.env.ADMIN_INVITER_EMAIL || "admin@maggie.agency";
 const INVITER_NAME = process.env.ADMIN_INVITER_NAME || "Maggie";
 
-async function findAuthUserByEmail(
-  admin: NonNullable<ReturnType<typeof getSupabaseAdminClient>>,
-  email: string
-) {
-  const normalized = email.toLowerCase();
-
-  for (let page = 1; page <= 20; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({
-      page,
-      perPage: 1000,
-    });
-    if (error) throw error;
-
-    const user = data.users.find(
-      (item) => item.email?.toLowerCase() === normalized
-    );
-    if (user) return user;
-    if (!data.nextPage) return null;
-  }
-
-  return null;
-}
-
 export async function POST(req: Request) {
   const admin = getSupabaseAdminClient();
   if (!admin) {
@@ -59,17 +36,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Owner access required." }, { status: 403 });
   }
 
-  const body = (await req.json()) as {
+  let body: {
     email?: unknown;
     name?: unknown;
     role?: unknown;
   };
-  const email = typeof body.email === "string" ? body.email.trim() : "";
-  const name = typeof body.name === "string" ? body.name.trim() : "";
-  const role = ROLES.includes(body.role as AppRole) ? (body.role as AppRole) : "viewer";
+  try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid request body." }, { status: 400 }); }
+  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const name = typeof body.name === "string" ? body.name.trim().slice(0, 120) : "";
+  const role = body.role as AppRole;
 
-  if (!email) {
-    return NextResponse.json({ error: "Email is required." }, { status: 400 });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || !ROLES.includes(role)) {
+    return NextResponse.json({ error: "Enter a valid email and role." }, { status: 400 });
   }
 
   const { data: existingProfile } = await admin
@@ -85,48 +63,30 @@ export async function POST(req: Request) {
     );
   }
 
-  const origin = req.headers.get("origin") || new URL(req.url).origin;
+  const origin = new URL(req.url).origin;
   const inviteData = {
     redirectTo: `${origin}/admin/accept-invite`,
     data: {
       name,
-      role,
       role_label: ROLE_LABELS[role],
       inviter_email: INVITER_EMAIL,
       inviter_name: INVITER_NAME,
     },
   };
 
-  let { data, error } = await admin.auth.admin.inviteUserByEmail(email, inviteData);
+  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, inviteData);
 
   if (error && /already.*registered/i.test(error.message)) {
-    const staleUser = await findAuthUserByEmail(admin, email);
-
-    if (staleUser?.id === user.id) {
-      return NextResponse.json(
-        { error: "You cannot invite your own admin account." },
-        { status: 400 }
-      );
-    }
-
-    if (staleUser) {
-      const { error: deleteError } = await admin.auth.admin.deleteUser(staleUser.id);
-      if (deleteError) {
-        return NextResponse.json(
-          { error: deleteError.message },
-          { status: 500 }
-        );
-      }
-
-      const retry = await admin.auth.admin.inviteUserByEmail(email, inviteData);
-      data = retry.data;
-      error = retry.error;
-    }
+    return NextResponse.json(
+      { error: "This email already has an account. Resolve it in Supabase Auth before inviting; the account was not changed." },
+      { status: 409 }
+    );
   }
 
   if (error || !data.user) {
+    console.error("[admin/team] invite failed:", error);
     return NextResponse.json(
-      { error: error?.message || "Could not send invite." },
+      { error: "Could not send the invite. Please try again." },
       { status: 500 }
     );
   }
@@ -143,8 +103,9 @@ export async function POST(req: Request) {
     .single();
 
   if (profileError || !upserted) {
+    console.error("[admin/team] profile upsert failed:", profileError);
     return NextResponse.json(
-      { error: profileError?.message || "Invite sent, but profile was not saved." },
+      { error: "The invite was sent, but admin access could not be saved. Please contact the owner." },
       { status: 500 }
     );
   }

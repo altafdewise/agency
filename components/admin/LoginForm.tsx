@@ -10,7 +10,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/admin";
+  const requestedNext = searchParams.get("next") || "/admin";
+  const next = requestedNext.startsWith("/admin") && !requestedNext.startsWith("//") ? requestedNext : "/admin";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

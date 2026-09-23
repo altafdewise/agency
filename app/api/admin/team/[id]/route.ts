@@ -49,12 +49,14 @@ export async function DELETE(
 
   const { error: authError } = await admin.auth.admin.deleteUser(id);
   if (authError && !/not found/i.test(authError.message)) {
-    return NextResponse.json({ error: authError.message }, { status: 500 });
+    console.error("[admin/team] auth removal failed:", authError);
+    return NextResponse.json({ error: "Could not remove this member. Please try again." }, { status: 500 });
   }
 
   const { error: profileError } = await admin.from("profiles").delete().eq("id", id);
   if (profileError) {
-    return NextResponse.json({ error: profileError.message }, { status: 500 });
+    console.error("[admin/team] profile removal failed:", profileError);
+    return NextResponse.json({ error: "Could not finish removing this member. Please try again." }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

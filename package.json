@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:chapter-scroll": "node --test scripts/test-chapter-scroll.mjs",
+    "test:admin": "node --experimental-strip-types --test scripts/test-admin.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",

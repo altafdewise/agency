@@ -123,7 +123,7 @@ export function GamesChapter() {
     value >= 0.86 ? 1 : 0
   );
 
-  if (reduce) {
+  if (reduce || mobile) {
     return (
       <StoryChapter
         ref={chapterRef}
@@ -144,6 +144,9 @@ export function GamesChapter() {
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <strong>{project}</strong>
                 <small>Unity 3D · C#</small>
+                <div className={styles.reducedGameMedia}>
+                  <ViewportVideo src={`/designs/${index + 5}.g.mp4`} label={`${project} gameplay footage`} />
+                </div>
               </li>
             ))}
           </ol>

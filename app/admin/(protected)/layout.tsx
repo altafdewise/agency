@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { SetupNotice } from "@/components/admin/SetupNotice";
+import { AccessDenied } from "@/components/admin/AccessDenied";
 import { getAdminSession } from "@/lib/admin/auth";
 
 export default async function ProtectedAdminLayout({
@@ -13,16 +14,7 @@ export default async function ProtectedAdminLayout({
     return <SetupNotice />;
   }
 
-  if (session.status === "missing-profile") {
-    return (
-      <SetupNotice title="Your admin profile is missing.">
-        <p>
-          Supabase Auth found `{session.email}`, but there is no matching row in
-          `profiles`. Add that profile with the right role, then reload.
-        </p>
-      </SetupNotice>
-    );
-  }
+  if (session.status === "missing-profile") return <AccessDenied />;
 
   return <AdminShell profile={session.profile}>{children}</AdminShell>;
 }

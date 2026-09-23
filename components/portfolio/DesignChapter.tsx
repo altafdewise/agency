@@ -9,6 +9,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
+import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { MediaFrame } from "./MediaFrame";
 import { StoryChapter } from "./StoryChapter";
 import { StoryReveal } from "./StoryReveal";
@@ -48,6 +49,7 @@ export function DesignChapter() {
   const chapterRef = useRef<HTMLElement>(null);
   const [galleryActive, setGalleryActive] = useState(false);
   const reduce = Boolean(useReducedMotion());
+  const mobile = usePortfolioMobile();
   const { scrollYProgress } = useScroll({
     target: chapterRef,
     offset: ["start start", "end end"],
@@ -73,7 +75,7 @@ export function DesignChapter() {
     );
   });
 
-  if (reduce) {
+  if (reduce || mobile) {
     return (
       <StoryChapter
         ref={chapterRef}
@@ -88,6 +90,12 @@ export function DesignChapter() {
               It started with making things <em>look good.</em>
             </h2>
           </StoryReveal>
+          <div className={styles.reducedDevelopmentCopy}>
+            <p>Branding, UI/UX, websites and product design. Shaped as one visual system, not a collection of disconnected screens.</p>
+            <div className={styles.toolLine} aria-label="Design tools">
+              {DESIGN_TOOLS.map((tool) => <span key={tool}>{tool}</span>)}
+            </div>
+          </div>
           <div className={styles.reducedMediaGrid}>
             <DesignStudy src="/designs/1.mp4" label="DejureBook" index="01" />
             <DesignStudy

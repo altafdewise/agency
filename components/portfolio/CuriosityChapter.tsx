@@ -10,6 +10,7 @@ import {
 } from "framer-motion";
 import { ArrowDown } from "lucide-react";
 import { PORTFOLIO_ROLES } from "@/lib/portfolio";
+import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
 import { MediaFrame } from "./MediaFrame";
 import { StoryChapter } from "./StoryChapter";
@@ -30,6 +31,7 @@ function AltafPortrait() {
 export function CuriosityChapter() {
   const chapterRef = useRef<HTMLElement>(null);
   const reduce = Boolean(useReducedMotion());
+  const mobile = usePortfolioMobile();
   const { scrollYProgress } = useScroll({
     target: chapterRef,
     offset: ["start start", "end end"],
@@ -60,7 +62,7 @@ export function CuriosityChapter() {
     fadeOut(value, 0.08, 0.18)
   );
 
-  if (reduce) {
+  if (reduce || mobile) {
     return (
       <StoryChapter
         ref={chapterRef}
@@ -70,9 +72,10 @@ export function CuriosityChapter() {
         className={styles.reducedChapter}
       >
         <div className={styles.reducedStory}>
-          <p>I never really picked one thing.</p>
-          <p>I just kept getting curious.</p>
-          <p>So I kept building.</p>
+          <div className={styles.mobileOpening}>
+            <h2 className={styles.reducedTitle}>I never really picked <em>one thing.</em></h2>
+            <p>I just kept getting curious. So I kept building.</p>
+          </div>
           <div className={styles.reducedIdentity}>
             <div>
               <p className={styles.identityEyebrow}>Meet the person behind Maggie</p>

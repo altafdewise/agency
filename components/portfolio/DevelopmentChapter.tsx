@@ -10,6 +10,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { fadeIn, fadeInOut } from "@/lib/portfolio-motion";
+import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { StoryChapter } from "./StoryChapter";
 import { StoryReveal } from "./StoryReveal";
 import { ViewportVideo } from "./ViewportVideo";
@@ -40,6 +41,7 @@ export function DevelopmentChapter() {
   const chapterRef = useRef<HTMLElement>(null);
   const [processActive, setProcessActive] = useState(false);
   const reduce = Boolean(useReducedMotion());
+  const mobile = usePortfolioMobile();
   const { scrollYProgress } = useScroll({
     target: chapterRef,
     offset: ["start start", "end end"],
@@ -66,7 +68,7 @@ export function DevelopmentChapter() {
     );
   });
 
-  if (reduce) {
+  if (reduce || mobile) {
     return (
       <StoryChapter
         ref={chapterRef}
@@ -83,6 +85,9 @@ export function DevelopmentChapter() {
             </h2>
           </StoryReveal>
           <BuildProcess />
+          <div className={styles.interfaceSchematic}>
+            <ViewportVideo src="/designs/4.mp4" label="Development project demonstration" />
+          </div>
           <div className={styles.reducedDevelopmentCopy}>
             <p>
               The same idea could move from a blank frame in Figma to something

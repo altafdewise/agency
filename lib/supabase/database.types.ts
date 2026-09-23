@@ -7,7 +7,9 @@ export type Json =
   | Json[];
 
 export type AppRole = "owner" | "project_lead" | "editor" | "viewer";
-export type LeadStatus = "new" | "contacted" | "converted" | "lost";
+export type LeadStatus = "new" | "contacted" | "qualified" | "proposal" | "won" | "converted" | "lost";
+export type EstimateStatus = "new" | "reviewing" | "sent" | "accepted" | "rejected";
+export type BookingStatus = "pending" | "confirmed" | "cancelled";
 export type ProjectStatus = "ongoing" | "on_hold" | "delivered" | "closed";
 export type BlogStatus = "draft" | "published";
 export type FunnelAction = "entered" | "completed";
@@ -34,9 +36,13 @@ export interface LeadRow {
   ai_price_low: number | null;
   ai_price_high: number | null;
   ai_summary: string | null;
+  ai_timeline: string | null;
   ai_included: string[] | null;
   status: LeadStatus;
   created_at: string;
+  updated_at: string;
+  company: string | null;
+  estimate_status: EstimateStatus | null;
 }
 
 export interface ProjectRow {
@@ -109,12 +115,17 @@ export interface BookingRow {
   note: string | null;
   brief: Json;
   estimate: Json | null;
+  status: BookingStatus;
+  updated_at: string;
 }
 
 export interface FeedbackRow {
   id: string;
   message: string;
   created_at: string;
+  name: string | null;
+  rating: number | null;
+  project: string | null;
 }
 
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {

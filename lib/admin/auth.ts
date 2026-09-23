@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { hasSupabaseBrowserConfig } from "@/lib/supabase/config";
 import type { AppRole, ProfileRow } from "@/lib/supabase/database.types";
@@ -16,7 +17,7 @@ export type AdminSession =
       supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
     };
 
-export async function getAdminSession(): Promise<AdminSession> {
+export const getAdminSession = cache(async (): Promise<AdminSession> => {
   if (!hasSupabaseBrowserConfig()) return { status: "missing-env" };
 
   const supabase = await createSupabaseServerClient();
@@ -26,11 +27,16 @@ export async function getAdminSession(): Promise<AdminSession> {
 
   if (!user) redirect("/admin/login");
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id,email,name,role,last_active_at,created_at")
     .eq("id", user.id)
     .maybeSingle();
+
+  if (profileError) {
+    console.error("[admin] profile lookup failed:", profileError);
+    throw new Error("Admin profile could not be loaded.");
+  }
 
   if (!profile) {
     return {
@@ -39,11 +45,6 @@ export async function getAdminSession(): Promise<AdminSession> {
     };
   }
 
-  await supabase
-    .from("profiles")
-    .update({ last_active_at: new Date().toISOString() })
-    .eq("id", user.id);
-
   return {
     status: "ready",
     profile,
@@ -51,7 +52,7 @@ export async function getAdminSession(): Promise<AdminSession> {
     email: user.email ?? profile.email,
     supabase,
   };
-}
+});
 
 export async function requireAdminSection(section: AdminSection) {
   const session = await getAdminSession();

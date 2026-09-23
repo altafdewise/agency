@@ -46,10 +46,12 @@ export function AnalyticsDashboard({
   pageViews,
   funnelEvents,
   leads,
+  bookingCount,
 }: {
   pageViews: PageViewRow[];
   funnelEvents: FunnelEventRow[];
-  leads: LeadRow[];
+  leads: Pick<LeadRow, "id" | "status" | "ai_price_low" | "ai_price_high" | "created_at">[];
+  bookingCount: number;
 }) {
   const [range, setRange] = useState(30);
   const [path, setPath] = useState("all");
@@ -97,9 +99,9 @@ export function AnalyticsDashboard({
   }, [funnelEvents]);
 
   const totalVisitors = new Set(
-    pageViews.filter((view) => inRange(view.viewed_at, 30)).map((view) => view.session_id)
+    pageViews.filter((view) => inRange(view.viewed_at, 30) && view.session_id).map((view) => view.session_id)
   ).size;
-  const converted = leads.filter((lead) => lead.status === "converted").length;
+  const converted = leads.filter((lead) => lead.status === "converted" || lead.status === "won").length;
   const conversionRate = leads.length ? Math.round((converted / leads.length) * 100) : 0;
   const avgEstimate =
     leads.reduce((sum, lead) => {
@@ -121,10 +123,14 @@ export function AnalyticsDashboard({
   return (
     <div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Visitors this month" value={String(totalVisitors)} />
-        <StatCard label="Total leads" value={String(leads.length)} tone="accent" />
-        <StatCard label="Conversion rate" value={`${conversionRate}%`} tone="good" />
+        <StatCard label="Visitors · 30 days" value={String(totalVisitors)} />
+        <StatCard label="Enquiries · 90 days" value={String(leads.length)} tone="accent" />
+        <StatCard label="Conversion · 90 days" value={leads.length ? `${conversionRate}%` : "—"} note={leads.length ? undefined : "No activity yet."} tone="good" />
         <StatCard label="Avg estimate" value={avgEstimate ? inr(avgEstimate) : "-"} />
+      </div>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <StatCard label="Estimate requests · 90 days" value={String(leads.filter((lead) => lead.ai_price_low != null).length)} />
+        <StatCard label="Bookings · 90 days" value={String(bookingCount)} />
       </div>
 
       <section className="mt-6 rounded-lg border border-border bg-[#141414]/72 p-5">
