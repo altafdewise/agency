@@ -143,11 +143,18 @@ export function attachChapterScroll(root: HTMLElement) {
       burstDistance = 0;
     }
     burstDistance += Math.abs(delta);
-    const rapid = Math.abs(delta) > 180 || burstDistance > 360;
+    // A normal wheel notch or short trackpad burst can easily exceed 180px.
+    // Only yield entirely to native scrolling for a deliberate large fling.
+    const rapid = Math.abs(delta) > Math.max(900, win.innerHeight * 1.25) ||
+      burstDistance > Math.max(1200, win.innerHeight * 1.5);
     lastInput = time;
     if (event.ctrlKey || event.metaKey || Math.abs(event.deltaX) > Math.abs(delta) ||
-      isNestedControl(event.target) || rapid) {
+      isNestedControl(event.target)) {
       cancel(1000);
+      return;
+    }
+    if (rapid) {
+      cancel(450);
       return;
     }
     if (phase !== "native") {
@@ -185,8 +192,9 @@ export function attachChapterScroll(root: HTMLElement) {
     const delta = touchY - event.touches[0].clientY;
     const elapsed = Math.max(1, now() - touchStart);
     if (Math.abs(touchX - event.touches[0].clientX) > Math.abs(delta) + 10 ||
-      (Math.abs(delta) > 60 && Math.abs(delta) / elapsed > 0.9)) {
-      cancel(1200);
+      (Math.abs(delta) > Math.max(140, win.innerHeight * 0.2) &&
+        Math.abs(delta) / elapsed > 2.2)) {
+      cancel(450);
       return;
     }
     if (Math.abs(delta) > 10) direction = Math.sign(delta);
