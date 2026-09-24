@@ -3277,10 +3277,10 @@
   .maggieReveal {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-    align-content: start;
-    gap: clamp(1.4rem, 4vh, 2.5rem);
-    padding: 6.5rem 1.1rem clamp(4.75rem, 12vh, 6.5rem);
+    grid-template-rows: auto auto;
+    align-content: center;
+    gap: clamp(3rem, 8vh, 4.5rem);
+    padding: 5.5rem 1.1rem 3rem;
   }
 
   .maggieMark {
@@ -3296,13 +3296,14 @@
     left: auto;
     grid-column: 1;
     grid-row: 2;
-    align-self: end;
+    align-self: start;
     min-width: 0;
   }
 
   .maggieReveal > div:last-child > p {
-    margin-bottom: 1.25rem;
-    font-size: 0.45rem;
+    margin-bottom: 1rem;
+    font-size: 0.5rem;
+    line-height: 1.5;
   }
 
   .maggieReveal h2 {
