@@ -12,6 +12,7 @@ import { VOID_PIPELINE } from "@/lib/portfolio";
 import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
 import { cn } from "@/lib/cn";
+import { MobileStorySequence } from "./MobileStorySequence";
 import { StoryChapter } from "./StoryChapter";
 import { StoryReveal } from "./StoryReveal";
 import styles from "./portfolio.module.css";
@@ -89,12 +90,19 @@ export function VoidChapter() {
         className={cn(styles.reducedChapter, styles.voidChapter)}
       >
         <div className={styles.reducedStory}>
-          <StoryReveal>
-            <h2 className={cn(styles.reducedTitle, styles.darkReducedTitle)}>
-              Then I thought…
-              <em>Why not build my own?</em>
-            </h2>
-          </StoryReveal>
+          {mobile && !reduce ? (
+            <MobileStorySequence beats={[
+              <>Then I <em>thought…</em></>,
+              <>Why not build <em>my own?</em></>,
+            ]} />
+          ) : (
+            <StoryReveal>
+              <h2 className={cn(styles.reducedTitle, styles.darkReducedTitle)}>
+                Then I thought…
+                <em>Why not build my own?</em>
+              </h2>
+            </StoryReveal>
+          )}
           <VoidSystem />
         </div>
       </StoryChapter>

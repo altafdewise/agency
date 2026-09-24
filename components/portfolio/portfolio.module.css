@@ -3563,8 +3563,8 @@
   }
 }
 
-/* Mobile uses natural document flow: no 390–650svh tracks or clipped scenes.
-   Taller chapters remain readable; the scroll controller only assists their edges. */
+/* Mobile media remains in natural document flow. Short pinned text sequences
+   carry the chapter beats without clipping the longer project content. */
 @media (max-width: 640px) {
   .page {
     --page-gutter: clamp(1.1rem, 5vw, 1.5rem);
@@ -3589,6 +3589,52 @@
 
   .reducedStory > * {
     min-width: 0;
+  }
+
+  .mobileStoryTrack {
+    position: relative;
+    width: calc(100% + 2 * var(--page-gutter));
+    height: 190svh;
+    margin-top: calc(-7rem - env(safe-area-inset-top, 0px));
+    margin-inline: calc(-1 * var(--page-gutter));
+  }
+
+  .mobileStoryTrack[data-beats="3"] {
+    height: 250svh;
+  }
+
+  .mobileStoryStage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: clip;
+  }
+
+  .mobileStoryBeat {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    margin: 0;
+    padding: calc(6.5rem + env(safe-area-inset-top, 0px))
+      var(--page-gutter) calc(3rem + env(safe-area-inset-bottom, 0px));
+    font-family: var(--font-sans, Arial), Helvetica, sans-serif;
+    font-size: clamp(2.75rem, 11.5vw, 4.5rem);
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.065em;
+    text-wrap: balance;
+    pointer-events: none;
+  }
+
+  .mobileStoryBeat em {
+    display: block;
+    color: var(--accent);
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    font-style: italic;
   }
 
   .reducedTitle {

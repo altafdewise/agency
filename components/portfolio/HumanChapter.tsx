@@ -6,6 +6,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion
 import { fadeIn, fadeOut } from "@/lib/portfolio-motion";
 import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { cn } from "@/lib/cn";
+import { MobileStorySequence } from "./MobileStorySequence";
 import { StoryChapter } from "./StoryChapter";
 import { StoryReveal } from "./StoryReveal";
 import styles from "./portfolio.module.css";
@@ -70,11 +71,18 @@ export function HumanChapter() {
         className={cn(styles.reducedChapter, styles.humanChapter)}
       >
         <div className={styles.reducedStory}>
-          <StoryReveal>
-            <h2 className={styles.reducedTitle}>
-              And when I&apos;m not doing any of that… <em>I box.</em>
-            </h2>
-          </StoryReveal>
+          {mobile && !reduce ? (
+            <MobileStorySequence beats={[
+              <>And when I&apos;m not doing <em>any of that…</em></>,
+              <>I <em>box.</em></>,
+            ]} />
+          ) : (
+            <StoryReveal>
+              <h2 className={styles.reducedTitle}>
+                And when I&apos;m not doing any of that… <em>I box.</em>
+              </h2>
+            </StoryReveal>
+          )}
           <div className={styles.reducedBoxingScene}>
             <BoxingScene />
           </div>

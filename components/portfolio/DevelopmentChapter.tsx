@@ -11,6 +11,7 @@ import {
 } from "framer-motion";
 import { fadeIn, fadeInOut } from "@/lib/portfolio-motion";
 import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
+import { MobileStorySequence } from "./MobileStorySequence";
 import { StoryChapter } from "./StoryChapter";
 import { StoryReveal } from "./StoryReveal";
 import { ViewportVideo } from "./ViewportVideo";
@@ -78,12 +79,19 @@ export function DevelopmentChapter() {
         className={styles.reducedChapter}
       >
         <div className={styles.reducedStory}>
-          <StoryReveal>
-            <h2 className={styles.reducedTitle}>
-              Eventually, designing wasn&apos;t enough.
-              <em>So I started building them.</em>
-            </h2>
-          </StoryReveal>
+          {mobile && !reduce ? (
+            <MobileStorySequence beats={[
+              <>Eventually, designing <em>wasn&apos;t enough.</em></>,
+              <>So I started <em>building them.</em></>,
+            ]} />
+          ) : (
+            <StoryReveal>
+              <h2 className={styles.reducedTitle}>
+                Eventually, designing wasn&apos;t enough.
+                <em>So I started building them.</em>
+              </h2>
+            </StoryReveal>
+          )}
           <BuildProcess />
           <div className={styles.interfaceSchematic}>
             <ViewportVideo src="/designs/4.mp4" label="Development project demonstration" />

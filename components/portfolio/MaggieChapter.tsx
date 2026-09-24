@@ -15,6 +15,7 @@ import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
 import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { cn } from "@/lib/cn";
 import { StoryChapter } from "./StoryChapter";
+import { MobileStorySequence } from "./MobileStorySequence";
 import { StoryReveal } from "./StoryReveal";
 import styles from "./portfolio.module.css";
 
@@ -188,12 +189,20 @@ export function MaggieChapter() {
         className={cn(styles.reducedChapter, styles.maggieChapter)}
       >
         <div className={styles.reducedStory}>
-          <StoryReveal>
-            <h2 className={styles.reducedTitle}>
-              I wasn&apos;t just building projects.
-              <em>I was building an agency.</em>
-            </h2>
-          </StoryReveal>
+          {mobile && !reduce ? (
+            <MobileStorySequence beats={[
+              <>At some point, <em>I realized…</em></>,
+              <>I wasn&apos;t just <em>building projects.</em></>,
+              <>I was building <em>an agency.</em></>,
+            ]} />
+          ) : (
+            <StoryReveal>
+              <h2 className={styles.reducedTitle}>
+                I wasn&apos;t just building projects.
+                <em>I was building an agency.</em>
+              </h2>
+            </StoryReveal>
+          )}
           <AgencyOverview />
           <div className={styles.reducedMaggieProjects} hidden>
             {MAGGIE_PROJECTS.map((project) => (

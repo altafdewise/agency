@@ -8,6 +8,7 @@ import { mailtoHref } from "@/lib/contact";
 import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
 import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { cn } from "@/lib/cn";
+import { MobileStorySequence } from "./MobileStorySequence";
 import { StoryChapter } from "./StoryChapter";
 import styles from "./portfolio.module.css";
 
@@ -97,9 +98,16 @@ export function NextChapter() {
         className={cn(styles.reducedChapter, styles.nextChapter)}
       >
         <div className={styles.reducedStory}>
-          <h2 className={styles.reducedTitle}>
-            I don&apos;t really believe in having <em>one box.</em>
-          </h2>
+          {mobile && !reduce ? (
+            <MobileStorySequence beats={[
+              <>I don&apos;t really believe in having <em>one box.</em></>,
+              <>That&apos;s <em>the fun part.</em></>,
+            ]} />
+          ) : (
+            <h2 className={styles.reducedTitle}>
+              I don&apos;t really believe in having <em>one box.</em>
+            </h2>
+          )}
           <ol className={styles.reducedLessons}>
             {LESSONS.map(([subject, lesson]) => (
               <li key={subject}>

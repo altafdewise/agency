@@ -11,6 +11,7 @@ import {
 import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
 import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { MediaFrame } from "./MediaFrame";
+import { MobileStorySequence } from "./MobileStorySequence";
 import { StoryChapter } from "./StoryChapter";
 import { StoryReveal } from "./StoryReveal";
 import { ViewportVideo } from "./ViewportVideo";
@@ -85,11 +86,18 @@ export function DesignChapter() {
         className={styles.reducedChapter}
       >
         <div className={styles.reducedStory}>
-          <StoryReveal>
-            <h2 className={styles.reducedTitle}>
-              It started with making things <em>look good.</em>
-            </h2>
-          </StoryReveal>
+          {mobile && !reduce ? (
+            <MobileStorySequence beats={[
+              <>It started with making things <em>look good.</em></>,
+              <>Making ideas <em>visible.</em></>,
+            ]} />
+          ) : (
+            <StoryReveal>
+              <h2 className={styles.reducedTitle}>
+                It started with making things <em>look good.</em>
+              </h2>
+            </StoryReveal>
+          )}
           <div className={styles.reducedDevelopmentCopy}>
             <p>Branding, UI/UX, websites and product design. Shaped as one visual system, not a collection of disconnected screens.</p>
             <div className={styles.toolLine} aria-label="Design tools">
