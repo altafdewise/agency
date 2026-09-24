@@ -9,10 +9,8 @@ import {
   useTransform,
 } from "framer-motion";
 import { VOID_PIPELINE } from "@/lib/portfolio";
-import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
 import { cn } from "@/lib/cn";
-import { MobileStorySequence } from "./MobileStorySequence";
 import { StoryChapter } from "./StoryChapter";
 import { StoryReveal } from "./StoryReveal";
 import styles from "./portfolio.module.css";
@@ -57,7 +55,6 @@ function VoidSystem({ progress }: { progress?: MotionValue<number> }) {
 export function VoidChapter() {
   const chapterRef = useRef<HTMLElement>(null);
   const reduce = Boolean(useReducedMotion());
-  const mobile = usePortfolioMobile();
   const { scrollYProgress } = useScroll({
     target: chapterRef,
     offset: ["start start", "end end"],
@@ -80,7 +77,7 @@ export function VoidChapter() {
   const systemY = useTransform(scrollYProgress, [0.68, 0.84], [65, 0]);
   const pipelineProgress = useTransform(scrollYProgress, [0.76, 0.98], [0, 1]);
 
-  if (reduce || mobile) {
+  if (reduce) {
     return (
       <StoryChapter
         ref={chapterRef}
@@ -90,19 +87,12 @@ export function VoidChapter() {
         className={cn(styles.reducedChapter, styles.voidChapter)}
       >
         <div className={styles.reducedStory}>
-          {mobile && !reduce ? (
-            <MobileStorySequence beats={[
-              <>Then I <em>thought…</em></>,
-              <>Why not build <em>my own?</em></>,
-            ]} />
-          ) : (
-            <StoryReveal>
-              <h2 className={cn(styles.reducedTitle, styles.darkReducedTitle)}>
-                Then I thought…
-                <em>Why not build my own?</em>
-              </h2>
-            </StoryReveal>
-          )}
+          <StoryReveal>
+            <h2 className={cn(styles.reducedTitle, styles.darkReducedTitle)}>
+              Then I thought…
+              <em>Why not build my own?</em>
+            </h2>
+          </StoryReveal>
           <VoidSystem />
         </div>
       </StoryChapter>

@@ -15,7 +15,6 @@ import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
 import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { cn } from "@/lib/cn";
 import { StoryChapter } from "./StoryChapter";
-import { MobileStorySequence } from "./MobileStorySequence";
 import { StoryReveal } from "./StoryReveal";
 import styles from "./portfolio.module.css";
 
@@ -172,14 +171,18 @@ export function MaggieChapter() {
   );
   const overviewY = useTransform(scrollYProgress, [0.56, 0.7], [65, 0]);
   const mobileRevealOpacity = useTransform(scrollYProgress, (value) =>
-    value >= 0.43 && value < 0.59 ? 1 : 0
+    fadeInOut(value, 0.4, 0.45, 0.55, 0.6)
   );
   const mobileOverviewOpacity = useTransform(scrollYProgress, (value) =>
-    value >= 0.59 ? 1 : 0
+    fadeIn(value, 0.57, 0.63)
   );
-  const ctaY = useTransform(scrollYProgress, [0.7, 0.8], ["100%", "0%"]);
+  const ctaY = useTransform(
+    scrollYProgress,
+    mobile ? [0.82, 0.92] : [0.7, 0.8],
+    ["100%", "0%"]
+  );
 
-  if (reduce || mobile) {
+  if (reduce) {
     return (
       <StoryChapter
         ref={chapterRef}
@@ -189,20 +192,12 @@ export function MaggieChapter() {
         className={cn(styles.reducedChapter, styles.maggieChapter)}
       >
         <div className={styles.reducedStory}>
-          {mobile && !reduce ? (
-            <MobileStorySequence beats={[
-              <>At some point, <em>I realized…</em></>,
-              <>I wasn&apos;t just <em>building projects.</em></>,
-              <>I was building <em>an agency.</em></>,
-            ]} />
-          ) : (
-            <StoryReveal>
-              <h2 className={styles.reducedTitle}>
-                I wasn&apos;t just building projects.
-                <em>I was building an agency.</em>
-              </h2>
-            </StoryReveal>
-          )}
+          <StoryReveal>
+            <h2 className={styles.reducedTitle}>
+              I wasn&apos;t just building projects.
+              <em>I was building an agency.</em>
+            </h2>
+          </StoryReveal>
           <AgencyOverview />
           <div className={styles.reducedMaggieProjects} hidden>
             {MAGGIE_PROJECTS.map((project) => (

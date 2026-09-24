@@ -6,9 +6,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion
 import { ArrowUpRight } from "lucide-react";
 import { mailtoHref } from "@/lib/contact";
 import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
-import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { cn } from "@/lib/cn";
-import { MobileStorySequence } from "./MobileStorySequence";
 import { StoryChapter } from "./StoryChapter";
 import styles from "./portfolio.module.css";
 
@@ -65,7 +63,6 @@ function ClosingScene() {
 export function NextChapter() {
   const chapterRef = useRef<HTMLElement>(null);
   const reduce = Boolean(useReducedMotion());
-  const mobile = usePortfolioMobile();
   const { scrollYProgress } = useScroll({
     target: chapterRef,
     offset: ["start start", "end end"],
@@ -88,7 +85,7 @@ export function NextChapter() {
   const closingY = useTransform(scrollYProgress, [0.69, 0.82], [70, 0]);
   const lessonOffsets = [lessonOne, lessonTwo, lessonThree, lessonFour];
 
-  if (reduce || mobile) {
+  if (reduce) {
     return (
       <StoryChapter
         ref={chapterRef}
@@ -98,16 +95,9 @@ export function NextChapter() {
         className={cn(styles.reducedChapter, styles.nextChapter)}
       >
         <div className={styles.reducedStory}>
-          {mobile && !reduce ? (
-            <MobileStorySequence beats={[
-              <>I don&apos;t really believe in having <em>one box.</em></>,
-              <>That&apos;s <em>the fun part.</em></>,
-            ]} />
-          ) : (
-            <h2 className={styles.reducedTitle}>
-              I don&apos;t really believe in having <em>one box.</em>
-            </h2>
-          )}
+          <h2 className={styles.reducedTitle}>
+            I don&apos;t really believe in having <em>one box.</em>
+          </h2>
           <ol className={styles.reducedLessons}>
             {LESSONS.map(([subject, lesson]) => (
               <li key={subject}>

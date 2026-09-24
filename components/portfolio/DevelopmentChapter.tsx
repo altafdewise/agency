@@ -9,9 +9,7 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
-import { fadeIn, fadeInOut } from "@/lib/portfolio-motion";
-import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
-import { MobileStorySequence } from "./MobileStorySequence";
+import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
 import { StoryChapter } from "./StoryChapter";
 import { StoryReveal } from "./StoryReveal";
 import { ViewportVideo } from "./ViewportVideo";
@@ -42,14 +40,13 @@ export function DevelopmentChapter() {
   const chapterRef = useRef<HTMLElement>(null);
   const [processActive, setProcessActive] = useState(false);
   const reduce = Boolean(useReducedMotion());
-  const mobile = usePortfolioMobile();
   const { scrollYProgress } = useScroll({
     target: chapterRef,
     offset: ["start start", "end end"],
   });
 
   const firstOpacity = useTransform(scrollYProgress, (value) =>
-    fadeInOut(value, 0, 0.05, 0.18, 0.29)
+    fadeOut(value, 0.18, 0.29)
   );
   const firstY = useTransform(scrollYProgress, [0.18, 0.29], [0, -50]);
   const secondOpacity = useTransform(scrollYProgress, (value) =>
@@ -69,7 +66,7 @@ export function DevelopmentChapter() {
     );
   });
 
-  if (reduce || mobile) {
+  if (reduce) {
     return (
       <StoryChapter
         ref={chapterRef}
@@ -79,19 +76,12 @@ export function DevelopmentChapter() {
         className={styles.reducedChapter}
       >
         <div className={styles.reducedStory}>
-          {mobile && !reduce ? (
-            <MobileStorySequence beats={[
-              <>Eventually, designing <em>wasn&apos;t enough.</em></>,
-              <>So I started <em>building them.</em></>,
-            ]} />
-          ) : (
-            <StoryReveal>
-              <h2 className={styles.reducedTitle}>
-                Eventually, designing wasn&apos;t enough.
-                <em>So I started building them.</em>
-              </h2>
-            </StoryReveal>
-          )}
+          <StoryReveal>
+            <h2 className={styles.reducedTitle}>
+              Eventually, designing wasn&apos;t enough.
+              <em>So I started building them.</em>
+            </h2>
+          </StoryReveal>
           <BuildProcess />
           <div className={styles.interfaceSchematic}>
             <ViewportVideo src="/designs/4.mp4" label="Development project demonstration" />

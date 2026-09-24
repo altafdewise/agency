@@ -4,10 +4,8 @@ import Image from "next/image";
 import { useRef } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { SECURITY_DISCIPLINES, SECURITY_TOOLS } from "@/lib/portfolio";
-import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
 import { cn } from "@/lib/cn";
-import { MobileStorySequence } from "./MobileStorySequence";
 import { StoryChapter } from "./StoryChapter";
 import { StoryReveal } from "./StoryReveal";
 import styles from "./portfolio.module.css";
@@ -48,7 +46,6 @@ function SecurityWorkspace() {
 export function CybersecurityChapter() {
   const chapterRef = useRef<HTMLElement>(null);
   const reduce = Boolean(useReducedMotion());
-  const mobile = usePortfolioMobile();
   const { scrollYProgress } = useScroll({
     target: chapterRef,
     offset: ["start start", "end end"],
@@ -67,7 +64,7 @@ export function CybersecurityChapter() {
   );
   const workspaceY = useTransform(scrollYProgress, [0.5, 0.7], [70, 0]);
 
-  if (reduce || mobile) {
+  if (reduce) {
     return (
       <StoryChapter
         ref={chapterRef}
@@ -77,19 +74,12 @@ export function CybersecurityChapter() {
         className={cn(styles.reducedChapter, styles.cybersecurityChapter)}
       >
         <div className={styles.reducedStory}>
-          {mobile && !reduce ? (
-            <MobileStorySequence beats={[
-              <>Then I got curious about what happens <em>underneath.</em></>,
-              <>So naturally… <em>I started breaking things.</em></>,
-            ]} />
-          ) : (
-            <StoryReveal>
-              <h2 className={cn(styles.reducedTitle, styles.darkReducedTitle)}>
-                Then I got curious about what happens underneath.
-                <em>So naturally… I started breaking things.</em>
-              </h2>
-            </StoryReveal>
-          )}
+          <StoryReveal>
+            <h2 className={cn(styles.reducedTitle, styles.darkReducedTitle)}>
+              Then I got curious about what happens underneath.
+              <em>So naturally… I started breaking things.</em>
+            </h2>
+          </StoryReveal>
           <SecurityWorkspace />
         </div>
       </StoryChapter>

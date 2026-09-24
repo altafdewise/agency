@@ -12,7 +12,6 @@ import {
 import { GAME_PROJECTS, GAME_SKILL_GROUPS } from "@/lib/portfolio";
 import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
 import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
-import { MobileStorySequence } from "./MobileStorySequence";
 import { StoryChapter } from "./StoryChapter";
 import { StoryReveal } from "./StoryReveal";
 import { ViewportVideo } from "./ViewportVideo";
@@ -124,7 +123,7 @@ export function GamesChapter() {
     value >= 0.86 ? 1 : 0
   );
 
-  if (reduce || mobile) {
+  if (reduce) {
     return (
       <StoryChapter
         ref={chapterRef}
@@ -134,18 +133,11 @@ export function GamesChapter() {
         className={styles.reducedChapter}
       >
         <div className={styles.reducedStory}>
-          {mobile && !reduce ? (
-            <MobileStorySequence beats={[
-              <>A different kind of <em>system.</em></>,
-              <>And then I started <em>making games.</em></>,
-            ]} />
-          ) : (
-            <StoryReveal>
-              <h2 className={styles.reducedTitle}>
-                And then I started <em>making games.</em>
-              </h2>
-            </StoryReveal>
-          )}
+          <StoryReveal>
+            <h2 className={styles.reducedTitle}>
+              And then I started <em>making games.</em>
+            </h2>
+          </StoryReveal>
           <ol className={styles.reducedGameList}>
             {GAME_PROJECTS.map((project, index) => (
               <li key={project}>

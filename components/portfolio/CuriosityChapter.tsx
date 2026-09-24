@@ -10,10 +10,8 @@ import {
 } from "framer-motion";
 import { ArrowDown } from "lucide-react";
 import { PORTFOLIO_ROLES } from "@/lib/portfolio";
-import { usePortfolioMobile } from "@/lib/use-portfolio-mobile";
 import { fadeIn, fadeInOut, fadeOut } from "@/lib/portfolio-motion";
 import { MediaFrame } from "./MediaFrame";
-import { MobileStorySequence } from "./MobileStorySequence";
 import { StoryChapter } from "./StoryChapter";
 import styles from "./portfolio.module.css";
 
@@ -32,7 +30,6 @@ function AltafPortrait() {
 export function CuriosityChapter() {
   const chapterRef = useRef<HTMLElement>(null);
   const reduce = Boolean(useReducedMotion());
-  const mobile = usePortfolioMobile();
   const { scrollYProgress } = useScroll({
     target: chapterRef,
     offset: ["start start", "end end"],
@@ -63,7 +60,7 @@ export function CuriosityChapter() {
     fadeOut(value, 0.08, 0.18)
   );
 
-  if (reduce || mobile) {
+  if (reduce) {
     return (
       <StoryChapter
         ref={chapterRef}
@@ -73,18 +70,10 @@ export function CuriosityChapter() {
         className={styles.reducedChapter}
       >
         <div className={styles.reducedStory}>
-          {mobile && !reduce ? (
-            <MobileStorySequence beats={[
-              <>I never really picked <em>one thing.</em></>,
-              <>I just kept getting <em>curious.</em></>,
-              <>So I kept <em>building.</em></>,
-            ]} />
-          ) : (
-            <div className={styles.mobileOpening}>
-              <h2 className={styles.reducedTitle}>I never really picked <em>one thing.</em></h2>
-              <p>I just kept getting curious. So I kept building.</p>
-            </div>
-          )}
+          <div className={styles.mobileOpening}>
+            <h2 className={styles.reducedTitle}>I never really picked <em>one thing.</em></h2>
+            <p>I just kept getting curious. So I kept building.</p>
+          </div>
           <div className={styles.reducedIdentity}>
             <div>
               <p className={styles.identityEyebrow}>Meet the person behind Maggie</p>
