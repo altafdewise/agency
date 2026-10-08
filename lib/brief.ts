@@ -47,4 +47,6 @@ export interface Estimate {
   timeline: string;
   summary: string;
   included: string[];
+  /** Pricing keys the range covers, so the client sees what was priced. */
+  services?: string[];
 }

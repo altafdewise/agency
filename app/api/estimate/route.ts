@@ -1,15 +1,17 @@
-﻿import Anthropic from "@anthropic-ai/sdk";
+import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import type { Brief, Estimate, EstimateTier } from "@/lib/brief";
 import {
-  PRICING_KEYS,
   PRICING_TABLE,
+  SCOPE_INCLUDES,
   isEstimateTier,
   isPricingKey,
   isValidPriceRange,
   pricingFallback,
+  quote,
   type PricingKey,
   type PricingTable,
+  type ServiceScope,
 } from "@/lib/pricing";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sendEstimateEmail } from "@/lib/email";
@@ -65,38 +67,51 @@ async function loadPricingTable(): Promise<PricingTable> {
   }
 }
 
-/* â”€â”€ The estimator's brief (system prompt) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── The estimator's brief (system prompt) ──────────────────────────────────
+   The model only judges scope and writes the client-facing copy. Prices and
+   timelines are computed from the pricing table by `quote()`, so they're
+   consistent from one visitor to the next. */
 function systemPrompt(pricingTable: PricingTable): string {
-  return `You are the project estimator for "Zev", a premium creative studio (zev.world) based in India. You read a prospective client's brief and return a single, grounded price estimate.
+  return `You are the project estimator for Zev's Agency (zev.world), a creative and technology studio based in India. You read a prospective client's brief and decide the scope of each service they need. Our system turns your scope into the price and timeline, so you never write prices or durations yourself.
 
-PRICING TABLE (INR) â€” these are your ONLY source of truth for numbers. Each service has simple / medium / complex bands as [low, high]:
-${JSON.stringify(pricingTable, null, 2)}
-
-Scope guide per tier:
-- brand_logo: simple = logo only (2-3 concepts); medium = logo + colors + fonts (mini kit); complex = full identity system + guidelines.
-- website: simple = 1-page/landing (animated, responsive, form); medium = 5-7 page business site with original design + CMS; complex = dynamic web-app, integrations, dashboards.
-- app: simple = basic cross-platform, few screens; medium = moderate app with backend, auth, Play Store launch; complex = full product, complex features, scale.
+SCOPES PER SERVICE (simple / medium / complex):
+- brand_logo: simple = logo only (2-3 concepts); medium = logo + colours + fonts (mini kit); complex = full identity system + guidelines.
+- website: simple = 1-page/landing (animated, responsive, form); medium = 5-7 page business site with original design + CMS; complex = dynamic web app, integrations, dashboards.
+- app: simple = basic cross-platform app, few screens; medium = moderate app with backend, auth, Play Store launch; complex = full product, complex features, scale.
 - design_prototype: simple = UI mockups with pre-built components; medium = custom UI/UX + full interactive prototype; complex = design system + full product prototype.
 - ai_integration: simple = chatbot / single AI feature on an existing product; medium = custom AI workflows, API integration, automation; complex = AI agents, multi-system automation, RAG, infra.
 - content: simple = one-off posters/carousel/few reels; medium = monthly social package; complex = full content + strategy retainer.
 - security: simple = basic site/app audit + report; medium = deeper pen-test (web + app); complex = full security assessment + remediation.
 
-RULES:
-1. Read the brief (needs, persona, stage, description). Identify which service(s) and which tier (simple / medium / complex) fit best.
-2. If multiple needs are present, sum the relevant bands into ONE combined range (priceLow = sum of lows, priceHigh = sum of highs).
-3. Lean toward the LOWER half of the band for first-time / small / early-stage / solo clients (to win the deal). Lean upper half only for clearly complex, large, or scaling scope. NEVER go below a service's simple-low floor.
-4. The "delivered in 24 hours" promise applies ONLY when tier = "simple". If tier is "simple", timeline MUST be exactly the fixed string "24 hours" - never "1-2 days", "24-48 hours", "~24 hours", or any other wording. For medium, timeline is a few days (e.g. "3-5 days"). For complex, it is weeks / milestone-based (e.g. "2-4 weeks"). NEVER promise 24 hours for medium or complex.
-5. Always return a RANGE, never a single number. Round numbers to clean values.
-6. Tone for "summary": plain, confident, no fluff, no hype, 1-2 sentences. "included" = 3-5 short, concrete bullet items relevant to the chosen scope.
-7. If the brief is vague, infer the most likely reasonable scope rather than refusing.
+PRICE BANDS (INR) per service and scope, for judging where the project sits inside a band:
+${JSON.stringify(pricingTable)}
 
-OUTPUT: Return ONLY valid JSON â€” no markdown, no code fences, no preamble, no trailing commentary. Exactly this shape:
-{"tier":"simple"|"medium"|"complex","priceLow":number,"priceHigh":number,"timeline":string,"summary":string,"included":string[]}`;
+FOR EACH SERVICE TO SCOPE, return:
+- "key": the service key.
+- "tier": the scope the brief most plausibly needs. Pick complex only when the brief clearly asks for complex-scope work.
+- "position": a number from 0 to 1 for where the project sits inside that scope's band. 0-0.3 = small, first-time, solo or early-stage; 0.3-0.6 = a typical project; 0.6-1 = clearly large or demanding. When the brief gives little detail, use 0.3.
+
+THEN WRITE FOR THE CLIENT:
+- "summary": 1-2 sentences, at most 35 words, addressed to the client ("you", "your"), saying what we'd build for them. Plain and confident, no hype.
+- "included": 3-5 concrete deliverables, at most 8 words each.
+- The summary and the included list must describe the same deliverables and only promise what the chosen scope covers. Example: a medium app includes a Play Store launch, so don't promise an App Store launch.
+- Never describe how you estimated. Don't write "inferred", "assumed", "conservatively", "based on your brief", "limited detail", scope or tier names, or notes in brackets. If the brief is thin, describe the typical project for that scope.
+- Don't mention prices, currencies, durations or dates.
+
+WHICH SERVICES TO SCOPE: exactly the keys listed in "services" in the brief. If "services" is empty, map "customNeed" and "description" to the closest service keys (at most 3); if nothing fits, return "services": [].
+
+OUTPUT: only valid JSON, with no markdown or commentary, in exactly this shape:
+{"services":[{"key":string,"tier":"simple"|"medium"|"complex","position":number}],"summary":string,"included":string[]}`;
+}
+
+function pricedKeys(brief: Brief): PricingKey[] {
+  return brief.needs.filter((need): need is PricingKey => isPricingKey(need));
 }
 
 function userContent(brief: Brief): string {
-  return `Here is the client's brief as JSON. Produce the estimate.\n\n${JSON.stringify(
+  return `Here is the client's brief as JSON. Scope it.\n\n${JSON.stringify(
     {
+      services: pricedKeys(brief),
       needs: brief.needs,
       customNeed: brief.customNeed ?? null,
       persona: brief.persona,
@@ -109,7 +124,7 @@ function userContent(brief: Brief): string {
   )}`;
 }
 
-/* â”€â”€ Safe parsing + validation of the model's reply â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Safe parsing + validation of the model's reply ─────────────────────────── */
 function extractJson(raw: string): string {
   let s = raw.trim();
   // strip ``` / ```json fences if the model added them despite instructions
@@ -120,29 +135,120 @@ function extractJson(raw: string): string {
   return s;
 }
 
-function validate(obj: unknown): Estimate | null {
+interface ModelScope {
+  scopes: ServiceScope[];
+  summary: string;
+  included: string[];
+}
+
+function parseModelScope(obj: unknown, brief: Brief): ModelScope | null {
   if (!obj || typeof obj !== "object") return null;
   const o = obj as Record<string, unknown>;
-  const tier = o.tier;
-  if (!isEstimateTier(tier)) return null;
-  const low = Number(o.priceLow);
-  const high = Number(o.priceHigh);
-  if (!Number.isFinite(low) || !Number.isFinite(high) || low <= 0 || high < low)
-    return null;
-  if (typeof o.timeline !== "string" || !o.timeline.trim()) return null;
-  if (typeof o.summary !== "string" || !o.summary.trim()) return null;
-  if (!Array.isArray(o.included)) return null;
-  const included = o.included
-    .filter((x): x is string => typeof x === "string" && x.trim().length > 0)
-    .slice(0, 5);
-  if (included.length === 0) return null;
+  if (!Array.isArray(o.services)) return null;
+
+  const returned = new Map<PricingKey, ServiceScope>();
+  for (const item of o.services) {
+    if (!item || typeof item !== "object") continue;
+    const s = item as Record<string, unknown>;
+    const position = Number(s.position);
+    if (!isPricingKey(s.key) || !isEstimateTier(s.tier)) continue;
+    returned.set(s.key, {
+      key: s.key,
+      tier: s.tier,
+      position: Number.isFinite(position) ? position : 0.3,
+    });
+  }
+
+  // Price exactly what the client picked; the model may only choose services
+  // itself when they described their need in their own words.
+  const required = pricedKeys(brief);
+  const scopes = required.length
+    ? required.map((key) => returned.get(key) ?? heuristicScope(brief, key))
+    : Array.from(returned.values()).slice(0, 3);
+
+  return {
+    scopes,
+    summary: typeof o.summary === "string" ? o.summary.trim() : "",
+    included: Array.isArray(o.included)
+      ? o.included.filter((x): x is string => typeof x === "string")
+      : [],
+  };
+}
+
+/* ── Client-facing copy guards ──────────────────────────────────────────────
+   The estimate is read by prospects, so anything that sounds like the model
+   talking to itself, or that could contradict the computed numbers, is
+   replaced with the standard copy for that scope. */
+const META_RE =
+  /\b(infer\w*|assum\w*|conservativ\w*|vague\w*|unclear|unspecified|not specified|limited (brief|detail|info\w*)|brief detail|based on (the|your) brief|tiers?|simple build|medium build|complex build)\b/i;
+const NUMBERS_RE =
+  /₹|\binr\b|\brs\.?\s|\blakhs?\b|\bcrores?\b|\b\d+\s*(?:[-–]\s*\d+\s*)?(?:hours?|days?|weeks?|months?)\b/i;
+
+function isCleanCopy(text: string) {
+  return !META_RE.test(text) && !NUMBERS_RE.test(text);
+}
+
+const SERVICE_NOUNS: Record<PricingKey, string> = {
+  brand_logo: "brand identity",
+  website: "website",
+  app: "app",
+  design_prototype: "product design",
+  ai_integration: "AI integration",
+  content: "content package",
+  security: "security review",
+};
+
+function standardSummary(scopes: ServiceScope[], tier: EstimateTier) {
+  const what = scopes.map((s) => SERVICE_NOUNS[s.key]).join(" and ");
+  if (tier === "simple") return `A focused ${what} with the essentials done properly, delivered fast.`;
+  if (tier === "complex") return `A full ${what}, delivered in clear milestones and built to scale.`;
+  return `A custom ${what} with the features your project needs, ready to launch.`;
+}
+
+function standardIncluded(scopes: ServiceScope[]) {
+  const perService = scopes.length > 1 ? 2 : 5;
+  return scopes.flatMap((s) => SCOPE_INCLUDES[s.key][s.tier].slice(0, perService));
+}
+
+function cleanIncluded(items: string[], scopes: ServiceScope[]) {
+  const seen = new Set<string>();
+  const clean: string[] = [];
+  const add = (raw: string) => {
+    const item = raw
+      .replace(/\s*\([^)]*\)/g, (part) => (META_RE.test(part) ? "" : part))
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\.$/, "");
+    const id = item.toLowerCase();
+    if (!item || item.length > 80 || !isCleanCopy(item) || seen.has(id)) return;
+    seen.add(id);
+    clean.push(item);
+  };
+
+  items.forEach(add);
+  if (clean.length < 3) standardIncluded(scopes).forEach(add);
+  return clean.slice(0, 5);
+}
+
+function buildEstimate(
+  scopes: ServiceScope[],
+  pricingTable: PricingTable,
+  copy: { summary: string; included: string[] } | null
+): Estimate {
+  const { tier, priceLow, priceHigh, timeline } = quote(scopes, pricingTable);
+  const summary =
+    copy?.summary && copy.summary.length <= 300 && isCleanCopy(copy.summary)
+      ? copy.summary
+      : standardSummary(scopes, tier);
+
   return {
     tier,
-    priceLow: Math.round(low),
-    priceHigh: Math.round(high),
-    timeline: o.timeline.trim(),
-    summary: o.summary.trim(),
-    included,
+    priceLow,
+    priceHigh,
+    timeline,
+    summary,
+    included: cleanIncluded(copy?.included ?? [], scopes),
+    services: scopes.map((s) => s.key),
   };
 }
 
@@ -225,82 +331,71 @@ function validateBrief(input: unknown): { brief: Brief } | { error: string } {
   };
 }
 
-/* â”€â”€ Deterministic fallback, straight from PRICING_TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-function heuristic(brief: Brief, pricingTable: PricingTable): Estimate {
-  const keys = brief.needs.filter((n): n is PricingKey =>
-    PRICING_KEYS.includes(n as PricingKey)
-  );
-  const usedKeys = keys.length ? keys : (["website"] as PricingKey[]);
+/* ── Deterministic scope when the model is unavailable ──────────────────────── */
+const EARLY_STAGES = [
+  "ideation",
+  "prototype",
+  "business-started",
+  "creator-starting",
+  "idea-thought",
+  "idea-real",
+  "freelancer-clients",
+  "explore",
+  "proxy-unsure",
+];
+const COMPLEX_STAGES = [
+  "scaling",
+  "business-scale",
+  "creator-pro",
+  "idea-launch",
+  "freelancer-team",
+];
 
-  const earlyStages = [
-    "ideation",
-    "prototype",
-    "business-started",
-    "creator-starting",
-    "idea-thought",
-    "idea-real",
-    "freelancer-clients",
-    "explore",
-    "proxy-unsure",
-  ];
-  const complexStages = [
-    "scaling",
-    "business-scale",
-    "creator-pro",
-    "idea-launch",
-    "freelancer-team",
-  ];
+function heuristicScope(brief: Brief, key: PricingKey): ServiceScope {
   const blob = `${brief.stage} ${brief.description}`.toLowerCase();
   const complexSignals =
-    complexStages.includes(brief.stage) ||
+    COMPLEX_STAGES.includes(brief.stage) ||
     /enterprise|dashboard|integrat|rag|agent|multi|scale|saas|platform|backend/.test(
       blob
     );
 
   let tier: EstimateTier = "medium";
-  if (earlyStages.includes(brief.stage)) tier = "simple";
+  if (EARLY_STAGES.includes(brief.stage)) tier = "simple";
   if (complexSignals) tier = "complex";
 
-  let low = 0;
-  let high = 0;
-  for (const k of usedKeys) {
-    const band = pricingTable[k][tier];
-    low += band[0];
-    high += band[1];
-  }
-
-  const timeline =
-    tier === "simple" ? "24 hours" : tier === "medium" ? "3-5 days" : "2-4 weeks";
-
-  const included = [
-    "Senior team, one point of contact",
-    "Original work â€” no templates",
-    tier === "simple" ? "Delivered in ~24 hours" : "Clear milestones & check-ins",
-    "Revisions until it's right",
-    "Launch support",
-  ].slice(0, 5);
-
-  const labels: Record<PricingKey, string> = {
-    brand_logo: "brand & logo",
-    website: "website",
-    app: "app",
-    design_prototype: "design",
-    ai_integration: "AI",
-    content: "content",
-    security: "security",
-  };
-  const what = usedKeys.map((k) => labels[k]).join(" + ");
-  const summary =
-    tier === "simple"
-      ? `A tight ${what} build we can turn around fast.`
-      : tier === "complex"
-        ? `A serious ${what} build â€” we'd scope it into clear milestones.`
-        : `A focused ${what} build, scoped to move quickly without cutting corners.`;
-
-  return { tier, priceLow: low, priceHigh: high, timeline, summary, included };
+  return { key, tier, position: 0.3 };
 }
 
-async function recordLead(brief: Brief, estimate: Estimate) {
+async function scopeWithModel(
+  brief: Brief,
+  pricingTable: PricingTable,
+  apiKey: string
+): Promise<ModelScope | null> {
+  try {
+    const client = new Anthropic({ apiKey });
+    const message = await client.messages.create({
+      model: MODEL,
+      max_tokens: 800,
+      temperature: 0.2,
+      system: systemPrompt(pricingTable),
+      messages: [{ role: "user", content: userContent(brief) }],
+    });
+
+    const text = message.content
+      .filter((b): b is Anthropic.TextBlock => b.type === "text")
+      .map((b) => b.text)
+      .join("");
+
+    const parsed = parseModelScope(JSON.parse(extractJson(text)), brief);
+    if (!parsed) throw new Error("Model returned an unparseable scope.");
+    return parsed;
+  } catch (err) {
+    console.error("[estimate] falling back to heuristic scope:", err);
+    return null;
+  }
+}
+
+async function recordLead(brief: Brief, estimate: Estimate | null) {
   const supabase = getSupabaseAdminClient();
   if (!supabase) return;
 
@@ -313,12 +408,12 @@ async function recordLead(brief: Brief, estimate: Estimate) {
       needs: brief.needs ?? [],
       stage: brief.stage || null,
       brief_text: brief.description || null,
-      ai_tier: estimate.tier,
-      ai_price_low: estimate.priceLow,
-      ai_price_high: estimate.priceHigh,
-      ai_summary: estimate.summary,
-      ai_timeline: estimate.timeline,
-      ai_included: estimate.included,
+      ai_tier: estimate?.tier ?? null,
+      ai_price_low: estimate?.priceLow ?? null,
+      ai_price_high: estimate?.priceHigh ?? null,
+      ai_summary: estimate?.summary ?? null,
+      ai_timeline: estimate?.timeline ?? null,
+      ai_included: estimate?.included ?? null,
       status: "new",
     });
 
@@ -369,35 +464,22 @@ export async function POST(req: Request) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   const pricingTable = await loadPricingTable();
 
-  // No key yet â†’ still return a grounded number so the path works end-to-end.
-  if (!apiKey) {
-    const estimate = heuristic(brief, pricingTable);
-    return completeEstimate(brief, estimate);
+  // No key or no usable reply → scope from the stage alone, so the path still
+  // ends in a grounded number.
+  const modelScope = apiKey ? await scopeWithModel(brief, pricingTable, apiKey) : null;
+  const scopes = modelScope?.scopes.length
+    ? modelScope.scopes
+    : pricedKeys(brief).map((key) => heuristicScope(brief, key));
+
+  // Nothing we can price (e.g. "something else" that maps to no service):
+  // keep the lead and let the client fall through to "let's talk it through".
+  if (!scopes.length) {
+    await recordLead(brief, null);
+    return NextResponse.json(
+      { error: "This one needs a conversation rather than a standard range." },
+      { status: 422 }
+    );
   }
 
-  try {
-    const client = new Anthropic({ apiKey });
-    const message = await client.messages.create({
-      model: MODEL,
-      max_tokens: 800,
-      temperature: 0.4,
-      system: systemPrompt(pricingTable),
-      messages: [{ role: "user", content: userContent(brief) }],
-    });
-
-    const text = message.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("");
-
-    const parsed = validate(JSON.parse(extractJson(text)));
-    if (!parsed) throw new Error("Model returned unparseable estimate.");
-
-    return completeEstimate(brief, parsed);
-  } catch (err) {
-    console.error("[estimate] falling back to heuristic:", err);
-    // Graceful: hand back a grounded estimate rather than failing the journey.
-    const estimate = heuristic(brief, pricingTable);
-    return completeEstimate(brief, estimate);
-  }
+  return completeEstimate(brief, buildEstimate(scopes, pricingTable, modelScope));
 }

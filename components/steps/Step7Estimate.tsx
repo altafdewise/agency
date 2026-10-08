@@ -8,6 +8,7 @@ import { StepShell } from "@/components/ui/StepShell";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { usePath } from "@/components/PathProvider";
 import { whatsappHref, mailtoHref } from "@/lib/contact";
+import { SERVICES } from "@/lib/content";
 import type { Estimate } from "@/lib/brief";
 
 const ESTIMATE_TIMEOUT_MS = 25000;
@@ -20,11 +21,18 @@ const inr = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
-const tierLabel: Record<Estimate["tier"], string> = {
-  simple: "a simple build",
-  medium: "a medium build",
-  complex: "a complex build",
+const scopeLabel: Record<Estimate["tier"], string> = {
+  simple: "Essential scope",
+  medium: "Standard scope",
+  complex: "Advanced scope",
 };
+
+function pricedFor(estimate: Estimate) {
+  return (estimate.services ?? [])
+    .map((key) => SERVICES.find((service) => service.key === key)?.title)
+    .filter(Boolean)
+    .join(" + ");
+}
 
 function isValidEstimate(data: unknown): data is Estimate {
   if (!data || typeof data !== "object") return false;
@@ -179,13 +187,13 @@ export function Step7Estimate() {
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
         <p className="font-sans text-sm font-light text-muted">
-          Looks like {tierLabel[estimate.tier]}.
+          {[pricedFor(estimate), scopeLabel[estimate.tier]].filter(Boolean).join(" · ")}
         </p>
 
         <div className="mt-4 font-display font-semibold leading-[0.98] tracking-tightest text-accent [font-size:clamp(2.5rem,8vw,6rem)]">
-          {inr(estimate.priceLow)}
+          <span className="whitespace-nowrap">{inr(estimate.priceLow)}</span>
           <span className="text-muted"> – </span>
-          {inr(estimate.priceHigh)}
+          <span className="whitespace-nowrap">{inr(estimate.priceHigh)}</span>
         </div>
 
         <p className="mt-6 max-w-xl font-display text-xl text-foreground sm:text-2xl">
@@ -193,7 +201,7 @@ export function Step7Estimate() {
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2">
-          <span className="eyebrow">Timeline</span>
+          <span className="eyebrow">Delivery</span>
           <span className="font-sans text-base font-light text-foreground">
             {estimate.timeline}
           </span>
@@ -211,12 +219,12 @@ export function Step7Estimate() {
         </ul>
 
         <p className="mt-8 text-xs font-light text-muted/70">
-          An indicative range, grounded in our standard rates. Final scope is
-          confirmed on a quick call.
+          Based on our standard rates for this scope. We confirm the final
+          price with you on a short call before any work starts.
         </p>
 
         <Button className="mt-10" withArrow onClick={next}>
-          what&apos;s next
+          Book a call to confirm
         </Button>
       </motion.div>
     </StepShell>
