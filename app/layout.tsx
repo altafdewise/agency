@@ -22,7 +22,7 @@ const mono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
-const TITLE = "zev — for brands ready to move.";
+const TITLE = "Zev — for brands ready to move.";
 const DESCRIPTION =
   "For brands ready to move — websites, apps, AI, brand and more. Tell us what you're building and get an instant, grounded estimate.";
 
@@ -30,10 +30,10 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://zev.world"),
   title: {
     default: TITLE,
-    template: "%s · zev",
+    template: "%s · Zev",
   },
   description: DESCRIPTION,
-  applicationName: "zev",
+  applicationName: "Zev",
   keywords: [
     "creative studio",
     "web design",
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: "https://zev.world",
-    siteName: "zev",
+    siteName: "Zev",
     type: "website",
     locale: "en_US",
   },

@@ -6,7 +6,7 @@ import { getAllPosts, formatDate } from "@/lib/posts";
 
 export const metadata: Metadata = {
   title: "Blog",
-  description: "Notes on building, creating and growing — from the zev studio.",
+  description: "Notes on building, creating and growing — from the Zev studio.",
 };
 
 export default async function BlogIndex() {

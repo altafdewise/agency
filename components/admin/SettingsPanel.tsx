@@ -16,7 +16,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 const SETTING_FIELDS = [
   { key: "cal_url", label: "Cal.com URL", placeholder: "https://cal.com/..." },
   { key: "whatsapp_number", label: "WhatsApp number", placeholder: "919999999999" },
-  { key: "site_title", label: "Site title", placeholder: "zev - one studio" },
+  { key: "site_title", label: "Site title", placeholder: "Zev - one studio" },
   { key: "meta_description", label: "Meta description", placeholder: "One studio..." },
   { key: "og_image", label: "OG image URL", placeholder: "/opengraph-image.png" },
 ];

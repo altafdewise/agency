@@ -122,7 +122,7 @@ export function Step7Estimate() {
   // ── graceful fallback (timeout / network / invalid) — feels intentional ─────
   if (!estimate) {
     const note =
-      "Hi zev — I just walked the path and would love an estimate." +
+      "Hi Zev — I just walked the path and would love an estimate." +
       (briefRef.current.description
         ? ` Here's what I'm building: ${briefRef.current.description}`
         : "");

@@ -37,7 +37,7 @@ export default function LegalHelpPage() {
 
       <div className="mt-8 max-w-2xl space-y-5 text-base font-light leading-relaxed text-muted sm:text-lg">
         <p>
-          zev is the studio for websites, apps, AI, brand, and launch work.
+          Zev is the studio for websites, apps, AI, brand, and launch work.
           If what you need is legal help, we route that to deJure Book, the
           legal-side team built to help people understand what to do next.
         </p>
@@ -62,7 +62,7 @@ export default function LegalHelpPage() {
           href="/"
           className="inline-flex w-full items-center justify-center rounded-full border border-border bg-foreground/[0.03] px-6 py-3 text-sm font-medium text-foreground transition-colors duration-200 hover:border-accent hover:text-accent sm:w-auto"
         >
-          Back to zev
+          Back to Zev
         </Link>
       </div>
 
@@ -91,7 +91,7 @@ export default function LegalHelpPage() {
       </section>
 
       <p className="mt-10 max-w-2xl text-xs font-light leading-relaxed text-muted/70">
-        This page is a referral path, not legal advice from zev. For legal
+        This page is a referral path, not legal advice from Zev. For legal
         questions, use deJure Book and consult a qualified lawyer for your
         specific situation.
       </p>

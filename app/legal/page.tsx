@@ -34,7 +34,7 @@ export default function LegalPage() {
         </div>
 
         <Link
-          href={mailtoHref("Legal question for zev", "Hi zev - I have a legal/privacy question.")}
+          href={mailtoHref("Legal question for Zev", "Hi Zev - I have a legal/privacy question.")}
           className="mt-8 inline-flex min-h-[44px] items-center rounded-full border border-foreground/25 px-6 text-sm font-medium text-foreground transition-colors hover:border-accent/55 hover:text-accent"
         >
           {CONTACT.email}

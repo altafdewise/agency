@@ -138,7 +138,7 @@ export default function Logo({
         containerType: "inline-size",
         overflow: "visible",
       }}
-      aria-label="zev"
+      aria-label="Zev"
       role="img"
     >
       {/* The "7" — bone fill via an alpha mask of the dot-less mark, with glow. */}

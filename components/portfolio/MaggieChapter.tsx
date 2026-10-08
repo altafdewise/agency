@@ -186,7 +186,7 @@ export function MaggieChapter() {
     return (
       <StoryChapter
         ref={chapterRef}
-        id="maggie"
+        id="zev"
         index="07"
         label="Zev’s Agency"
         className={cn(styles.reducedChapter, styles.maggieChapter)}
@@ -210,7 +210,7 @@ export function MaggieChapter() {
               </article>
             ))}
           </div>
-          <div id="maggie-visit" className={styles.reducedAgencyCta} data-chapter="maggie">
+          <div id="zev-visit" className={styles.reducedAgencyCta} data-chapter="zev">
             <p>The agency became another way to keep building.</p>
             <AgencyLink />
           </div>
@@ -222,7 +222,7 @@ export function MaggieChapter() {
   return (
     <StoryChapter
       ref={chapterRef}
-      id="maggie"
+      id="zev"
       index="07"
       label="Zev’s Agency"
       className={styles.maggieChapter}

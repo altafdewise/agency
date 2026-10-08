@@ -1,7 +1,7 @@
-# zev — the path
+# Zev — the path
 
 A premium, dark, interactive single-page experience for the creative studio
-**zev** (zev.world). Not a scrolling landing page — a guided "path" the
+**Zev** (zev.world). Not a scrolling landing page — a guided "path" the
 visitor walks one full-screen step at a time. It quietly qualifies them as a
 lead and ends with an **AI-generated project estimate**.
 
