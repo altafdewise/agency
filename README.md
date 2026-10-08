@@ -1,7 +1,7 @@
-# maggie — the path
+# zev — the path
 
 A premium, dark, interactive single-page experience for the creative studio
-**maggie** (maggie.agency). Not a scrolling landing page — a guided "path" the
+**zev** (zev.world). Not a scrolling landing page — a guided "path" the
 visitor walks one full-screen step at a time. It quietly qualifies them as a
 lead and ends with an **AI-generated project estimate**.
 

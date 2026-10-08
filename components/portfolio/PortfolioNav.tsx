@@ -38,7 +38,7 @@ export function PortfolioNav({ activeChapter }: { activeChapter: string }) {
 
         <nav className={styles.utilityNav} aria-label="Portfolio links">
           <Link href="/" className={styles.utilityLink}>
-            Maggie
+            Zev
             <ArrowUpRight aria-hidden size={13} strokeWidth={1.7} />
           </Link>
           <a href={mailtoHref("Let's work together")} className={styles.utilityLink}>

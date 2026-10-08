@@ -35,7 +35,7 @@ export default function AcceptInvitePage() {
 
         if (error) {
           setStatus("error");
-          setMessage("This invite link could not be opened. Ask Maggie to send a fresh invite.");
+          setMessage("This invite link could not be opened. Ask Zev to send a fresh invite.");
           return;
         }
 
@@ -55,7 +55,7 @@ export default function AcceptInvitePage() {
       }
 
       setStatus("error");
-      setMessage("This invite link is missing or expired. Ask Maggie to send a fresh invite.");
+      setMessage("This invite link is missing or expired. Ask Zev to send a fresh invite.");
     }
 
     acceptInvite();
@@ -95,7 +95,7 @@ export default function AcceptInvitePage() {
   return (
     <main className="grid min-h-[100dvh] place-items-center px-6 py-16">
       <section className="w-full max-w-md rounded-lg border border-border bg-[#141414]/78 p-6 shadow-[0_28px_80px_-48px_rgba(0,0,0,0.95)] backdrop-blur">
-        <p className="eyebrow">Maggie admin</p>
+        <p className="eyebrow">Zev admin</p>
         <h1 className="mt-4 font-display text-4xl font-semibold leading-none tracking-tightest text-foreground">
           accept invite.
         </h1>

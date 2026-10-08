@@ -141,7 +141,7 @@ export function FaqSection() {
               footer. Swap to whatsappHref() or CONTACT.cal once those env-driven
               placeholders are live. */}
           <a
-            href={mailtoHref("Question for maggie")}
+            href={mailtoHref("Question for zev")}
             className="group inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-foreground/[0.14] bg-foreground/[0.02] px-6 py-2.5 text-sm font-medium text-foreground transition-[transform,background-color,border-color] duration-200 hover:border-accent/50 hover:bg-accent/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/45 active:scale-[0.98]"
           >
             contact us

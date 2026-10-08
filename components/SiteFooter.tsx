@@ -34,14 +34,14 @@ export function SiteFooter() {
       <div className="mx-auto flex w-full max-w-path flex-col items-center gap-6 border-t-0 border-foreground/[0.08] pt-10 text-center sm:border-t">
         <Link
           href="/"
-          aria-label="Maggie&rsquo;s Agency — home"
+          aria-label="Zev&rsquo;s Agency — home"
           className="inline-flex items-center text-foreground transition-opacity duration-200 hover:opacity-75"
         >
           <FooterMark />
         </Link>
 
         <div className="flex flex-col items-center gap-1.5 text-xs font-light text-muted/60">
-          <p>&copy; {year} Maggie&rsquo;s Agency for brands ready to move.</p>
+          <p>&copy; {year} Zev&rsquo;s Agency for brands ready to move.</p>
           <a
             href={`mailto:${CONTACT.email}`}
             className="transition-colors duration-200 hover:text-foreground"

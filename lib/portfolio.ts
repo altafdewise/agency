@@ -22,7 +22,7 @@ export const PORTFOLIO_CHAPTERS: PortfolioChapter[] = [
   { id: "cybersecurity", index: "04", label: "Cybersecurity", phase: 3 },
   { id: "void", index: "05", label: "VOID", phase: 3 },
   { id: "games", index: "06", label: "Games", phase: 3 },
-  { id: "maggie", index: "07", label: "Maggie", phase: 4 },
+  { id: "maggie", index: "07", label: "Zev", phase: 4 },
   { id: "human", index: "08", label: "The human part", phase: 4 },
   { id: "next", index: "09", label: "What's next", phase: 5 },
 ];

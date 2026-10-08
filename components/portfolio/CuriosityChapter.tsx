@@ -76,7 +76,7 @@ export function CuriosityChapter() {
           </div>
           <div className={styles.reducedIdentity}>
             <div>
-              <p className={styles.identityEyebrow}>Meet the person behind Maggie</p>
+              <p className={styles.identityEyebrow}>Meet the person behind Zev</p>
               <h1 className={styles.identityName}>
                 Mohammad
                 <span>Altaf.</span>
@@ -141,7 +141,7 @@ export function CuriosityChapter() {
           </motion.div>
 
           <div className={styles.identityCopy}>
-            <p className={styles.identityEyebrow}>Meet the person behind Maggie</p>
+            <p className={styles.identityEyebrow}>Meet the person behind Zev</p>
             <h1 className={styles.identityName}>
               Mohammad
               <span>Altaf.</span>

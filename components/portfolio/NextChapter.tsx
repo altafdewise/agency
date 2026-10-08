@@ -25,7 +25,7 @@ function ClosingLinks() {
         <ArrowUpRight aria-hidden size={22} strokeWidth={1.5} />
       </a>
       <Link href="/" className={styles.closingLink}>
-        <span>Maggie’s Agency</span>
+        <span>Zev’s Agency</span>
         <ArrowUpRight aria-hidden size={22} strokeWidth={1.5} />
       </Link>
       <a

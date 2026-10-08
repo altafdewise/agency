@@ -67,7 +67,7 @@ async function loadPricingTable(): Promise<PricingTable> {
 
 /* â”€â”€ The estimator's brief (system prompt) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function systemPrompt(pricingTable: PricingTable): string {
-  return `You are the project estimator for "maggie", a premium creative studio (maggie.agency) based in India. You read a prospective client's brief and return a single, grounded price estimate.
+  return `You are the project estimator for "zev", a premium creative studio (zev.world) based in India. You read a prospective client's brief and return a single, grounded price estimate.
 
 PRICING TABLE (INR) â€” these are your ONLY source of truth for numbers. Each service has simple / medium / complex bands as [low, high]:
 ${JSON.stringify(pricingTable, null, 2)}

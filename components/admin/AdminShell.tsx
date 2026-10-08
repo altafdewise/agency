@@ -124,7 +124,7 @@ export function AdminShell({
           <Link
             href="/"
             className="flex w-fit items-center px-2 text-foreground"
-            aria-label="Maggie public site"
+            aria-label="Zev public site"
           >
             <AdminMark className="h-7 w-5" />
           </Link>

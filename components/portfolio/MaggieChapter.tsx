@@ -22,7 +22,7 @@ type MaggieProject = (typeof MAGGIE_PROJECTS)[number];
 
 function MaggieMark() {
   return (
-    <div className={styles.maggieMark} role="img" aria-label="Maggie’s Agency mark">
+    <div className={styles.maggieMark} role="img" aria-label="Zev’s Agency mark">
       <span className={styles.maggieMarkShape} aria-hidden />
       <span className={styles.maggieMarkDot} aria-hidden />
     </div>
@@ -36,7 +36,7 @@ function AgencyOverview() {
         <p className={styles.chapterKicker}>Founded by Mohammad Altaf</p>
         <h2>One studio. Many ways to build.</h2>
         <p>
-          Maggie’s Agency works across branding, websites, applications, product
+          Zev’s Agency works across branding, websites, applications, product
           interfaces, and digital experiences, bridging creative direction with
           development from concept to launch.
         </p>
@@ -116,14 +116,14 @@ function MaggieProjectSlide({
       className={styles.maggieProjectSlide}
       data-variant={project.variant}
       style={{ x: mobile ? 0 : x, opacity: mobile ? mobileOpacity : 1 }}
-      aria-label={`${project.title}, selected Maggie’s Agency work`}
+      aria-label={`${project.title}, selected Zev’s Agency work`}
     >
       <div className={styles.maggieProjectCopy}>
         <p>Selected work · {project.index}</p>
         <h2>
           {titleLines.map((line) => <span key={line}>{line}</span>)}
         </h2>
-        <span>Maggie’s Agency · Project archive</span>
+        <span>Zev’s Agency · Project archive</span>
       </div>
       <div className={styles.maggieProjectMedia}>
         <MaggieProjectVisual project={project} />
@@ -137,7 +137,7 @@ function AgencyLink() {
   return (
     <Link href="/" className={styles.agencyLink}>
       <span>
-        Visit Maggie’s<span className={styles.mobileAgencyBreak}><br /></span> Agency
+        Visit Zev’s<span className={styles.mobileAgencyBreak}><br /></span> Agency
       </span>
       <ArrowUpRight size={24} strokeWidth={1.5} aria-hidden />
     </Link>
@@ -188,7 +188,7 @@ export function MaggieChapter() {
         ref={chapterRef}
         id="maggie"
         index="07"
-        label="Maggie’s Agency"
+        label="Zev’s Agency"
         className={cn(styles.reducedChapter, styles.maggieChapter)}
       >
         <div className={styles.reducedStory}>
@@ -224,7 +224,7 @@ export function MaggieChapter() {
       ref={chapterRef}
       id="maggie"
       index="07"
-      label="Maggie’s Agency"
+      label="Zev’s Agency"
       className={styles.maggieChapter}
     >
       <div className={styles.stickyStage}>
@@ -250,7 +250,7 @@ export function MaggieChapter() {
           <MaggieMark />
           <div>
             <p>Creative studio · Founded by Mohammad Altaf</p>
-            <h2>MAGGIE’S<br />AGENCY</h2>
+            <h2>ZEV’S<br />AGENCY</h2>
           </div>
         </motion.div>
 

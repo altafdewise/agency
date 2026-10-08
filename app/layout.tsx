@@ -22,25 +22,25 @@ const mono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
-const TITLE = "maggie — for brands ready to move.";
+const TITLE = "zev — for brands ready to move.";
 const DESCRIPTION =
   "For brands ready to move — websites, apps, AI, brand and more. Tell us what you're building and get an instant, grounded estimate.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://maggie.agency"),
+  metadataBase: new URL("https://zev.world"),
   title: {
     default: TITLE,
-    template: "%s · maggie",
+    template: "%s · zev",
   },
   description: DESCRIPTION,
-  applicationName: "maggie",
+  applicationName: "zev",
   keywords: [
     "creative studio",
     "web design",
     "app development",
     "AI integration",
     "branding",
-    "maggie.agency",
+    "zev.world",
   ],
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
@@ -52,8 +52,8 @@ export const metadata: Metadata = {
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
-    url: "https://maggie.agency",
-    siteName: "maggie",
+    url: "https://zev.world",
+    siteName: "zev",
     type: "website",
     locale: "en_US",
   },

@@ -33,7 +33,7 @@ export default function AboutPage() {
 
       <div className="mt-8 space-y-5 text-base font-light leading-relaxed text-muted sm:text-lg">
         <p>
-          maggie is being shaped as a focused studio for the messy stretch
+          zev is being shaped as a focused studio for the messy stretch
           between a rough idea and a launched product: websites, apps, AI
           features, brand systems, and the launch material around them.
         </p>

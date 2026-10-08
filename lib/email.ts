@@ -2,7 +2,7 @@ import { Resend } from "resend";
 import type { Booking } from "@/lib/bookings";
 import type { Brief, Estimate } from "@/lib/brief";
 
-const DEFAULT_FROM = "Maggie's Agency <admin@maggie.agency>";
+const DEFAULT_FROM = "Zev's Agency <admin@zev.world>";
 
 let resendClient: Resend | null = null;
 
@@ -88,7 +88,7 @@ function customerHtml(booking: Booking) {
     preview: `Your call is booked for ${when}.`,
     children: `
       <h1 style="margin:0 0 18px;font-size:26px;line-height:1.15;font-weight:700;">Your call is booked.</h1>
-      <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#333;">Hi ${escapeHtml(name)}, thanks for booking with Maggie's Agency. We have your call on the calendar.</p>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#333;">Hi ${escapeHtml(name)}, thanks for booking with Zev's Agency. We have your call on the calendar.</p>
       <table role="presentation" style="width:100%;border-collapse:collapse;margin:22px 0;border-top:1px solid #eee;border-bottom:1px solid #eee;">
         ${detailRow("Date", dateLabel(booking.date))}
         ${detailRow("Time", `${slotLabel(booking.time)} IST`)}
@@ -96,7 +96,7 @@ function customerHtml(booking: Booking) {
         ${booking.contact.phone ? detailRow("Phone", booking.contact.phone) : ""}
       </table>
       <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#555;">No prep deck needed. Bring the context, questions, and anything you already know. We will keep it focused.</p>
-      <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#888;">Maggie's Agency</p>
+      <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#888;">Zev's Agency</p>
     `,
   });
 }
@@ -141,16 +141,16 @@ function estimateHtml(brief: Brief, estimate: Estimate) {
     .join("");
 
   return emailShell({
-    preview: `Your Maggie project estimate is ${range}.`,
+    preview: `Your Zev project estimate is ${range}.`,
     children: `
       <h1 style="margin:0 0 18px;font-size:26px;line-height:1.15;font-weight:700;">Your project estimate.</h1>
-      <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#333;">Hi ${escapeHtml(name)}, here is the estimate from the brief you shared with Maggie's Agency.</p>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#333;">Hi ${escapeHtml(name)}, here is the estimate from the brief you shared with Zev's Agency.</p>
       <p style="margin:24px 0 8px;font-size:30px;line-height:1.1;font-weight:700;color:#ff4438;">${escapeHtml(range)}</p>
       <p style="margin:0 0 24px;font-size:13px;line-height:1.6;color:#777;">Indicative range · ${escapeHtml(estimate.timeline)}</p>
       <p style="margin:0 0 20px;font-size:15px;line-height:1.7;color:#333;">${escapeHtml(estimate.summary)}</p>
       <ul style="margin:0;padding:20px 20px 12px 38px;border-top:1px solid #eee;border-bottom:1px solid #eee;">${included}</ul>
       <p style="margin:22px 0 0;font-size:13px;line-height:1.6;color:#777;">This is an initial range. We will confirm the final scope and price before work begins.</p>
-      <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#888;">Maggie's Agency</p>
+      <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#888;">Zev's Agency</p>
     `,
   });
 }
@@ -166,13 +166,13 @@ export async function sendBookingEmails(booking: Booking) {
   const adminTo =
     process.env.BOOKING_NOTIFY_EMAIL ||
     process.env.NEXT_PUBLIC_CONTACT_EMAIL ||
-    "admin@maggie.agency";
+    "admin@zev.world";
 
   const { error } = await resend.batch.send([
     {
       from,
       to: booking.contact.email,
-      subject: "Your Maggie call is booked",
+      subject: "Your Zev call is booked",
       html: customerHtml(booking),
     },
     {
@@ -201,7 +201,7 @@ export async function sendEstimateEmail(brief: Brief, estimate: Estimate) {
   const { error } = await resend.emails.send({
     from: getFromAddress(),
     to: email,
-    subject: "Your Maggie project estimate",
+    subject: "Your Zev project estimate",
     html: estimateHtml(brief, estimate),
   });
 

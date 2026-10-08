@@ -82,7 +82,7 @@ export function SiteNav() {
         <button
           type="button"
           onClick={goHome}
-          aria-label="maggie — home"
+          aria-label="zev — home"
           className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full transition-opacity duration-200 hover:opacity-80"
         >
           <NavMark />
@@ -165,7 +165,7 @@ export function SiteNav() {
             </Link>
           ))}
           <a
-            href={mailtoHref("Hello maggie")}
+            href={mailtoHref("Hello zev")}
             tabIndex={open ? 0 : -1}
             onClick={() => setOpen(false)}
             className="font-display text-3xl font-semibold leading-none tracking-tightest text-foreground transition-colors duration-200 hover:text-accent sm:text-5xl"

@@ -3,7 +3,7 @@ import { PortfolioStory } from "@/components/portfolio/PortfolioStory";
 
 const TITLE = "Mohammad Altaf: designer, developer, and curious builder";
 const DESCRIPTION =
-  "The personal portfolio of Mohammad Altaf. A scrolling story through design, development, cybersecurity, game development, Maggie’s Agency, and boxing.";
+  "The personal portfolio of Mohammad Altaf. A scrolling story through design, development, cybersecurity, game development, Zev’s Agency, and boxing.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: "/portfolio",
-    siteName: "Maggie’s Agency",
+    siteName: "Zev’s Agency",
     type: "profile",
     locale: "en_US",
     images: [
@@ -46,11 +46,11 @@ export default function PortfolioPage() {
     "@type": "ProfilePage",
     name: TITLE,
     description: DESCRIPTION,
-    url: "https://maggie.agency/portfolio",
+    url: "https://zev.world/portfolio",
     mainEntity: {
       "@type": "Person",
       name: "Mohammad Altaf",
-      url: "https://maggie.agency/portfolio",
+      url: "https://zev.world/portfolio",
       jobTitle: "Designer, developer, cybersecurity practitioner, and founder",
     },
   };

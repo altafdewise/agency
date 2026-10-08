@@ -85,7 +85,7 @@ const ogMarkMeta = await sharp(ogMark).metadata();
 const svg = `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
   <text x="470" y="296" font-family="Georgia, 'Times New Roman', serif" font-size="66" font-weight="600" fill="#F2EEE3" letter-spacing="-2">one studio.</text>
   <text x="470" y="374" font-family="Georgia, 'Times New Roman', serif" font-size="66" font-weight="600" fill="#F2EEE3" letter-spacing="-2">from idea to launch.</text>
-  <text x="472" y="436" font-family="Arial, sans-serif" font-size="24" letter-spacing="6" fill="#9B9B9B">MAGGIE.AGENCY</text>
+  <text x="472" y="436" font-family="Arial, sans-serif" font-size="24" letter-spacing="6" fill="#9B9B9B">ZEV.WORLD</text>
 </svg>`;
 await sharp({ create: { width: 1200, height: 630, channels: 4, background: BG } })
   .composite([

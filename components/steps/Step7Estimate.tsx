@@ -122,7 +122,7 @@ export function Step7Estimate() {
   // ── graceful fallback (timeout / network / invalid) — feels intentional ─────
   if (!estimate) {
     const note =
-      "Hi maggie — I just walked the path and would love an estimate." +
+      "Hi zev — I just walked the path and would love an estimate." +
       (briefRef.current.description
         ? ` Here's what I'm building: ${briefRef.current.description}`
         : "");
@@ -153,7 +153,7 @@ export function Step7Estimate() {
               WhatsApp us
             </LinkButton>
             <LinkButton
-              href={mailtoHref("Project enquiry — via maggie.agency", note)}
+              href={mailtoHref("Project enquiry — via zev.world", note)}
               size="lg"
               variant="ghost"
             >

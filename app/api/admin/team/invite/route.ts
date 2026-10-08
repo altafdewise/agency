@@ -7,8 +7,8 @@ import { ROLE_LABELS } from "@/lib/admin/permissions";
 export const runtime = "nodejs";
 
 const ROLES: AppRole[] = ["owner", "project_lead", "editor", "viewer"];
-const INVITER_EMAIL = process.env.ADMIN_INVITER_EMAIL || "admin@maggie.agency";
-const INVITER_NAME = process.env.ADMIN_INVITER_NAME || "Maggie";
+const INVITER_EMAIL = process.env.ADMIN_INVITER_EMAIL || "admin@zev.world";
+const INVITER_NAME = process.env.ADMIN_INVITER_NAME || "Zev";
 
 export async function POST(req: Request) {
   const admin = getSupabaseAdminClient();
