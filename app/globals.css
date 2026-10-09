@@ -25,6 +25,17 @@
   color-scheme: dark;
 }
 
+/* Warm-ink panel — one dark moment inside the light public pages. */
+.theme-ink {
+  --background: 28 25 21; /* #1C1915 */
+  --background-center: 34 31 26;
+  --foreground: 239 234 225; /* #EFEAE1 */
+  --muted: 163 155 143; /* #A39B8F */
+  --surface: 40 36 31; /* #28241F — lifted tiles */
+  --glow: 0;
+  color-scheme: dark;
+}
+
 @layer base {
   *,
   *::before,

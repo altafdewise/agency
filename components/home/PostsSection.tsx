@@ -37,7 +37,7 @@ function PostCard({ post, index }: { post: HomePost; index: number }) {
       <Link
         href={post.href}
         {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-        className="group flex h-full min-h-[340px] flex-col overflow-hidden rounded-[28px] border border-foreground/[0.06] bg-surface/70 transition-[transform,box-shadow,border-color] duration-500 ease-out-soft hover:-translate-y-1 hover:border-foreground/10 hover:shadow-card-hover"
+        className="group flex h-full min-h-[340px] flex-col overflow-hidden rounded-[26px] border border-foreground/[0.07] bg-surface transition-[transform,box-shadow,border-color] duration-500 ease-out-soft hover:-translate-y-1 hover:border-foreground/20 hover:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.65)]"
       >
         {post.image && (
           <span className="relative block aspect-[4/3] w-full overflow-hidden">
@@ -68,7 +68,10 @@ function PostCard({ post, index }: { post: HomePost; index: number }) {
           )}
 
           <span className="mt-auto flex items-center justify-between pt-10">
-            <span className="h-[7px] w-[7px] scale-0 rounded-full bg-accent transition-transform duration-500 ease-out-soft group-hover:scale-100" />
+            <span className="flex items-center gap-2.5 text-sm font-medium text-muted transition-colors duration-300 group-hover:text-foreground">
+              <span className="h-[7px] w-[7px] rounded-full bg-accent transition-transform duration-500 ease-out-soft group-hover:scale-125" />
+              read
+            </span>
             <span className="flex h-10 w-10 items-center justify-center rounded-full border border-foreground/15 text-foreground transition-colors duration-300 group-hover:border-foreground group-hover:bg-foreground group-hover:text-background">
               <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />
             </span>
@@ -79,15 +82,23 @@ function PostCard({ post, index }: { post: HomePost; index: number }) {
   );
 }
 
-/** "From the studio" — the latest posts. Hidden entirely when there are none. */
+/** "From the studio" — the latest posts, on the page's one warm-ink panel.
+ *  Hidden entirely when there are none. */
 export function PostsSection({ posts }: { posts: HomePost[] }) {
   if (posts.length === 0) return null;
 
   return (
     <section
       aria-labelledby="posts-heading"
-      className="relative w-full py-[clamp(7rem,18vh,12rem)]"
+      className="relative w-full px-3 py-[clamp(3rem,8vh,6rem)] sm:px-5"
     >
+      <div className="theme-ink relative isolate mx-auto w-full max-w-[1320px] overflow-hidden rounded-[32px] bg-background py-[clamp(4.5rem,11vh,7.5rem)] text-foreground sm:rounded-[44px]">
+      {/* A low signal-red glow so the panel feels lit, not flat. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-[18%] -top-[35%] -z-10 h-[80%] w-[70%] rounded-full"
+        style={{ background: "radial-gradient(closest-side, rgb(var(--accent) / 0.16), transparent)" }}
+      />
       <div className="mx-auto w-full max-w-path px-6 sm:px-10">
         <div className="flex items-end justify-between gap-6">
           <div>
@@ -110,7 +121,7 @@ export function PostsSection({ posts }: { posts: HomePost[] }) {
       </div>
 
       {/* Mobile: a swipeable row that bleeds to the edge. Desktop: a grid. */}
-      <ul className="no-scrollbar mx-auto mt-14 flex w-full max-w-path snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-6 px-6 pb-4 sm:scroll-px-10 sm:px-10 lg:grid lg:grid-cols-3 lg:gap-5 lg:overflow-visible">
+      <ul className="no-scrollbar mx-auto mt-14 flex w-full max-w-path snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-6 px-6 pb-2 sm:scroll-px-10 sm:px-10 lg:grid lg:grid-cols-3 lg:gap-5 lg:overflow-visible">
         {posts.map((post, i) => (
           <PostCard key={post.href} post={post} index={i} />
         ))}
@@ -124,6 +135,7 @@ export function PostsSection({ posts }: { posts: HomePost[] }) {
           all posts
           <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />
         </Link>
+      </div>
       </div>
     </section>
   );
