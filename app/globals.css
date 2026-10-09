@@ -5,12 +5,12 @@
 /* ── Design tokens (raw RGB channels so Tailwind alpha modifiers work) ───── */
 /* Light is the public site. Admin opts back into the dark set via .theme-dark. */
 :root {
-  --background: 244 242 237; /* #F4F2ED — paper */
-  --background-center: 250 249 246; /* #FAF9F6 */
-  --foreground: 20 20 19; /* #141413 — ink */
-  --muted: 107 105 100; /* #6B6964 */
+  --background: 235 230 221; /* #EBE6DD — warm linen */
+  --background-center: 240 236 228; /* #F0ECE4 — a whisper lighter */
+  --foreground: 28 25 21; /* #1C1915 — warm ink */
+  --muted: 104 98 89; /* #686259 — AA on linen */
   --accent: 255 68 56; /* #FF4438 — signal red */
-  --surface: 255 255 255; /* raised cards */
+  --surface: 244 240 233; /* #F4F0E9 — cards, one step up from linen */
   --glow: 0; /* light-on-light glows are switched off */
   color-scheme: light;
 }
