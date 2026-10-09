@@ -17,11 +17,14 @@ const DOT_CX = 0.838; // dot centre, fraction of width
 const DOT_CY = 0.8838; // dot centre, fraction of height
 const DOT_R = 0.0946; // dot radius, fraction of width
 
+/** Shared so other scenes (the home hero) can place a dot exactly on the mark. */
+export const LOGO_GEOMETRY = { BOX_ASPECT, DOT_CX, DOT_CY, DOT_R } as const;
+
 const ORBIT_S = 3.5; // seconds for one trip around the 7
 const HOLD_S = 2.0; // seconds resting + breathing
 const CYCLE = ORBIT_S + HOLD_S;
 
-const REST_SHADOW = "0 0 12px 2px rgba(242,238,227,0.28)";
+const REST_SHADOW = "0 0 12px 2px rgb(var(--foreground) / calc(0.28 * var(--glow)))";
 const easeInOut = (t: number) =>
   t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
@@ -123,7 +126,7 @@ export default function Logo({
     }
     scale.set(1 + 0.08 * f); // barely-there breathing pulse
     boxShadow.set(
-      `0 0 ${12 + 12 * f}px ${2 + 5 * f}px rgba(242,238,227,${0.28 + 0.22 * f})`
+      `0 0 ${12 + 12 * f}px ${2 + 5 * f}px rgb(var(--foreground) / calc(${0.28 + 0.22 * f} * var(--glow)))`
     );
   });
 

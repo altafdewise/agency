@@ -110,7 +110,7 @@ export function FeedbackModal({
         initial={reduce ? false : { opacity: 0, y: 18, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: reduce ? 0 : 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-lg rounded-2xl border border-border bg-[#0A0A0A] p-7 shadow-[0_40px_120px_-40px_rgba(0,0,0,0.9)] sm:p-9"
+        className="relative z-10 w-full max-w-lg rounded-2xl border border-border bg-background p-7 shadow-[0_40px_120px_-40px_rgb(var(--foreground)/0.35)] sm:p-9"
       >
         <button
           type="button"

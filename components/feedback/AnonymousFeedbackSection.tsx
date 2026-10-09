@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Check, MessageSquareWarning, Send, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useSafeReducedMotion } from "@/lib/use-safe-reduced-motion";
 
 const MAX_CHARS = 1200;
 
@@ -29,7 +30,7 @@ type FeedbackType = (typeof FEEDBACK_TYPES)[number]["key"];
 type Status = "idle" | "sending" | "done" | "error";
 
 export function AnonymousFeedbackSection() {
-  const reduce = useReducedMotion();
+  const reduce = useSafeReducedMotion();
   const [type, setType] = useState<FeedbackType | null>(null);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<Status>("idle");

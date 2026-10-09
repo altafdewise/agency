@@ -3,12 +3,26 @@
 @tailwind utilities;
 
 /* ── Design tokens (raw RGB channels so Tailwind alpha modifiers work) ───── */
+/* Light is the public site. Admin opts back into the dark set via .theme-dark. */
 :root {
+  --background: 244 242 237; /* #F4F2ED — paper */
+  --background-center: 250 249 246; /* #FAF9F6 */
+  --foreground: 20 20 19; /* #141413 — ink */
+  --muted: 107 105 100; /* #6B6964 */
+  --accent: 255 68 56; /* #FF4438 — signal red */
+  --surface: 255 255 255; /* raised cards */
+  --glow: 0; /* light-on-light glows are switched off */
+  color-scheme: light;
+}
+
+.theme-dark {
   --background: 10 10 10; /* #0A0A0A */
   --background-center: 20 20 20; /* #141414 */
   --foreground: 242 238 227; /* #F2EEE3 — bone */
   --muted: 155 155 155; /* #9B9B9B */
-  --accent: 255 68 56; /* #FF4438 — signal red */
+  --surface: 20 20 20;
+  --glow: 1;
+  color-scheme: dark;
 }
 
 @layer base {
@@ -25,7 +39,7 @@
 
   body {
     min-height: 100dvh;
-    /* Near-black with a subtle radial lift toward the centre for depth. */
+    /* Paper with a subtle radial lift toward the centre for depth. */
     background-color: rgb(var(--background));
     background-image: radial-gradient(
       ellipse 90% 80% at 50% 42%,
@@ -89,13 +103,13 @@
 }
 
 @layer utilities {
-  /* Tasteful warm-white glow for light elements (logo, dot). */
+  /* Warm-white glow for bone elements on dark; off on the light theme. */
   .glow-soft {
-    filter: drop-shadow(0 0 14px rgb(var(--foreground) / 0.3));
+    filter: drop-shadow(0 0 14px rgb(var(--foreground) / calc(0.3 * var(--glow))));
   }
   .glow-strong {
-    filter: drop-shadow(0 0 16px rgb(var(--foreground) / 0.45))
-      drop-shadow(0 0 4px rgb(var(--foreground) / 0.35));
+    filter: drop-shadow(0 0 16px rgb(var(--foreground) / calc(0.45 * var(--glow))))
+      drop-shadow(0 0 4px rgb(var(--foreground) / calc(0.35 * var(--glow))));
   }
   .glow-accent {
     filter: drop-shadow(0 0 18px rgb(var(--accent) / 0.5));

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useSafeReducedMotion } from "@/lib/use-safe-reduced-motion";
 import { usePath } from "@/components/PathProvider";
 import { Progress } from "@/components/Progress";
 import { Step1Needs } from "@/components/steps/Step1Needs";
@@ -13,6 +14,7 @@ import { Step6Contact } from "@/components/steps/Step6Contact";
 import { Step7Estimate } from "@/components/steps/Step7Estimate";
 import { Step8Close } from "@/components/steps/Step8Close";
 import { SHOW_CASE_STUDIES } from "@/lib/brief";
+import type { HomePost } from "@/components/home/PostsSection";
 
 const STEPS = [
   Step1Needs,
@@ -41,9 +43,9 @@ const EXIT_MS = 400;
  * The logo + back affordance live in <SiteNav> (global). The ambient background
  * lives in the root layout.
  */
-export function Path() {
+export function Path({ posts = [] }: { posts?: HomePost[] }) {
   const { step } = usePath();
-  const reduce = useReducedMotion();
+  const reduce = useSafeReducedMotion();
   const [shown, setShown] = useState(step);
   const [exiting, setExiting] = useState(false);
 
@@ -78,7 +80,7 @@ export function Path() {
             : { opacity: 1, y: 0, transition: { duration: reduce ? 0 : 0.5, ease: EASE_OUT } }
         }
       >
-        <Current />
+        {shown === 0 ? <Step1Needs posts={posts} /> : <Current />}
       </motion.div>
     </main>
   );

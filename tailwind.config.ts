@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Design system — "Exaggerated Minimalism", dark.
+ * Design system — "Exaggerated Minimalism", light paper + ink (admin stays dark).
  * Colours live as raw RGB channels in CSS vars (app/globals.css) so Tailwind's
  * `<alpha-value>` opacity modifiers work everywhere (e.g. bg-accent/10).
  */
@@ -19,6 +19,7 @@ const config: Config = {
         foreground: "rgb(var(--foreground) / <alpha-value>)",
         muted: "rgb(var(--muted) / <alpha-value>)",
         accent: "rgb(var(--accent) / <alpha-value>)",
+        surface: "rgb(var(--surface) / <alpha-value>)",
         // Hairline borders = foreground at 12%.
         border: "rgb(var(--foreground) / 0.12)",
       },
@@ -57,7 +58,7 @@ const config: Config = {
         path: "1200px",
       },
       boxShadow: {
-        "card-hover": "0 24px 60px -24px rgba(0,0,0,0.7)",
+        "card-hover": "0 24px 60px -28px rgb(var(--foreground) / 0.28)",
       },
       transitionTimingFunction: {
         "out-soft": "cubic-bezier(0.22, 1, 0.36, 1)",
@@ -68,9 +69,14 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(12px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "scroll-cue": {
+          "0%": { transform: "translateY(-100%)" },
+          "100%": { transform: "translateY(200%)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "scroll-cue": "scroll-cue 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite",
       },
     },
   },

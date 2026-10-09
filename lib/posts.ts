@@ -63,27 +63,33 @@ function getMarkdownPosts(): PostMeta[] {
     .sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
+/** Published admin (Supabase) posts plus the markdown files, newest first.
+ *  An admin post wins if both use the same slug. */
 export async function getAllPosts(): Promise<PostMeta[]> {
+  const markdown = getMarkdownPosts();
   const supabase = getSupabaseAdminClient();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("blog_posts")
-      .select("slug,title,published_at,created_at,content,cover_image_url")
-      .eq("status", "published")
-      .order("published_at", { ascending: false });
+  if (!supabase) return markdown;
 
-    if (!error && data?.length) {
-      return data.map((post) => ({
-        slug: post.slug,
-        title: post.title,
-        date: post.published_at || post.created_at,
-        excerpt: post.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 150),
-        coverImage: post.cover_image_url || undefined,
-      }));
-    }
-  }
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("slug,title,published_at,created_at,content,cover_image_url")
+    .eq("status", "published")
+    .order("published_at", { ascending: false });
 
-  return getMarkdownPosts();
+  if (error || !data?.length) return markdown;
+
+  const published: PostMeta[] = data.map((post) => ({
+    slug: post.slug,
+    title: post.title,
+    date: post.published_at || post.created_at,
+    excerpt: post.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 150),
+    coverImage: post.cover_image_url || undefined,
+  }));
+  const slugs = new Set(published.map((post) => post.slug));
+
+  return [...published, ...markdown.filter((post) => !slugs.has(post.slug))].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
 }
 
 export async function getSlugs(): Promise<string[]> {

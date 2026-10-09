@@ -28,6 +28,8 @@ export interface Service {
   key: string;
   pricingKey: string | null;
   title: string;
+  /** Optional shorter label for tight, one-line layouts (the home wheel). */
+  short?: string;
   blurb: string;
   brief: string;
   Icon: LucideIcon;
@@ -38,6 +40,7 @@ export const SERVICES: Service[] = [
     key: "ai_integration",
     pricingKey: "ai_integration",
     title: "AI features & integrations",
+    short: "AI integrations",
     blurb: "chatbots, AI tools in your product",
     brief: "Map the workflow, connect the tools, make it feel native.",
     Icon: Sparkles,
