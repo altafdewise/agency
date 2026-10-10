@@ -109,7 +109,6 @@ export function PostsSection({ posts }: { posts: HomePost[] }) {
 
   return (
     <section
-      data-chapter
       aria-labelledby="posts-heading"
       className="relative w-full px-6 py-[clamp(7rem,18vh,12rem)] sm:px-10"
     >

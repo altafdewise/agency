@@ -30,8 +30,8 @@ const N = SERVICES.length;
 const OTHER_INDEX = SERVICES.findIndex((s) => s.key === "other");
 
 // Scroll budget per phase, in viewport heights.
-// The first stop (the wheel) sits within half a screen of the top, so on
-// phones a small swipe from the headline glides straight to the services.
+// The wheel starts within half a screen of the top, so a short scroll from the
+// headline reaches the services.
 const INTRO_HOLD = 0.08;
 const HANDOFF = 0.44;
 const PER_SERVICE = 0.24;
@@ -46,12 +46,22 @@ export const SERVICES_ANCHOR_ID = "services";
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+
+// Fraction of each service's scroll distance spent holding, on either side.
+const HOLD = 0.3;
+/** Whole numbers become plateaus: the wheel rests on a service, then moves
+ *  across the middle of the step with a smooth ease in and out. */
+const holdOnEach = (v: number) => {
+  const i = Math.floor(v);
+  const t = clamp01((v - i - HOLD) / (1 - 2 * HOLD));
+  return i + t * t * (3 - 2 * t);
+};
 const easeInOut = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
 /** Scroll offset inside the track at which service `index` sits on the line.
  *  Measured the way framer-motion's useScroll does (document clientHeight),
- *  so a stop lands exactly on a whole service. */
+ *  so it lands exactly on a whole service. */
 function stopOffset(track: HTMLElement, index: number) {
   const scrollable = track.clientHeight - document.documentElement.clientHeight;
   return scrollable * (P_WHEEL + (index / (N - 1)) * (P_WHEEL_END - P_WHEEL));
@@ -114,17 +124,17 @@ function PinnedHero({ onChoose, showOther, other, setOther, submitOther }: HeroS
   const geoVersion = useMotionValue(0);
   const [measured, setMeasured] = useState(false);
   const [focused, setFocused] = useState(0);
-  // One scroll stop per service, for the phone scroll assist (data-chapter).
-  const [stops, setStops] = useState<number[] | null>(null);
+  // Where the first service sits — the closing CTA scrolls here.
+  const [anchorTop, setAnchorTop] = useState<number | null>(null);
 
   const scrollYProgress = useScrollProgress(trackRef, ["start start", "end end"]);
   const handoff = useTransform(scrollYProgress, [P_HANDOFF, P_WHEEL], [0, 1], { clamp: true });
   const wheelRaw = useTransform(scrollYProgress, [P_WHEEL, P_WHEEL_END], [0, N - 1], {
     clamp: true,
   });
-  // Detents: the curve flattens at every whole number, so the wheel dwells on
-  // each service and moves briskly between them — without hijacking scroll.
-  const wheelDetent = useTransform(wheelRaw, (v) => v - Math.sin(2 * Math.PI * v) / (2 * Math.PI));
+  // Holds: each service stays put for most of its scroll distance, then eases
+  // across to the next — clear steps under a finger that scrolls freely.
+  const wheelDetent = useTransform(wheelRaw, holdOnEach);
   const wheel = useSpring(wheelDetent, { stiffness: 300, damping: 40, mass: 0.6, restDelta: 0.0005 });
 
   useMotionValueEvent(wheel, "change", (w) => {
@@ -190,10 +200,7 @@ function PinnedHero({ onChoose, showOther, other, setOther, submitOther }: HeroS
       setMeasured(true);
 
       const track = trackRef.current;
-      if (track) {
-        const next = SERVICES.map((_, i) => Math.round(stopOffset(track, i)));
-        setStops((prev) => (prev && prev.every((v, i) => v === next[i]) ? prev : next));
-      }
+      if (track) setAnchorTop(Math.round(stopOffset(track, 0)));
     };
 
     measure();
@@ -225,32 +232,18 @@ function PinnedHero({ onChoose, showOther, other, setOther, submitOther }: HeroS
     <section
       ref={trackRef}
       id="tap-funnel"
-      data-chapter
       aria-label="What brings you here?"
       className="relative"
       style={{ height: `${(1 + SCROLL_VH) * 100}svh` }}
     >
-      {/* Scroll stops: one per service. The first is also the closing CTA's
-          target. Before measuring, a CSS estimate keeps the anchor usable. */}
-      {stops ? (
-        stops.map((top, i) => (
-          <div
-            key={i}
-            id={i === 0 ? SERVICES_ANCHOR_ID : undefined}
-            data-chapter
-            aria-hidden
-            className="pointer-events-none absolute left-0 h-px w-px"
-            style={{ top }}
-          />
-        ))
-      ) : (
-        <div
-          id={SERVICES_ANCHOR_ID}
-          aria-hidden
-          className="pointer-events-none absolute left-0 h-px w-px"
-          style={{ top: `${(INTRO_HOLD + HANDOFF) * 100}svh` }}
-        />
-      )}
+      {/* The closing CTA's target: the first service. Until measured, a CSS
+          estimate keeps it usable. */}
+      <div
+        id={SERVICES_ANCHOR_ID}
+        aria-hidden
+        className="pointer-events-none absolute left-0 h-px w-px"
+        style={{ top: anchorTop ?? `${(INTRO_HOLD + HANDOFF) * 100}svh` }}
+      />
 
       <div ref={stageRef} className="sticky top-0 h-[100svh] w-full overflow-hidden">
         {/* ── Intro: the mark and the headline ── */}

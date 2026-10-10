@@ -47,7 +47,6 @@ export function HowItWorksSection() {
 
   return (
     <section
-      data-chapter
       aria-labelledby="how-heading"
       className="relative w-full px-6 py-[clamp(7rem,18vh,12rem)] sm:px-10"
     >

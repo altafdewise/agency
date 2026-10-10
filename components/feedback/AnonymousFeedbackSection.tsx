@@ -74,7 +74,6 @@ export function AnonymousFeedbackSection() {
 
   return (
     <section
-      data-chapter
       id="anonymous-feedback"
       aria-label="Anonymous feedback"
       className="relative w-full overflow-hidden py-16 sm:py-24 lg:py-28"

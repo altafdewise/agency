@@ -21,7 +21,11 @@ export function PortfolioStory() {
   const mobile = usePortfolioMobile();
 
   useEffect(() => {
-    if (storyRef.current) return attachChapterScroll(storyRef.current);
+    // Touch screens scroll natively: the sticky chapter scenes hold on their
+    // own, and an automatic glide there reads as being pulled. The glide stays
+    // for wheels and trackpads.
+    if (!storyRef.current || window.matchMedia("(pointer: coarse)").matches) return;
+    return attachChapterScroll(storyRef.current);
   }, []);
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useReducedMotion } from "framer-motion";
 import { usePath } from "@/components/PathProvider";
@@ -15,7 +15,6 @@ import { WorkTeaserSection } from "@/components/home/WorkTeaserSection";
 import { FaqSection } from "@/components/faq/FaqSection";
 import { AnonymousFeedbackSection } from "@/components/feedback/AnonymousFeedbackSection";
 import { SiteFooter } from "@/components/SiteFooter";
-import { attachChapterScroll } from "@/lib/chapter-scroll";
 
 // Proof sections wait until there are real clients, numbers and work to show.
 // Flip a flag to bring one back — they render between the story and the posts.
@@ -32,16 +31,6 @@ export function Step1Needs({ posts = [] }: { posts?: HomePost[] }) {
   const reduce = useReducedMotion();
   const [showOther, setShowOther] = useState(brief.needs.includes("other"));
   const [other, setOther] = useState(brief.customNeed ?? "");
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  // Phones: the same interruptible glide as the portfolio. A small swipe
-  // carries you to the next stop (each service, then each section) and holds;
-  // fast flings and long sections stay native. Desktop scrolls as normal.
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root || !window.matchMedia("(pointer: coarse)").matches) return;
-    return attachChapterScroll(root);
-  }, []);
 
   const choose = (key: string) => {
     if (key === "legal_help") {
@@ -71,7 +60,7 @@ export function Step1Needs({ posts = [] }: { posts?: HomePost[] }) {
   };
 
   return (
-    <div ref={rootRef} data-chapter-surface>
+    <>
       <HeroServices
         onChoose={choose}
         showOther={showOther}
@@ -97,6 +86,6 @@ export function Step1Needs({ posts = [] }: { posts?: HomePost[] }) {
       <AnonymousFeedbackSection />
 
       <SiteFooter />
-    </div>
+    </>
   );
 }
