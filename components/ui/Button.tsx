@@ -21,10 +21,10 @@ const sizes: Record<Size, string> = {
 };
 
 const variants: Record<Variant, string> = {
-  // Filled ink pill with a paper label; flashes signal red on hover.
+  // Filled signal-red; near-black label for AA contrast. Brightens on hover.
   primary:
-    "bg-foreground text-background font-medium hover:bg-accent active:brightness-95",
-  // Outline that fills with a faint ink wash on hover.
+    "bg-accent text-background font-medium hover:brightness-110 active:brightness-95",
+  // Outline that fills with a faint bone wash on hover.
   ghost:
     "border border-foreground/25 text-foreground font-medium hover:border-foreground/45 hover:bg-foreground/[0.04]",
   // Quiet text link (used for "skip →").

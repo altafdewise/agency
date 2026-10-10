@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useSafeReducedMotion } from "@/lib/use-safe-reduced-motion";
 
 /**
- * A very subtle, slow-drifting radial glow so the paper background feels alive
+ * A very subtle, slow-drifting radial glow so the dark background feels alive
  * rather than flat. Barely perceptible; ~20s loop. Static under reduced motion.
  */
 export function Ambient() {
@@ -17,7 +17,7 @@ export function Ambient() {
           className="absolute left-1/2 top-[44%] h-[80vmax] w-[80vmax] -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
             background:
-              "radial-gradient(circle, rgb(var(--surface) / 0.35), transparent 60%)",
+              "radial-gradient(circle, rgba(242,238,227,0.05), transparent 60%)",
           }}
         />
       </div>
@@ -30,7 +30,7 @@ export function Ambient() {
         className="absolute left-1/2 top-[44%] h-[80vmax] w-[80vmax] -translate-x-1/2 -translate-y-1/2 rounded-full"
         style={{
           background:
-            "radial-gradient(circle, rgb(var(--surface) / 0.4), transparent 60%)",
+            "radial-gradient(circle, rgba(242,238,227,0.06), transparent 60%)",
         }}
         animate={{
           x: ["-4%", "5%", "-4%"],

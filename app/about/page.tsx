@@ -81,7 +81,7 @@ export default function AboutPage() {
                 className="absolute inset-0"
                 style={{
                   background:
-                    "radial-gradient(120% 120% at 70% 10%, rgb(var(--surface) / 0.7), transparent 60%)",
+                    "radial-gradient(120% 120% at 70% 10%, rgba(242,238,227,0.06), transparent 60%)",
                 }}
                 aria-hidden
               />

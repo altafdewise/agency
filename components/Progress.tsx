@@ -185,7 +185,7 @@ export function Progress() {
                   style={{
                     scaleY: trailScale,
                     background:
-                      "linear-gradient(to bottom, rgba(255,68,56,0) 0%, rgb(var(--foreground) / 0.12) 62%, rgb(var(--foreground) / 0.3) 84%, rgba(255,68,56,0.68) 100%)",
+                      "linear-gradient(to bottom, rgba(255,68,56,0) 0%, rgba(242,238,227,0.12) 62%, rgba(242,238,227,0.38) 84%, rgba(255,68,56,0.68) 100%)",
                   }}
                 />
               </div>
@@ -196,7 +196,7 @@ export function Progress() {
                   style={{
                     scaleY: trailScale,
                     background:
-                      "linear-gradient(to bottom, rgba(255,68,56,0) 0%, rgb(var(--foreground) / 0.18) 58%, rgb(var(--foreground) / 0.55) 88%, rgba(255,68,56,0.95) 100%)",
+                      "linear-gradient(to bottom, rgba(255,68,56,0) 0%, rgba(242,238,227,0.2) 58%, rgba(242,238,227,0.72) 88%, rgba(255,68,56,0.95) 100%)",
                   }}
                 />
               </div>
@@ -207,7 +207,7 @@ export function Progress() {
                     className="h-full w-full rounded-full blur-md"
                     style={{
                       background:
-                        "linear-gradient(to bottom, rgba(255,68,56,0) 0%, rgb(var(--foreground) / 0.18) 45%, rgba(255,68,56,0.75) 100%)",
+                        "linear-gradient(to bottom, rgba(255,68,56,0) 0%, rgba(242,238,227,0.2) 45%, rgba(255,68,56,0.75) 100%)",
                     }}
                     initial={{ opacity: 0, scaleX: 0.7 }}
                     animate={{ opacity: [0, 0.75, 0], scaleX: [0.7, 1.5, 1] }}
@@ -326,7 +326,7 @@ export function Progress() {
             x: handoff.from.x,
             y: handoff.from.y,
             backgroundColor: "rgb(255,68,56)",
-            boxShadow: "0 0 10px 2px rgba(255,68,56,0.4)",
+            boxShadow: "0 0 14px 3px rgba(255,68,56,0.42)",
           }}
           animate={{
             x: handoff.to.x,

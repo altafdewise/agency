@@ -34,7 +34,7 @@ export function OtherInput({
         onClick={onSubmit}
         disabled={!value.trim()}
         aria-label="Continue"
-        className="mb-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-foreground text-background transition-all duration-200 ease-out-soft hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+        className="mb-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-accent text-background transition-all duration-200 ease-out-soft hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-30"
       >
         <ArrowRight className="h-5 w-5" strokeWidth={1.75} />
       </button>

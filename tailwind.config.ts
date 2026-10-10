@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Design system — "Exaggerated Minimalism", light paper + ink (admin stays dark).
+ * Design system — "Exaggerated Minimalism", dark.
  * Colours live as raw RGB channels in CSS vars (app/globals.css) so Tailwind's
  * `<alpha-value>` opacity modifiers work everywhere (e.g. bg-accent/10).
  */
@@ -58,7 +58,7 @@ const config: Config = {
         path: "1200px",
       },
       boxShadow: {
-        "card-hover": "0 24px 60px -28px rgb(var(--foreground) / 0.28)",
+        "card-hover": "0 24px 60px -24px rgba(0,0,0,0.7)",
       },
       transitionTimingFunction: {
         "out-soft": "cubic-bezier(0.22, 1, 0.36, 1)",

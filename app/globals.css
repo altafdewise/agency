@@ -3,37 +3,23 @@
 @tailwind utilities;
 
 /* ── Design tokens (raw RGB channels so Tailwind alpha modifiers work) ───── */
-/* Light is the public site. Admin opts back into the dark set via .theme-dark. */
 :root {
-  --background: 235 230 221; /* #EBE6DD — warm linen */
-  --background-center: 240 236 228; /* #F0ECE4 — a whisper lighter */
-  --foreground: 28 25 21; /* #1C1915 — warm ink */
-  --muted: 104 98 89; /* #686259 — AA on linen */
-  --accent: 255 68 56; /* #FF4438 — signal red */
-  --surface: 244 240 233; /* #F4F0E9 — cards, one step up from linen */
-  --glow: 0; /* light-on-light glows are switched off */
-  color-scheme: light;
-}
-
-.theme-dark {
   --background: 10 10 10; /* #0A0A0A */
   --background-center: 20 20 20; /* #141414 */
   --foreground: 242 238 227; /* #F2EEE3 — bone */
   --muted: 155 155 155; /* #9B9B9B */
-  --surface: 20 20 20;
-  --glow: 1;
+  --accent: 255 68 56; /* #FF4438 — signal red */
+  --surface: 20 20 20; /* raised tiles */
   color-scheme: dark;
 }
 
-/* Warm-ink panel — one dark moment inside the light public pages. */
+/* Warm charcoal panel — a lifted moment on the black page (posts, notes). */
 .theme-ink {
   --background: 28 25 21; /* #1C1915 */
   --background-center: 34 31 26;
   --foreground: 239 234 225; /* #EFEAE1 */
   --muted: 163 155 143; /* #A39B8F */
   --surface: 40 36 31; /* #28241F — lifted tiles */
-  --glow: 0;
-  color-scheme: dark;
 }
 
 @layer base {
@@ -50,7 +36,7 @@
 
   body {
     min-height: 100dvh;
-    /* Paper with a subtle radial lift toward the centre for depth. */
+    /* Near-black with a subtle radial lift toward the centre for depth. */
     background-color: rgb(var(--background));
     background-image: radial-gradient(
       ellipse 90% 80% at 50% 42%,
@@ -114,13 +100,13 @@
 }
 
 @layer utilities {
-  /* Warm-white glow for bone elements on dark; off on the light theme. */
+  /* Tasteful warm-white glow for light elements (logo, dot). */
   .glow-soft {
-    filter: drop-shadow(0 0 14px rgb(var(--foreground) / calc(0.3 * var(--glow))));
+    filter: drop-shadow(0 0 14px rgb(var(--foreground) / 0.3));
   }
   .glow-strong {
-    filter: drop-shadow(0 0 16px rgb(var(--foreground) / calc(0.45 * var(--glow))))
-      drop-shadow(0 0 4px rgb(var(--foreground) / calc(0.35 * var(--glow))));
+    filter: drop-shadow(0 0 16px rgb(var(--foreground) / 0.45))
+      drop-shadow(0 0 4px rgb(var(--foreground) / 0.35));
   }
   .glow-accent {
     filter: drop-shadow(0 0 18px rgb(var(--accent) / 0.5));

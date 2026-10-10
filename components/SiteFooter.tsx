@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { CONTACT } from "@/lib/contact";
 
-/** The "7." brand mark (ink, via mask) — same asset the nav uses. */
+/** The "7." brand mark (bone, via mask) — same asset the nav uses. */
 function FooterMark() {
   return (
     <span
@@ -20,7 +20,7 @@ function FooterMark() {
         maskSize: "contain",
         WebkitMaskPosition: "center",
         maskPosition: "center",
-        filter: "drop-shadow(0 0 6px rgb(var(--foreground) / calc(0.12 * var(--glow))))",
+        filter: "drop-shadow(0 0 6px rgba(242,238,227,0.12))",
       }}
     />
   );

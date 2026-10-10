@@ -18,7 +18,7 @@ const NAV_LINKS = [
   { label: "Legal", href: "/legal" },
 ];
 
-/** Small static "7." mark (ink, via mask) used in the corner. */
+/** Small static "7." mark (bone, via mask) used in the corner. */
 function NavMark() {
   return (
     <span
@@ -35,7 +35,7 @@ function NavMark() {
         maskSize: "contain",
         WebkitMaskPosition: "center",
         maskPosition: "center",
-        filter: "drop-shadow(0 0 8px rgb(var(--foreground) / calc(0.25 * var(--glow))))",
+        filter: "drop-shadow(0 0 8px rgba(242,238,227,0.25))",
       }}
     />
   );
@@ -78,7 +78,7 @@ export function SiteNav() {
 
   return (
     <>
-      {/* soft paper fade so content scrolling under the corners stays clean */}
+      {/* soft fade so content scrolling under the corners stays clean */}
       <div
         aria-hidden
         className="pointer-events-none fixed inset-x-0 top-0 z-40 h-20 bg-gradient-to-b from-background via-background/80 to-transparent sm:h-24"
