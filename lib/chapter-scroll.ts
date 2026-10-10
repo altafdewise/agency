@@ -125,7 +125,11 @@ export function attachChapterScroll(root: HTMLElement) {
 
   const isNestedControl = (target: EventTarget | null) => {
     let element = target instanceof Element ? target : null;
-    if (element?.closest("input, textarea, select, button, a, [contenteditable='true'], [data-native-scroll]")) return true;
+    if (element?.closest("input, textarea, select, [contenteditable='true'], [data-native-scroll]")) return true;
+    // Buttons and links on a swipe surface (a list you browse by scrolling,
+    // like the home services) still glide; fields never do.
+    const pressable = element?.closest("button, a");
+    if (pressable && !pressable.closest("[data-chapter-surface]")) return true;
     while (element && element !== root && element !== doc.body) {
       const style = win.getComputedStyle(element);
       if (/(auto|scroll)/.test(style.overflowY) && element.scrollHeight > element.clientHeight + 2) return true;

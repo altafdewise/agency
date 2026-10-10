@@ -30,8 +30,10 @@ const N = SERVICES.length;
 const OTHER_INDEX = SERVICES.findIndex((s) => s.key === "other");
 
 // Scroll budget per phase, in viewport heights.
-const INTRO_HOLD = 0.12;
-const HANDOFF = 0.6;
+// The first stop (the wheel) sits within half a screen of the top, so on
+// phones a small swipe from the headline glides straight to the services.
+const INTRO_HOLD = 0.08;
+const HANDOFF = 0.44;
 const PER_SERVICE = 0.24;
 const TAIL = 0.3;
 const SCROLL_VH = INTRO_HOLD + HANDOFF + (N - 1) * PER_SERVICE + TAIL;
@@ -46,6 +48,14 @@ const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const easeInOut = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+/** Scroll offset inside the track at which service `index` sits on the line.
+ *  Measured the way framer-motion's useScroll does (document clientHeight),
+ *  so a stop lands exactly on a whole service. */
+function stopOffset(track: HTMLElement, index: number) {
+  const scrollable = track.clientHeight - document.documentElement.clientHeight;
+  return scrollable * (P_WHEEL + (index / (N - 1)) * (P_WHEEL_END - P_WHEEL));
+}
 
 interface Geometry {
   from: { x: number; y: number; size: number };
@@ -104,6 +114,8 @@ function PinnedHero({ onChoose, showOther, other, setOther, submitOther }: HeroS
   const geoVersion = useMotionValue(0);
   const [measured, setMeasured] = useState(false);
   const [focused, setFocused] = useState(0);
+  // One scroll stop per service, for the phone scroll assist (data-chapter).
+  const [stops, setStops] = useState<number[] | null>(null);
 
   const scrollYProgress = useScrollProgress(trackRef, ["start start", "end end"]);
   const handoff = useTransform(scrollYProgress, [P_HANDOFF, P_WHEEL], [0, 1], { clamp: true });
@@ -176,23 +188,32 @@ function PinnedHero({ onChoose, showOther, other, setOther, submitOther }: HeroS
       };
       geoVersion.set(geoVersion.get() + 1); // re-run the dot transforms
       setMeasured(true);
+
+      const track = trackRef.current;
+      if (track) {
+        const next = SERVICES.map((_, i) => Math.round(stopOffset(track, i)));
+        setStops((prev) => (prev && prev.every((v, i) => v === next[i]) ? prev : next));
+      }
     };
 
     measure();
     const ro = new ResizeObserver(measure);
     if (stageRef.current) ro.observe(stageRef.current);
     if (introRef.current) ro.observe(introRef.current);
+    // Phone toolbars change the viewport without resizing the sticky stage.
+    window.addEventListener("resize", measure);
     document.fonts?.ready.then(measure).catch(() => {});
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
   }, [geoVersion]);
 
   const scrollToIndex = (index: number) => {
     const track = trackRef.current;
     if (!track) return;
     const top = track.getBoundingClientRect().top + window.scrollY;
-    const scrollable = track.offsetHeight - window.innerHeight;
-    const p = P_WHEEL + (index / (N - 1)) * (P_WHEEL_END - P_WHEEL);
-    window.scrollTo({ top: top + scrollable * p, behavior: "smooth" });
+    window.scrollTo({ top: top + stopOffset(track, index), behavior: "smooth" });
   };
 
   const choose = (key: string, index: number) => {
@@ -204,16 +225,32 @@ function PinnedHero({ onChoose, showOther, other, setOther, submitOther }: HeroS
     <section
       ref={trackRef}
       id="tap-funnel"
+      data-chapter
       aria-label="What brings you here?"
       className="relative"
       style={{ height: `${(1 + SCROLL_VH) * 100}svh` }}
     >
-      <div
-        id={SERVICES_ANCHOR_ID}
-        aria-hidden
-        className="pointer-events-none absolute left-0 h-px w-px"
-        style={{ top: `${(INTRO_HOLD + HANDOFF) * 100}svh` }}
-      />
+      {/* Scroll stops: one per service. The first is also the closing CTA's
+          target. Before measuring, a CSS estimate keeps the anchor usable. */}
+      {stops ? (
+        stops.map((top, i) => (
+          <div
+            key={i}
+            id={i === 0 ? SERVICES_ANCHOR_ID : undefined}
+            data-chapter
+            aria-hidden
+            className="pointer-events-none absolute left-0 h-px w-px"
+            style={{ top }}
+          />
+        ))
+      ) : (
+        <div
+          id={SERVICES_ANCHOR_ID}
+          aria-hidden
+          className="pointer-events-none absolute left-0 h-px w-px"
+          style={{ top: `${(INTRO_HOLD + HANDOFF) * 100}svh` }}
+        />
+      )}
 
       <div ref={stageRef} className="sticky top-0 h-[100svh] w-full overflow-hidden">
         {/* ── Intro: the mark and the headline ── */}
@@ -297,7 +334,7 @@ function PinnedHero({ onChoose, showOther, other, setOther, submitOther }: HeroS
                 what brings
                 <br className="hidden lg:block" /> you here?
               </h2>
-              <p className="mt-6 hidden font-mono text-xs tabular-nums text-muted lg:block">
+              <p className="mt-3 font-mono text-xs tabular-nums text-muted lg:mt-6">
                 <span className="text-foreground">{String(focused + 1).padStart(2, "0")}</span>
                 <span className="text-muted/60"> / {String(N).padStart(2, "0")}</span>
               </p>
@@ -357,6 +394,22 @@ function PinnedHero({ onChoose, showOther, other, setOther, submitOther }: HeroS
           </motion.div>
           </div>
         </div>
+
+        {/* Phones: say what the wheel wants, until the first move. */}
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-[max(1.75rem,4svh)] flex justify-center lg:hidden"
+          style={{ opacity: servicesOpacity }}
+        >
+          <motion.span
+            initial={false}
+            animate={{ opacity: focused === 0 ? 1 : 0 }}
+            transition={{ duration: 0.5, ease: EASE_OUT }}
+            className="text-[0.65rem] font-medium uppercase tracking-eyebrow text-muted"
+          >
+            swipe to browse · tap to choose
+          </motion.span>
+        </motion.div>
 
         {/* ── The dot ── */}
         <motion.div

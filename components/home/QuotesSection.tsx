@@ -18,7 +18,8 @@ const quoteType =
 
 /**
  * A few studio lines with room to breathe, ending on the closing call to
- * action, which scrolls back up to the services wheel.
+ * action, which scrolls back up to the services wheel. On phones each line is
+ * a full-screen scene and a scroll stop, so one small swipe turns the page.
  */
 export function QuotesSection({ onStart }: { onStart: () => void }) {
   const reduce = useSafeReducedMotion();
@@ -26,18 +27,21 @@ export function QuotesSection({ onStart }: { onStart: () => void }) {
   return (
     <section aria-label="What we believe" className="relative w-full px-6 sm:px-10">
       <div className="mx-auto flex w-full max-w-path flex-col items-center text-center">
-        <p className="eyebrow pt-[clamp(5rem,12vh,8rem)]">what we believe</p>
-
-        {QUOTES.map((lines) => (
+        {QUOTES.map((lines, i) => (
           <blockquote
             key={lines.join(" ")}
-            className="flex min-h-[50svh] items-center justify-center py-[8vh] sm:min-h-[62svh]"
+            data-chapter
+            className="flex min-h-[100svh] flex-col items-center justify-center py-[8vh] sm:min-h-[62svh]"
           >
+            {i === 0 && <p className="eyebrow mb-10 sm:mb-14">what we believe</p>}
             <LineReveal as="p" lines={lines} dot className={quoteType} />
           </blockquote>
         ))}
 
-        <div className="flex min-h-[70svh] flex-col sm:min-h-[78svh] items-center justify-center py-[10vh]">
+        <div
+          data-chapter
+          className="flex min-h-[100svh] flex-col items-center justify-center py-[10vh] sm:min-h-[78svh]"
+        >
           <LineReveal
             as="h2"
             lines={["in an AI era,", "speed is what matters"]}
