@@ -96,8 +96,7 @@ export function AnonymousFeedbackSection() {
           transition={{ duration: reduce ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] }}
           className="mx-auto mt-9 max-w-xl sm:mt-10"
         >
-          {/* The note itself sits on a warm-ink card, like the posts panel. */}
-          <div className="theme-ink rounded-3xl border border-foreground/[0.07] bg-background p-5 text-foreground shadow-[0_40px_80px_-40px_rgba(28,25,21,0.55)] sm:p-8">
+          <div className="rounded-3xl border border-foreground/[0.07] bg-foreground/[0.015] p-5 sm:p-8">
             <div className="flex items-center justify-between gap-4">
               <div className="flex min-w-0 items-center gap-3">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-foreground/[0.09] bg-foreground/[0.03] text-accent">
@@ -214,7 +213,7 @@ export function AnonymousFeedbackSection() {
                       type="button"
                       onClick={() => void submit()}
                       disabled={!canSend}
-                      className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-accent px-7 py-2.5 text-sm font-semibold text-background transition-[transform,filter] duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/45 active:scale-[0.98] disabled:pointer-events-none disabled:bg-accent/[0.18] disabled:text-foreground/45"
+                      className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-accent px-7 py-2.5 text-sm font-semibold text-background transition-[transform,filter] duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/45 active:scale-[0.98] disabled:pointer-events-none disabled:bg-accent/[0.18] disabled:text-background/55"
                     >
                       {status === "done" ? (
                         <>

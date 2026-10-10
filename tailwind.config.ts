@@ -19,7 +19,6 @@ const config: Config = {
         foreground: "rgb(var(--foreground) / <alpha-value>)",
         muted: "rgb(var(--muted) / <alpha-value>)",
         accent: "rgb(var(--accent) / <alpha-value>)",
-        surface: "rgb(var(--surface) / <alpha-value>)",
         // Hairline borders = foreground at 12%.
         border: "rgb(var(--foreground) / 0.12)",
       },

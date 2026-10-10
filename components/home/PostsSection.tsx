@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
-import { LineReveal } from "@/components/ui/LineReveal";
+import { FocusWords, LineReveal } from "@/components/ui/LineReveal";
 import { useSafeReducedMotion } from "@/lib/use-safe-reduced-motion";
 
-/** A card on the home page. Blog posts today; Instagram posts can use the same
+/** A row on the home page. Blog posts today; Instagram posts can use the same
  *  shape later (kind "instagram", external href, image). */
 export interface HomePost {
   kind: "journal" | "instagram";
@@ -20,86 +20,99 @@ export interface HomePost {
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
-function PostCard({ post, index }: { post: HomePost; index: number }) {
-  const reduce = useSafeReducedMotion();
+/** A hairline that draws in from the left when its row arrives. */
+function Hairline({ delay = 0 }: { delay?: number }) {
+  const instant = useSafeReducedMotion();
+  const variants: Variants = {
+    hidden: { scaleX: 0 },
+    show: {
+      scaleX: 1,
+      transition: instant ? { duration: 0 } : { duration: 1.3, ease: EASE_OUT, delay },
+    },
+  };
+  return (
+    <motion.span
+      aria-hidden
+      variants={variants}
+      className="absolute inset-x-0 top-0 h-px origin-left bg-foreground/15"
+    />
+  );
+}
+
+function PostRow({ post, index }: { post: HomePost; index: number }) {
   const external = post.href.startsWith("http");
+  const delay = index * 0.1;
 
   return (
     <motion.li
-      className="w-[82vw] max-w-[380px] shrink-0 snap-start lg:w-auto lg:max-w-none"
-      initial={{ opacity: 0, y: 14 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      // Trigger on vertical position only, so a card peeking in from the right
-      // of the mobile swipe row is already visible.
-      viewport={{ once: true, amount: "some", margin: "0px 0px -15% 0px" }}
-      transition={reduce ? { duration: 0 } : { duration: 1.1, ease: EASE_OUT, delay: 0.1 + index * 0.12 }}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.6 }}
+      // The row you point at stays lit; the others step back.
+      className="relative transition-opacity duration-300 group-hover/list:opacity-40 hover:!opacity-100 focus-within:!opacity-100"
     >
+      <Hairline delay={delay} />
       <Link
         href={post.href}
         {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-        className="group flex h-full min-h-[340px] flex-col overflow-hidden rounded-[26px] border border-foreground/[0.07] bg-surface transition-[transform,box-shadow,border-color] duration-500 ease-out-soft hover:-translate-y-1 hover:border-foreground/20 hover:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.65)]"
+        className="group flex items-center gap-4 py-7 sm:gap-8 sm:py-9"
       >
+        <span className="w-7 shrink-0 self-start pt-[0.55em] font-mono text-xs tabular-nums text-muted transition-colors duration-300 group-hover:text-accent sm:self-center sm:pt-0">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+
         {post.image && (
-          <span className="relative block aspect-[4/3] w-full overflow-hidden">
-            <Image
-              src={post.image}
-              alt=""
-              fill
-              sizes="(min-width: 1024px) 380px, 82vw"
-              className="object-cover transition-transform duration-700 ease-out-soft group-hover:scale-[1.03]"
-            />
+          <span className="relative hidden h-14 w-14 shrink-0 overflow-hidden rounded-full sm:block">
+            <Image src={post.image} alt="" fill sizes="56px" className="object-cover" />
           </span>
         )}
 
-        <span className="flex flex-1 flex-col p-7 sm:p-8">
-          <span className="flex items-center justify-between gap-4 text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted">
-            <span>{post.kind === "instagram" ? "instagram" : "journal"}</span>
-            {post.dateLabel && <span className="tracking-[0.08em]">{post.dateLabel}</span>}
-          </span>
-
-          <span className="mt-8 font-display text-[1.6rem] font-semibold leading-[1.12] tracking-tightest text-foreground">
-            {post.title}
-          </span>
-
-          {post.excerpt && (
-            <span className="mt-4 line-clamp-2 text-[0.95rem] font-light leading-relaxed text-muted">
-              {post.excerpt}
+        <span className="relative min-w-0 flex-1">
+          {post.dateLabel && (
+            <span className="mb-2 block font-mono text-[0.68rem] uppercase tracking-[0.16em] text-muted sm:hidden">
+              {post.dateLabel}
             </span>
           )}
-
-          <span className="mt-auto flex items-center justify-between pt-10">
-            <span className="flex items-center gap-2.5 text-sm font-medium text-muted transition-colors duration-300 group-hover:text-foreground">
-              <span className="h-[7px] w-[7px] rounded-full bg-accent transition-transform duration-500 ease-out-soft group-hover:scale-125" />
-              read
-            </span>
-            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-foreground/15 text-foreground transition-colors duration-300 group-hover:border-foreground group-hover:bg-foreground group-hover:text-background">
-              <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />
+          <span className="relative block">
+            <span
+              aria-hidden
+              className="absolute left-0 top-[0.55em] h-2 w-2 scale-0 rounded-full bg-accent transition-transform duration-500 ease-out-soft group-hover:scale-100"
+            />
+            <span className="block font-display text-[clamp(1.35rem,2.7vw,2.35rem)] font-semibold leading-[1.15] tracking-tightest text-foreground transition-transform duration-500 ease-out-soft group-hover:translate-x-6">
+              <FocusWords text={post.title} delay={0.15 + delay} />
             </span>
           </span>
+        </span>
+
+        {post.dateLabel && (
+          <span className="hidden w-44 shrink-0 text-right font-mono text-xs uppercase tracking-[0.14em] text-muted sm:block">
+            {post.dateLabel}
+          </span>
+        )}
+
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/15 text-foreground transition-colors duration-300 group-hover:border-accent group-hover:bg-accent group-hover:text-background">
+          <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />
         </span>
       </Link>
     </motion.li>
   );
 }
 
-/** "From the studio" — the latest posts, on the page's one warm-ink panel.
- *  Hidden entirely when there are none. */
+/**
+ * "From the studio" — the latest posts as a box-less editorial list, in the
+ * same language as the services: rows straight on the page, hairlines
+ * between them, and the red dot marking the one you're on. Hidden entirely
+ * when there are none.
+ */
 export function PostsSection({ posts }: { posts: HomePost[] }) {
   if (posts.length === 0) return null;
 
   return (
     <section
       aria-labelledby="posts-heading"
-      className="relative w-full px-3 py-[clamp(3rem,8vh,6rem)] sm:px-5"
+      className="relative w-full px-6 py-[clamp(7rem,18vh,12rem)] sm:px-10"
     >
-      <div className="theme-ink relative isolate mx-auto w-full max-w-[1320px] overflow-hidden rounded-[32px] bg-background py-[clamp(4.5rem,11vh,7.5rem)] text-foreground sm:rounded-[44px]">
-      {/* A low signal-red glow so the panel feels lit, not flat. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-[18%] -top-[35%] -z-10 h-[80%] w-[70%] rounded-full"
-        style={{ background: "radial-gradient(closest-side, rgb(var(--accent) / 0.16), transparent)" }}
-      />
-      <div className="mx-auto w-full max-w-path px-6 sm:px-10">
+      <div className="mx-auto w-full max-w-path">
         <div className="flex items-end justify-between gap-6">
           <div>
             <p className="eyebrow">from the studio</p>
@@ -118,24 +131,28 @@ export function PostsSection({ posts }: { posts: HomePost[] }) {
             <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />
           </Link>
         </div>
-      </div>
 
-      {/* Mobile: a swipeable row that bleeds to the edge. Desktop: a grid. */}
-      <ul className="no-scrollbar mx-auto mt-14 flex w-full max-w-path snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-6 px-6 pb-2 sm:scroll-px-10 sm:px-10 lg:grid lg:grid-cols-3 lg:gap-5 lg:overflow-visible">
-        {posts.map((post, i) => (
-          <PostCard key={post.href} post={post} index={i} />
-        ))}
-      </ul>
+        <ul className="group/list mt-[clamp(3rem,8vh,5rem)]">
+          {posts.map((post, i) => (
+            <PostRow key={post.href} post={post} index={i} />
+          ))}
+        </ul>
+        <motion.div
+          className="relative h-px"
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 1 }}
+        >
+          <Hairline delay={posts.length * 0.1} />
+        </motion.div>
 
-      <div className="mt-6 px-6 sm:hidden">
         <Link
           href="/blog"
-          className="inline-flex items-center gap-2 text-sm font-medium text-muted transition-colors duration-200 hover:text-foreground"
+          className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-muted transition-colors duration-200 hover:text-foreground sm:hidden"
         >
           all posts
           <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />
         </Link>
-      </div>
       </div>
     </section>
   );

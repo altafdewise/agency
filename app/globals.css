@@ -9,17 +9,7 @@
   --foreground: 242 238 227; /* #F2EEE3 — bone */
   --muted: 155 155 155; /* #9B9B9B */
   --accent: 255 68 56; /* #FF4438 — signal red */
-  --surface: 20 20 20; /* raised tiles */
   color-scheme: dark;
-}
-
-/* Warm charcoal panel — a lifted moment on the black page (posts, notes). */
-.theme-ink {
-  --background: 28 25 21; /* #1C1915 */
-  --background-center: 34 31 26;
-  --foreground: 239 234 225; /* #EFEAE1 */
-  --muted: 163 155 143; /* #A39B8F */
-  --surface: 40 36 31; /* #28241F — lifted tiles */
 }
 
 @layer base {
