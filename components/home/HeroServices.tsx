@@ -12,6 +12,7 @@ import {
 import Logo, { LOGO_GEOMETRY } from "@/components/Logo";
 import { usePath } from "@/components/PathProvider";
 import { OtherInput } from "@/components/ui/OtherInput";
+import { FocusWords } from "@/components/ui/LineReveal";
 import { StepShell } from "@/components/ui/StepShell";
 import { ServiceList } from "@/components/steps/ServiceList";
 import { SERVICES } from "@/lib/content";
@@ -120,8 +121,10 @@ function PinnedHero({ onChoose, showOther, other, setOther, submitOther }: HeroS
   });
 
   // Headline + mark exit.
-  const line1Y = useTransform(handoff, [0, 0.42], ["0%", "-112%"]);
-  const line2Y = useTransform(handoff, [0.08, 0.5], ["0%", "-112%"]);
+  const line1Y = useTransform(handoff, [0, 0.42], ["0%", "-40%"]);
+  const line2Y = useTransform(handoff, [0.08, 0.5], ["0%", "-40%"]);
+  const line1Opacity = useTransform(handoff, [0, 0.36], [1, 0]);
+  const line2Opacity = useTransform(handoff, [0.08, 0.44], [1, 0]);
   const markOpacity = useTransform(handoff, [0, 0.3], [1, 0]);
   const markY = useTransform(handoff, [0, 0.3], [0, -24]);
   const cueOpacity = useTransform(scrollYProgress, [0, P_HANDOFF * 0.8], [1, 0]);
@@ -250,25 +253,23 @@ function PinnedHero({ onChoose, showOther, other, setOther, submitOther }: HeroS
             </motion.div>
           </div>
 
-          <h1
+          <motion.h1
             aria-label="no fluff. just build."
+            initial="hidden"
+            animate="show"
             className="mt-[clamp(1.75rem,5svh,3.5rem)] font-display text-[clamp(3.1rem,min(10.5vw,15svh),9.25rem)] font-semibold leading-[0.98] tracking-tightest text-foreground"
           >
             {["no fluff.", "just build."].map((line, i) => (
-              <span key={line} aria-hidden className="-mb-[0.12em] block overflow-hidden pb-[0.12em]">
-                <motion.span className="block" style={{ y: i === 0 ? line1Y : line2Y }}>
-                  <motion.span
-                    className="block"
-                    initial={{ y: "112%" }}
-                    animate={{ y: "0%" }}
-                    transition={{ duration: 1, ease: EASE_OUT, delay: 0.15 + i * 0.1 }}
-                  >
-                    {line}
-                  </motion.span>
-                </motion.span>
-              </span>
+              <motion.span
+                key={line}
+                aria-hidden
+                className="block"
+                style={i === 0 ? { y: line1Y, opacity: line1Opacity } : { y: line2Y, opacity: line2Opacity }}
+              >
+                <FocusWords text={line} start={i * 2} delay={0.2} />
+              </motion.span>
             ))}
-          </h1>
+          </motion.h1>
         </div>
 
         <motion.div

@@ -27,12 +27,12 @@ function PostCard({ post, index }: { post: HomePost; index: number }) {
   return (
     <motion.li
       className="w-[82vw] max-w-[380px] shrink-0 snap-start lg:w-auto lg:max-w-none"
-      initial={{ opacity: 0, y: 36 }}
+      initial={{ opacity: 0, y: 14 }}
       whileInView={{ opacity: 1, y: 0 }}
       // Trigger on vertical position only, so a card peeking in from the right
       // of the mobile swipe row is already visible.
       viewport={{ once: true, amount: "some", margin: "0px 0px -15% 0px" }}
-      transition={reduce ? { duration: 0 } : { duration: 0.8, ease: EASE_OUT, delay: index * 0.1 }}
+      transition={reduce ? { duration: 0 } : { duration: 1.1, ease: EASE_OUT, delay: 0.1 + index * 0.12 }}
     >
       <Link
         href={post.href}

@@ -45,19 +45,19 @@ export function QuotesSection({ onStart }: { onStart: () => void }) {
             className={quoteType}
           />
           <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, filter: "blur(8px)" }}
+            whileInView={{ opacity: 1, filter: "blur(0px)" }}
             viewport={{ once: true, amount: 0.8 }}
-            transition={reduce ? { duration: 0 } : { duration: 0.7, ease: EASE_OUT, delay: 0.5 }}
+            transition={reduce ? { duration: 0 } : { duration: 1, ease: EASE_OUT, delay: 0.6 }}
             className="mt-6 text-lg font-light text-muted sm:text-xl"
           >
             and we know that well.
           </motion.p>
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, filter: "blur(8px)" }}
+            whileInView={{ opacity: 1, filter: "blur(0px)" }}
             viewport={{ once: true, amount: 0.8 }}
-            transition={reduce ? { duration: 0 } : { duration: 0.7, ease: EASE_OUT, delay: 0.65 }}
+            transition={reduce ? { duration: 0 } : { duration: 1, ease: EASE_OUT, delay: 0.8 }}
             className="mt-12"
           >
             <Button type="button" size="lg" withArrow onClick={onStart}>
