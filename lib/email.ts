@@ -154,7 +154,7 @@ function estimateHtml(brief: Brief, estimate: Estimate) {
       <h1 style="margin:0 0 18px;font-size:26px;line-height:1.15;font-weight:700;">Your project estimate.</h1>
       <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#333;">Hi ${escapeHtml(name)}, here is the estimate from the brief you shared with Zev's Agency.</p>
       <p style="margin:24px 0 8px;font-size:30px;line-height:1.1;font-weight:700;color:#ff4438;">${escapeHtml(range)}</p>
-      <p style="margin:0 0 24px;font-size:13px;line-height:1.6;color:#777;">${isFrom ? "Starting price" : "Indicative range"} · ${escapeHtml(estimate.timeline)}</p>
+      <p style="margin:0 0 24px;font-size:13px;line-height:1.6;color:#777;">${isFrom ? "Starting price" : `Indicative range · ${escapeHtml(estimate.timeline)}`}</p>
       <p style="margin:0 0 20px;font-size:15px;line-height:1.7;color:#333;">${escapeHtml(estimate.summary)}</p>
       <ul style="margin:0;padding:20px 20px 12px 38px;border-top:1px solid #eee;border-bottom:1px solid #eee;">${included}</ul>
       ${questions}
