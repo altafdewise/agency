@@ -132,7 +132,15 @@ function formatInr(value: number) {
 
 function estimateHtml(brief: Brief, estimate: Estimate) {
   const name = brief.contact?.name?.trim() || "there";
-  const range = `${formatInr(estimate.priceLow)} – ${formatInr(estimate.priceHigh)}`;
+  const isFrom = estimate.kind === "from";
+  const range = isFrom
+    ? `from ${formatInr(estimate.priceLow)}`
+    : `${formatInr(estimate.priceLow)} – ${formatInr(estimate.priceHigh)}`;
+  const questions = isFrom && estimate.questions?.length
+    ? `<p style="margin:22px 0 8px;font-size:14px;line-height:1.6;color:#333;">For a precise range, reply with:</p><ul style="margin:0;padding:0 0 0 20px;">${estimate.questions
+        .map((q) => `<li style="margin:0 0 6px;font-size:14px;line-height:1.55;color:#333;">${escapeHtml(q)}</li>`)
+        .join("")}</ul>`
+    : "";
   const included = estimate.included
     .map(
       (item) =>
@@ -146,10 +154,11 @@ function estimateHtml(brief: Brief, estimate: Estimate) {
       <h1 style="margin:0 0 18px;font-size:26px;line-height:1.15;font-weight:700;">Your project estimate.</h1>
       <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#333;">Hi ${escapeHtml(name)}, here is the estimate from the brief you shared with Zev's Agency.</p>
       <p style="margin:24px 0 8px;font-size:30px;line-height:1.1;font-weight:700;color:#ff4438;">${escapeHtml(range)}</p>
-      <p style="margin:0 0 24px;font-size:13px;line-height:1.6;color:#777;">Indicative range · ${escapeHtml(estimate.timeline)}</p>
+      <p style="margin:0 0 24px;font-size:13px;line-height:1.6;color:#777;">${isFrom ? "Starting price" : "Indicative range"} · ${escapeHtml(estimate.timeline)}</p>
       <p style="margin:0 0 20px;font-size:15px;line-height:1.7;color:#333;">${escapeHtml(estimate.summary)}</p>
       <ul style="margin:0;padding:20px 20px 12px 38px;border-top:1px solid #eee;border-bottom:1px solid #eee;">${included}</ul>
-      <p style="margin:22px 0 0;font-size:13px;line-height:1.6;color:#777;">This is an initial range. We will confirm the final scope and price before work begins.</p>
+      ${questions}
+      <p style="margin:22px 0 0;font-size:13px;line-height:1.6;color:#777;">${isFrom ? "This is where projects like yours start. Share the details above and we will send a precise range." : "This is an initial range. We will confirm the final scope and price before work begins."}</p>
       <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#888;">Zev's Agency</p>
     `,
   });

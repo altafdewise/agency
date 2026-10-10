@@ -2,6 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import type { Brief, Estimate, EstimateTier } from "@/lib/brief";
 import {
+  BRIEF_PROMPTS,
+  GENERAL_PROMPTS,
   PRICING_TABLE,
   SCOPE_INCLUDES,
   isEstimateTier,
@@ -9,6 +11,7 @@ import {
   isValidPriceRange,
   pricingFallback,
   quote,
+  startingPrice,
   type PricingKey,
   type PricingTable,
   type ServiceScope,
@@ -23,6 +26,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_DESCRIPTION_CHARS = 2000;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT_MAX = 5;
+// A precise range needs real detail: the model has to judge the brief complete,
+// and it has to be more than a line. Without the model, length is all we have.
+const MIN_WORDS_FOR_RANGE = 12;
+const FALLBACK_WORDS_FOR_RANGE = 30;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// A refined brief may update its lead only while that lead is fresh and untouched.
+const REFINE_WINDOW_MS = 2 * 60 * 60 * 1000;
 
 const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 
@@ -83,13 +93,30 @@ SCOPES PER SERVICE (simple / medium / complex):
 - content: simple = one-off posters/carousel/few reels; medium = monthly social package; complex = full content + strategy retainer.
 - security: simple = basic site/app audit + report; medium = deeper pen-test (web + app); complex = full security assessment + remediation.
 
+PRICE DRIVERS - the details that decide the scope and where a project sits inside its band:
+- brand_logo: logo only or a fuller kit; how many concepts; what else needs designing (cards, packaging, social templates); whether guidelines are needed.
+- website: how many distinct pages or page types; whether the client edits content themselves (CMS, blog); bookings, payments, a shop or user accounts; integrations (CRM, WhatsApp, maps, email tools); who writes the copy and supplies photos; languages.
+- app: the core user flows and roughly how many screens; iOS, Android or both; accounts and stored user data (backend); payments, chat, maps, notifications; an admin panel; offline or real-time needs.
+- design_prototype: how many screens or flows; static mockups or a clickable prototype; whether a design system is needed.
+- ai_integration: what the AI must do; where it lives (website, WhatsApp, internal tool); what data or documents it uses; which tools it connects to; how many workflows.
+- content: formats (posts, carousels, reels, video); volume per month; one-off or ongoing; whether shooting is needed.
+- security: what is tested (site, app, API); size (pages, endpoints, user roles); report only or fixes too; any compliance requirement.
+
 PRICE BANDS (INR) per service and scope, for judging where the project sits inside a band:
 ${JSON.stringify(pricingTable)}
 
+FIRST, THE DETAIL CHECK - set "enough":
+- true only if, for every service you scope, the brief says what is being built AND gives at least two of that service's price drivers concretely (counts, named features, platforms, integrations, volumes). Who the client is and their stage never count as drivers.
+- false otherwise. Never fill gaps with guesses to make a brief look complete.
+
 FOR EACH SERVICE TO SCOPE, return:
 - "key": the service key.
-- "tier": the scope the brief most plausibly needs. Pick complex only when the brief clearly asks for complex-scope work.
-- "position": a number from 0 to 1 for where the project sits inside that scope's band. 0-0.3 = small, first-time, solo or early-stage; 0.3-0.6 = a typical project; 0.6-1 = clearly large or demanding. When the brief gives little detail, use 0.3.
+- "tier": when enough, the scope the stated drivers need. When not enough, the smallest scope that everything the brief does state would require - never assume features the client didn't mention. Pick complex only when the brief clearly asks for complex-scope work.
+- "position": a number from 0 to 1 for where the project sits inside that scope's band, judged only from the stated drivers. 0-0.3 = small, few features; 0.3-0.6 = a typical project; 0.6-1 = clearly large or demanding. When not enough, use 0.
+
+QUESTIONS:
+- When not enough: "questions" holds 2-3 short questions (at most 12 words each), addressed to the client, asking for the missing price drivers that would change the price most. One idea per question, e.g. "How many pages do you need?".
+- When enough: "questions": [].
 
 THEN WRITE FOR THE CLIENT:
 - "summary": 1-2 sentences, at most 35 words, addressed to the client ("you", "your"), saying what we'd build for them. Plain and confident, no hype.
@@ -101,7 +128,7 @@ THEN WRITE FOR THE CLIENT:
 WHICH SERVICES TO SCOPE: exactly the keys listed in "services" in the brief. If "services" is empty, map "customNeed" and "description" to the closest service keys (at most 3); if nothing fits, return "services": [].
 
 OUTPUT: only valid JSON, with no markdown or commentary, in exactly this shape:
-{"services":[{"key":string,"tier":"simple"|"medium"|"complex","position":number}],"summary":string,"included":string[]}`;
+{"enough":boolean,"services":[{"key":string,"tier":"simple"|"medium"|"complex","position":number}],"summary":string,"included":string[],"questions":string[]}`;
 }
 
 function pricedKeys(brief: Brief): PricingKey[] {
@@ -137,8 +164,11 @@ function extractJson(raw: string): string {
 
 interface ModelScope {
   scopes: ServiceScope[];
+  /** The model judged the brief detailed enough for a precise range. */
+  enough: boolean;
   summary: string;
   included: string[];
+  questions: string[];
 }
 
 function parseModelScope(obj: unknown, brief: Brief): ModelScope | null {
@@ -168,9 +198,13 @@ function parseModelScope(obj: unknown, brief: Brief): ModelScope | null {
 
   return {
     scopes,
+    enough: o.enough === true,
     summary: typeof o.summary === "string" ? o.summary.trim() : "",
     included: Array.isArray(o.included)
       ? o.included.filter((x): x is string => typeof x === "string")
+      : [],
+    questions: Array.isArray(o.questions)
+      ? o.questions.filter((x): x is string => typeof x === "string")
       : [],
   };
 }
@@ -230,18 +264,49 @@ function cleanIncluded(items: string[], scopes: ServiceScope[]) {
   return clean.slice(0, 5);
 }
 
+/* The follow-ups shown with a starting price: the model's, when they read as
+   real questions, topped up from the standard prompts for those services. */
+function cleanQuestions(items: string[], scopes: ServiceScope[]) {
+  const seen = new Set<string>();
+  const clean: string[] = [];
+  const add = (raw: string) => {
+    const q = raw.replace(/\s+/g, " ").trim();
+    const id = q.toLowerCase();
+    if (!q.endsWith("?") || q.length > 100 || !isCleanCopy(q) || seen.has(id)) return;
+    seen.add(id);
+    clean.push(q);
+  };
+
+  items.forEach(add);
+  if (clean.length < 2) {
+    const standard = scopes.length
+      ? scopes.flatMap((s) => BRIEF_PROMPTS[s.key].slice(0, 2))
+      : GENERAL_PROMPTS;
+    standard.forEach(add);
+  }
+  return clean.slice(0, 3);
+}
+
+function wordCount(brief: Brief) {
+  return `${brief.customNeed ?? ""} ${brief.description}`.split(/\s+/).filter(Boolean).length;
+}
+
 function buildEstimate(
   scopes: ServiceScope[],
   pricingTable: PricingTable,
-  copy: { summary: string; included: string[] } | null
+  copy: { summary: string; included: string[]; questions: string[] } | null,
+  precise: boolean
 ): Estimate {
-  const { tier, priceLow, priceHigh, timeline } = quote(scopes, pricingTable);
+  const { tier, priceLow, priceHigh, timeline } = precise
+    ? quote(scopes, pricingTable)
+    : startingPrice(scopes, pricingTable);
   const summary =
     copy?.summary && copy.summary.length <= 300 && isCleanCopy(copy.summary)
       ? copy.summary
       : standardSummary(scopes, tier);
 
   return {
+    kind: precise ? "range" : "from",
     tier,
     priceLow,
     priceHigh,
@@ -249,6 +314,7 @@ function buildEstimate(
     summary,
     included: cleanIncluded(copy?.included ?? [], scopes),
     services: scopes.map((s) => s.key),
+    ...(precise ? {} : { questions: cleanQuestions(copy?.questions ?? [], scopes) }),
   };
 }
 
@@ -395,36 +461,67 @@ async function scopeWithModel(
   }
 }
 
-async function recordLead(brief: Brief, estimate: Estimate | null) {
+/* What the team sees: a starting price is flagged, with what's still open. */
+function leadSummary(estimate: Estimate) {
+  if (estimate.kind === "range") return estimate.summary;
+  const open = estimate.questions?.length ? ` Still to confirm: ${estimate.questions.join(" / ")}` : "";
+  return `${estimate.summary}\n\nStarting price only - the brief was too thin for a precise range.${open}`;
+}
+
+/** Saves the lead and returns its id. A refined brief (`leadId`) updates the
+ *  lead it came from instead of adding a second one. */
+async function recordLead(
+  brief: Brief,
+  estimate: Estimate | null,
+  leadId?: string
+): Promise<string | undefined> {
   const supabase = getSupabaseAdminClient();
-  if (!supabase) return;
+  if (!supabase) return undefined;
+
+  const row = {
+    name: brief.contact?.name ?? null,
+    contact_email: brief.contact?.email ?? null,
+    contact_phone: null,
+    persona: brief.customPersona || brief.persona || null,
+    needs: brief.needs ?? [],
+    stage: brief.stage || null,
+    brief_text: brief.description || null,
+    ai_tier: estimate?.tier ?? null,
+    ai_price_low: estimate?.priceLow ?? null,
+    ai_price_high: estimate?.priceHigh ?? null,
+    ai_summary: estimate ? leadSummary(estimate) : null,
+    ai_timeline: estimate?.timeline ?? null,
+    ai_included: estimate?.included ?? null,
+  };
 
   try {
-    const { error } = await supabase.from("leads").insert({
-      name: brief.contact?.name ?? null,
-      contact_email: brief.contact?.email ?? null,
-      contact_phone: null,
-      persona: brief.customPersona || brief.persona || null,
-      needs: brief.needs ?? [],
-      stage: brief.stage || null,
-      brief_text: brief.description || null,
-      ai_tier: estimate?.tier ?? null,
-      ai_price_low: estimate?.priceLow ?? null,
-      ai_price_high: estimate?.priceHigh ?? null,
-      ai_summary: estimate?.summary ?? null,
-      ai_timeline: estimate?.timeline ?? null,
-      ai_included: estimate?.included ?? null,
-      status: "new",
-    });
+    if (leadId) {
+      const { data, error } = await supabase
+        .from("leads")
+        .update(row)
+        .eq("id", leadId)
+        .eq("status", "new")
+        .gte("created_at", new Date(Date.now() - REFINE_WINDOW_MS).toISOString())
+        .select("id");
+      if (error) throw error;
+      if (data?.length) return leadId;
+    }
 
+    const { data, error } = await supabase
+      .from("leads")
+      .insert({ ...row, status: "new" })
+      .select("id")
+      .single();
     if (error) throw error;
+    return data.id;
   } catch (error) {
-    console.error("[estimate] lead insert failed:", error);
+    console.error("[estimate] lead save failed:", error);
+    return undefined;
   }
 }
 
-async function completeEstimate(brief: Brief, estimate: Estimate) {
-  await recordLead(brief, estimate);
+async function completeEstimate(brief: Brief, estimate: Estimate, leadId?: string) {
+  const savedId = await recordLead(brief, estimate, leadId);
 
   try {
     await sendEstimateEmail(brief, estimate);
@@ -433,7 +530,7 @@ async function completeEstimate(brief: Brief, estimate: Estimate) {
     console.error("[estimate] estimate email failed:", error);
   }
 
-  return NextResponse.json(estimate);
+  return NextResponse.json({ ...estimate, ...(savedId ? { leadId: savedId } : {}) });
 }
 
 export async function POST(req: Request) {
@@ -461,6 +558,8 @@ export async function POST(req: Request) {
   }
 
   const { brief } = validated;
+  const rawLeadId = (body as { leadId?: unknown }).leadId;
+  const leadId = typeof rawLeadId === "string" && UUID_RE.test(rawLeadId) ? rawLeadId : undefined;
   const apiKey = process.env.ANTHROPIC_API_KEY;
   const pricingTable = await loadPricingTable();
 
@@ -474,12 +573,23 @@ export async function POST(req: Request) {
   // Nothing we can price (e.g. "something else" that maps to no service):
   // keep the lead and let the client fall through to "let's talk it through".
   if (!scopes.length) {
-    await recordLead(brief, null);
+    await recordLead(brief, null, leadId);
     return NextResponse.json(
       { error: "This one needs a conversation rather than a standard range." },
       { status: 422 }
     );
   }
 
-  return completeEstimate(brief, buildEstimate(scopes, pricingTable, modelScope));
+  // A precise range only when the brief carries the details that set the
+  // price; otherwise an honest starting price plus what would firm it up.
+  const words = wordCount(brief);
+  const precise = modelScope?.scopes.length
+    ? modelScope.enough && words >= MIN_WORDS_FOR_RANGE
+    : words >= FALLBACK_WORDS_FOR_RANGE;
+
+  return completeEstimate(
+    brief,
+    buildEstimate(scopes, pricingTable, modelScope, precise),
+    leadId
+  );
 }

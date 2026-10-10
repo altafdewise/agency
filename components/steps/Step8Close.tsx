@@ -580,7 +580,9 @@ export function Step8Close() {
   const router = useRouter();
   const [showScheduler, setShowScheduler] = useState(false);
   const [booked, setBooked] = useState(false);
-  const isSimple = estimate?.tier === "simple";
+  // Delivery promises only follow a precise range, never a starting price.
+  const precise = estimate?.kind !== "from";
+  const isSimple = precise && estimate?.tier === "simple";
   const simpleTimeline = estimate?.timeline?.trim() || "";
   const hasTwentyFourHourPromise = /24\s*hour/i.test(simpleTimeline);
 
@@ -602,7 +604,8 @@ export function Step8Close() {
           </p>
         </Reveal>
       ) : (
-        estimate && (
+        estimate &&
+        precise && (
           <Reveal className="mt-10" delay={0.2}>
             <p className="font-display text-2xl font-medium text-foreground sm:text-3xl">
               Realistic timeline:{" "}

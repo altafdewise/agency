@@ -41,12 +41,21 @@ export const TOTAL_STEPS = SHOW_CASE_STUDIES ? 8 : 7;
 export type EstimateTier = "simple" | "medium" | "complex";
 
 export interface Estimate {
+  /** "range" = the brief was detailed enough for a precise quote.
+   *  "from" = only a starting price; `questions` say what would firm it up. */
+  kind: "range" | "from";
   tier: EstimateTier;
+  /** For "from", the starting price. */
   priceLow: number;
+  /** For "from", the top of that scope's band (kept for the team, not shown). */
   priceHigh: number;
   timeline: string;
   summary: string;
   included: string[];
   /** Pricing keys the range covers, so the client sees what was priced. */
   services?: string[];
+  /** For "from": the 2–3 details that would most sharpen the price. */
+  questions?: string[];
+  /** The lead this estimate was saved as, so a refined brief updates it. */
+  leadId?: string;
 }

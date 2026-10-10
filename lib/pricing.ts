@@ -114,6 +114,60 @@ export const SCOPE_INCLUDES: Record<PricingKey, Record<EstimateTier, string[]>> 
   },
 };
 
+/* ── What decides the price ─────────────────────────────────────────────────
+   The details that move a project between scopes and within a band. Shown on
+   the brief step as prompts, and used as the follow-up questions when a brief
+   is too thin for a precise range. Keep in step with the price drivers in
+   app/api/estimate/route.ts. */
+export const BRIEF_PROMPTS: Record<PricingKey, string[]> = {
+  brand_logo: [
+    "Just a logo, or a full brand kit?",
+    "Where will the brand show up most?",
+    "What else needs designing (cards, packaging, socials)?",
+  ],
+  website: [
+    "How many pages do you need?",
+    "Will you edit the content yourself?",
+    "Any bookings, payments, a shop or logins?",
+    "Do you have the text and photos ready?",
+  ],
+  app: [
+    "What are the main things users will do?",
+    "iOS, Android, or both?",
+    "Do users need accounts, payments or chat?",
+    "Do you need an admin panel?",
+  ],
+  design_prototype: [
+    "Roughly how many screens or flows?",
+    "Static mockups or a clickable prototype?",
+    "Do you need a design system?",
+  ],
+  ai_integration: [
+    "What exactly should the AI do?",
+    "Where will it live: site, WhatsApp, internal tool?",
+    "What data or documents will it use?",
+    "Which tools should it connect to?",
+  ],
+  content: [
+    "Which formats: posts, carousels, reels, video?",
+    "How many pieces a month?",
+    "One-off, or ongoing?",
+    "Will anything need shooting?",
+  ],
+  security: [
+    "What should we test: site, app or API?",
+    "Roughly how big is it (pages, endpoints, user roles)?",
+    "Just a report, or fixes too?",
+  ],
+};
+
+/** For needs outside the price list ("something else"). */
+export const GENERAL_PROMPTS = [
+  "What are you building, in one line?",
+  "What must it do on day one?",
+  "Who will use it?",
+];
+
 /* ── Delivery time per scope ────────────────────────────────────────────────
    `days` only orders them, so a multi-service project quotes its longest one.
    Simple scope keeps the 24-hour promise used on the closing step. */
@@ -200,5 +254,29 @@ export function quote(scopes: ServiceScope[], table: PricingTable) {
   let priceHigh = Math.ceil(high / highStep) * highStep;
   if (priceHigh <= priceLow) priceHigh = priceLow + highStep;
 
+  return { tier, priceLow, priceHigh, timeline: timeline.label };
+}
+
+/**
+ * A starting price for a brief too thin to quote precisely: the floor of each
+ * scope's band, i.e. the least the stated work can cost. `priceHigh` is the
+ * top of those bands, kept for the team's view rather than shown.
+ */
+export function startingPrice(scopes: ServiceScope[], table: PricingTable) {
+  let low = 0;
+  let high = 0;
+  let tier: EstimateTier = "simple";
+  let timeline = TIMELINES[scopes[0].key][scopes[0].tier];
+
+  for (const { key, tier: t } of scopes) {
+    const [bandLow, bandHigh] = table[key][t];
+    low += bandLow;
+    high += bandHigh;
+    if (TIER_ORDER[t] > TIER_ORDER[tier]) tier = t;
+    if (TIMELINES[key][t].days > timeline.days) timeline = TIMELINES[key][t];
+  }
+
+  const priceLow = Math.floor(low / priceStep(low)) * priceStep(low);
+  const priceHigh = Math.ceil(high / priceStep(high)) * priceStep(high);
   return { tier, priceLow, priceHigh, timeline: timeline.label };
 }

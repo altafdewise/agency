@@ -6,6 +6,7 @@ import { Check, MessageCircle, Mail, CalendarClock } from "lucide-react";
 import Logo from "@/components/Logo";
 import { StepShell } from "@/components/ui/StepShell";
 import { Button, LinkButton } from "@/components/ui/Button";
+import { TextArea } from "@/components/ui/inputs";
 import { usePath } from "@/components/PathProvider";
 import { whatsappHref, mailtoHref } from "@/lib/contact";
 import { SERVICES } from "@/lib/content";
@@ -38,6 +39,7 @@ function isValidEstimate(data: unknown): data is Estimate {
   if (!data || typeof data !== "object") return false;
   const e = data as Record<string, unknown>;
   return (
+    (e.kind === "range" || e.kind === "from") &&
     typeof e.priceLow === "number" &&
     typeof e.priceHigh === "number" &&
     typeof e.timeline === "string" &&
@@ -46,11 +48,15 @@ function isValidEstimate(data: unknown): data is Estimate {
 }
 
 export function Step7Estimate() {
-  const { brief, next, estimate, setEstimate } = usePath();
+  const { brief, next, estimate, setEstimate, update } = usePath();
   const [error, setError] = useState(false);
   const [showSlowMessage, setShowSlowMessage] = useState(false);
+  const [extra, setExtra] = useState("");
   // Snapshot the brief so the fetch body is stable across StrictMode remounts.
   const briefRef = useRef(brief);
+  // The saved lead, so answering the follow-ups updates it instead of adding one.
+  const leadIdRef = useRef(estimate?.leadId);
+  const refiningRef = useRef(false);
 
   useEffect(() => {
     if (estimate) return; // already have it (e.g. navigated back & forth)
@@ -72,13 +78,15 @@ export function Step7Estimate() {
         const res = await fetch("/api/estimate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(briefRef.current),
+          body: JSON.stringify({ ...briefRef.current, leadId: leadIdRef.current }),
           signal: ctrl.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: unknown = await res.json();
         if (!isValidEstimate(data)) throw new Error("Unparseable estimate.");
         if (active) {
+          leadIdRef.current = data.leadId ?? leadIdRef.current;
+          refiningRef.current = false;
           setError(false);
           setShowSlowMessage(false);
           setEstimate(data);
@@ -105,6 +113,18 @@ export function Step7Estimate() {
     };
   }, [estimate, setEstimate]);
 
+  // Answers to the follow-ups join the brief; clearing the estimate re-prices it.
+  const refine = () => {
+    const added = extra.trim();
+    if (!added) return;
+    const description = `${briefRef.current.description.trim()}\n\n${added}`;
+    briefRef.current = { ...briefRef.current, description };
+    refiningRef.current = true;
+    setExtra("");
+    setError(false);
+    update({ description });
+  };
+
   // ── loading ───────────────────────────────────────────────────────────────
   if (!estimate && !error) {
     return (
@@ -113,7 +133,9 @@ export function Step7Estimate() {
           <div style={{ width: "clamp(96px, 14vw, 132px)" }}>
             <Logo />
           </div>
-          <p className="eyebrow mt-12 animate-pulse">pricing your project…</p>
+          <p className="eyebrow mt-12 animate-pulse">
+            {refiningRef.current ? "sharpening your estimate…" : "pricing your project…"}
+          </p>
           <p className="body-muted mt-4">
             Reading your brief and working out a fair range.
           </p>
@@ -173,6 +195,68 @@ export function Step7Estimate() {
               Schedule a call
             </Button>
           </div>
+        </motion.div>
+      </StepShell>
+    );
+  }
+
+  // ── a starting price: the brief was too thin to quote precisely ─────────────
+  if (estimate.kind === "from") {
+    return (
+      <StepShell eyebrow="Your estimate" innerClassName="max-w-3xl">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <p className="font-sans text-sm font-light text-muted">
+            {[pricedFor(estimate), "Starting price"].filter(Boolean).join(" · ")}
+          </p>
+
+          <div className="mt-4 font-display font-semibold leading-[0.98] tracking-tightest text-accent [font-size:clamp(2.5rem,8vw,6rem)]">
+            <span className="mr-[0.22em] align-baseline text-[0.42em] font-medium text-muted">from</span>
+            <span className="whitespace-nowrap">{inr(estimate.priceLow)}</span>
+          </div>
+
+          <p className="mt-6 max-w-xl font-display text-xl text-foreground sm:text-2xl">
+            {estimate.summary}
+          </p>
+
+          <div className="mt-12 border-t border-border pt-10">
+            <h3 className="font-display text-2xl font-semibold tracking-tight text-foreground">
+              for a precise range, tell us:
+            </h3>
+            <ul className="mt-5 space-y-3">
+              {(estimate.questions ?? []).map((question) => (
+                <li key={question} className="flex items-start gap-3 text-base font-light text-foreground/90">
+                  <span aria-hidden className="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                  {question}
+                </li>
+              ))}
+            </ul>
+
+            <TextArea
+              className="mt-8"
+              value={extra}
+              onChange={(e) => setExtra(e.target.value)}
+              placeholder="A few words for each is plenty…"
+              aria-label="More detail about your project"
+            />
+
+            <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
+              <Button withArrow onClick={refine} disabled={!extra.trim()}>
+                Get my precise estimate
+              </Button>
+              <Button variant="link" onClick={next}>
+                or book a call instead →
+              </Button>
+            </div>
+          </div>
+
+          <p className="mt-10 text-xs font-light text-muted/70">
+            This is where projects like yours start. We confirm the final price
+            with you on a short call before any work starts.
+          </p>
         </motion.div>
       </StepShell>
     );
