@@ -1,0 +1,99 @@
+name: Uptime
+
+# Every 10 minutes: is zev.world up, and did the latest production deploy work?
+# Problems open one "downtime" issue (GitHub emails the repo owner); recovery
+# comments on it and closes it. GitHub can delay scheduled runs by a few minutes.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  deployments: read
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/uptime-check.mjs
+          sparse-checkout-cone-mode: false
+
+      - name: Check zev.world
+        id: site
+        run: node scripts/uptime-check.mjs https://www.zev.world
+
+      - name: Report
+        uses: actions/github-script@v7
+        env:
+          SITE_FAILED: ${{ steps.site.outputs.failed }}
+          SITE_FAILURES: ${{ steps.site.outputs.failures }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const LABEL = "downtime";
+            const problems = (process.env.SITE_FAILURES || "").split("\n").filter(Boolean);
+
+            // The latest production deploy: a failed build leaves the old version
+            // live, but it means the newest changes didn't ship.
+            const { data: deployments } = await github.rest.repos.listDeployments({
+              owner, repo, environment: "Production", per_page: 1,
+            });
+            if (deployments[0]) {
+              const { data: statuses } = await github.rest.repos.listDeploymentStatuses({
+                owner, repo, deployment_id: deployments[0].id, per_page: 1,
+              });
+              const state = statuses[0]?.state;
+              if (state === "failure" || state === "error") {
+                problems.push(
+                  `Latest production deploy (${deployments[0].sha.slice(0, 7)}) failed; the site is still on the previous version.`
+                );
+              }
+            }
+
+            const when = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" });
+            const run = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner, repo, labels: LABEL, state: "open", per_page: 1,
+            });
+            const issue = open[0];
+            const summary = problems.map((p) => `- ${p}`).join("\n");
+
+            if (problems.length) {
+              core.warning(`Problems found:\n${summary}`);
+              if (!issue) {
+                await github.rest.issues.createLabel({ owner, repo, name: LABEL, color: "ff4438" }).catch(() => {});
+                await github.rest.issues.create({
+                  owner, repo, labels: [LABEL],
+                  title: problems.length === 1 && problems[0].startsWith("Latest production deploy")
+                    ? "zev.world: production deploy failed"
+                    : "zev.world is down",
+                  body: `@${owner} the uptime check found a problem at ${when} IST:\n\n${summary}\n\n[Check run](${run}) · This issue closes itself when everything passes again.\n\n<!-- uptime:${summary} -->`,
+                });
+              } else if (!issue.body?.includes(`<!-- uptime:${summary} -->`)) {
+                // Only comment when the set of problems changes, not every 10 minutes.
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: issue.number,
+                  body: `Still failing at ${when} IST, now:\n\n${summary}\n\n[Check run](${run})`,
+                });
+                await github.rest.issues.update({
+                  owner, repo, issue_number: issue.number,
+                  body: `${(issue.body || "").replace(/<!-- uptime:[\s\S]*? -->/, "")}<!-- uptime:${summary} -->`,
+                });
+              }
+            } else if (issue) {
+              const minutes = Math.round((Date.now() - new Date(issue.created_at).getTime()) / 60000);
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issue.number,
+                body: `Back up at ${when} IST: all checks pass (problem lasted about ${minutes} min). Closing.`,
+              });
+              await github.rest.issues.update({ owner, repo, issue_number: issue.number, state: "closed" });
+            }
