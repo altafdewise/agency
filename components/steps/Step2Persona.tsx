@@ -24,7 +24,8 @@ export function Step2Persona() {
       goTo(3);
       return;
     }
-    update({ persona: key, customPersona: undefined, stage: "" });
+    // Re-picking the same answer keeps the stage chosen after it.
+    update({ persona: key, customPersona: undefined, ...(key === brief.persona ? {} : { stage: "" }) });
     next();
   };
 

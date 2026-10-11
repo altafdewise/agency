@@ -47,6 +47,10 @@ function sanitizePostHtml(html: string) {
   });
 }
 
+// The blog studio refreshes these pages on every save; this catches anything
+// changed outside it (e.g. directly in Supabase) within the hour.
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
   return (await getSlugs()).map((slug) => ({ slug }));
 }

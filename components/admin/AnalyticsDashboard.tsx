@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { FunnelEventRow, LeadRow, PageViewRow } from "@/lib/supabase/database.types";
+import type { AnalyticsSummary } from "@/lib/admin/analytics-summary";
 import { StatCard } from "@/components/admin/StatCard";
 import { inr } from "@/lib/admin/format";
 
@@ -22,52 +22,17 @@ const RANGE_DAYS = [
   { label: "90 days", value: 90 },
 ];
 
-const FLOW_STEPS = [
-  "step_1",
-  "step_2",
-  "step_3",
-  "step_4",
-  "step_5",
-  "step_6",
-  "step_7",
-  "step_8",
-];
-
-function dayKey(value: string) {
-  return new Date(value).toISOString().slice(0, 10);
-}
-
-function inRange(value: string, days: number) {
-  const date = new Date(value).getTime();
-  return date >= Date.now() - days * 24 * 60 * 60 * 1000;
-}
-
 export function AnalyticsDashboard({
-  pageViews,
-  funnelEvents,
-  leads,
+  summary,
   bookingCount,
 }: {
-  pageViews: PageViewRow[];
-  funnelEvents: FunnelEventRow[];
-  leads: Pick<LeadRow, "id" | "status" | "ai_price_low" | "ai_price_high" | "created_at">[];
+  summary: AnalyticsSummary;
   bookingCount: number;
 }) {
   const [range, setRange] = useState(30);
   const [path, setPath] = useState("all");
 
-  const paths = useMemo(
-    () => ["all", ...Array.from(new Set(pageViews.map((view) => view.path))).sort()],
-    [pageViews]
-  );
-
-  const visibleViews = useMemo(
-    () =>
-      pageViews.filter(
-        (view) => inRange(view.viewed_at, range) && (path === "all" || view.path === path)
-      ),
-    [pageViews, path, range]
-  );
+  const paths = useMemo(() => ["all", ...summary.paths], [summary.paths]);
 
   const viewsByDay = useMemo(() => {
     const map = new Map<string, number>();
@@ -77,59 +42,28 @@ export function AnalyticsDashboard({
         .slice(0, 10);
       map.set(date, 0);
     }
-    visibleViews.forEach((view) => {
-      const key = dayKey(view.viewed_at);
-      map.set(key, (map.get(key) || 0) + 1);
-    });
+    for (const entry of summary.dailyViews) {
+      if (!map.has(entry.day) || (path !== "all" && entry.path !== path)) continue;
+      map.set(entry.day, (map.get(entry.day) || 0) + entry.views);
+    }
     return Array.from(map.entries()).map(([date, views]) => ({
       date: date.slice(5),
       views,
     }));
-  }, [visibleViews, range]);
+  }, [summary.dailyViews, path, range]);
 
-  const funnel = useMemo(() => {
-    return FLOW_STEPS.map((step) => {
-      const sessions = new Set(
-        funnelEvents
-          .filter((event) => event.step_name === step && event.action === "entered")
-          .map((event) => event.session_id)
-      );
-      return { step: step.replace("_", " "), sessions: sessions.size };
-    });
-  }, [funnelEvents]);
-
-  const totalVisitors = new Set(
-    pageViews.filter((view) => inRange(view.viewed_at, 30) && view.session_id).map((view) => view.session_id)
-  ).size;
-  const converted = leads.filter((lead) => lead.status === "converted" || lead.status === "won").length;
-  const conversionRate = leads.length ? Math.round((converted / leads.length) * 100) : 0;
-  const avgEstimate =
-    leads.reduce((sum, lead) => {
-      if (lead.ai_price_low == null || lead.ai_price_high == null) return sum;
-      return sum + (lead.ai_price_low + lead.ai_price_high) / 2;
-    }, 0) / Math.max(1, leads.filter((lead) => lead.ai_price_low != null).length);
-
-  const topBlogPosts = useMemo(() => {
-    const map = new Map<string, number>();
-    pageViews
-      .filter((view) => view.path.startsWith("/blog/"))
-      .forEach((view) => map.set(view.path, (map.get(view.path) || 0) + 1));
-    return Array.from(map.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([postPath, views]) => ({ path: postPath, views }));
-  }, [pageViews]);
+  const { funnel, topBlogPosts, enquiries, conversionRate, avgEstimate } = summary;
 
   return (
     <div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Visitors · 30 days" value={String(totalVisitors)} />
-        <StatCard label="Enquiries · 90 days" value={String(leads.length)} tone="accent" />
-        <StatCard label="Conversion · 90 days" value={leads.length ? `${conversionRate}%` : "—"} note={leads.length ? undefined : "No activity yet."} tone="good" />
-        <StatCard label="Avg estimate" value={avgEstimate ? inr(avgEstimate) : "-"} />
+        <StatCard label="Visitors · 30 days" value={String(summary.visitors30)} />
+        <StatCard label="Enquiries · 90 days" value={String(enquiries)} tone="accent" />
+        <StatCard label="Conversion · 90 days" value={conversionRate === null ? "—" : `${conversionRate}%`} note={conversionRate === null ? "No activity yet." : undefined} tone="good" />
+        <StatCard label="Avg estimate" value={avgEstimate === null ? "-" : inr(avgEstimate)} />
       </div>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <StatCard label="Estimate requests · 90 days" value={String(leads.filter((lead) => lead.ai_price_low != null).length)} />
+        <StatCard label="Estimate requests · 90 days" value={String(summary.estimateRequests)} />
         <StatCard label="Bookings · 90 days" value={String(bookingCount)} />
       </div>
 

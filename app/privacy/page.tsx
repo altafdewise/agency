@@ -50,14 +50,16 @@ const SECTIONS: LegalSection[] = [
           </li>
           <li>
             <strong>Basic usage.</strong> The pages you visit, the page that referred you, and which
-            steps of the estimate you reach, tied to a random session ID kept in your browser&apos;s
-            session storage. It disappears when you close the tab. We don&apos;t use advertising
-            cookies or cross-site trackers.
+            steps of the estimate you reach, tied to a random session ID. That ID, and your answers
+            so far (so a refresh doesn&apos;t lose them), live in your browser&apos;s session storage
+            and disappear when you close the tab. We don&apos;t use advertising cookies or cross-site
+            trackers.
           </li>
           <li>
-            <strong>Technical data.</strong> To keep the estimate tool from being abused, we may briefly
-            use your IP address to limit how many estimates can be requested. We don&apos;t use it to
-            identify you.
+            <strong>Technical data.</strong> To keep the estimate tool from being abused, we limit how
+            many estimates one connection can request and how many estimate emails one address
+            receives. For that we keep only scrambled (hashed) versions of your IP address and email,
+            for up to two days. We don&apos;t use them to identify you.
           </li>
         </ul>
       </>

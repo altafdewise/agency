@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useSafeReducedMotion } from "@/lib/use-safe-reduced-motion";
-import { usePath } from "@/components/PathProvider";
+import { PanelStepContext, usePath } from "@/components/PathProvider";
 import { Progress } from "@/components/Progress";
 import { Step1Needs } from "@/components/steps/Step1Needs";
 import { Step2Persona } from "@/components/steps/Step2Persona";
@@ -40,18 +40,21 @@ const EXIT_MS = 400;
  * to complete its exit under React 19 + Next 15 here (the next panel never
  * mounts). This produces the identical motion, deterministically.
  *
+ * The outgoing panel is inert while it fades, and its navigation is scoped to
+ * its own step, so a double click can't fire a second "next" from it.
+ *
  * The logo + back affordance live in <SiteNav> (global). The ambient background
  * lives in the root layout.
  */
 export function Path({ posts = [] }: { posts?: HomePost[] }) {
-  const { step } = usePath();
+  const { step, instant } = usePath();
   const reduce = useSafeReducedMotion();
   const [shown, setShown] = useState(step);
   const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
     if (step === shown) return;
-    if (reduce) {
+    if (reduce || instant) {
       setShown(step);
       window.scrollTo(0, 0);
       return;
@@ -63,7 +66,7 @@ export function Path({ posts = [] }: { posts?: HomePost[] }) {
       window.scrollTo(0, 0);
     }, EXIT_MS);
     return () => clearTimeout(t);
-  }, [step, shown, reduce]);
+  }, [step, shown, reduce, instant]);
 
   const Current = STEPS[shown];
 
@@ -73,6 +76,7 @@ export function Path({ posts = [] }: { posts?: HomePost[] }) {
 
       <motion.div
         key={shown}
+        inert={exiting || step !== shown}
         initial={reduce ? false : { opacity: 0, y: 40 }}
         animate={
           exiting
@@ -80,7 +84,9 @@ export function Path({ posts = [] }: { posts?: HomePost[] }) {
             : { opacity: 1, y: 0, transition: { duration: reduce ? 0 : 0.5, ease: EASE_OUT } }
         }
       >
-        {shown === 0 ? <Step1Needs posts={posts} /> : <Current />}
+        <PanelStepContext.Provider value={shown}>
+          {shown === 0 ? <Step1Needs posts={posts} /> : <Current />}
+        </PanelStepContext.Provider>
       </motion.div>
     </main>
   );

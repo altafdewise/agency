@@ -128,6 +128,14 @@ export interface FeedbackRow {
   project: string | null;
 }
 
+export interface EstimateRequestRow {
+  id: string;
+  created_at: string;
+  client_hash: string;
+  email_hash: string | null;
+  emailed: boolean;
+}
+
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row & Record<string, unknown>;
   Insert: Insert & Record<string, unknown>;
@@ -185,6 +193,11 @@ export interface Database {
         FeedbackRow,
         Partial<FeedbackRow> & Pick<FeedbackRow, "message">,
         Partial<FeedbackRow>
+      >;
+      estimate_requests: Table<
+        EstimateRequestRow,
+        Partial<EstimateRequestRow> & Pick<EstimateRequestRow, "client_hash">,
+        Partial<EstimateRequestRow>
       >;
     };
     Views: Record<string, never>;

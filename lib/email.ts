@@ -1,6 +1,8 @@
 import { Resend } from "resend";
 import type { Booking } from "@/lib/bookings";
 import type { Brief, Estimate } from "@/lib/brief";
+import { GOALS, PERSONAS, PERSONA_STAGES, PROXY_GOALS, SERVICES } from "@/lib/content";
+import { SITE_URL } from "@/lib/site";
 
 const DEFAULT_FROM = "Zev's Agency <admin@zev.world>";
 
@@ -12,6 +14,15 @@ function getResend() {
 
   resendClient ??= new Resend(key);
   return resendClient;
+}
+
+/** Where the team hears about bookings and new leads. */
+function teamInbox() {
+  return (
+    process.env.BOOKING_NOTIFY_EMAIL ||
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL ||
+    "admin@zev.world"
+  );
 }
 
 function getFromAddress() {
@@ -172,10 +183,7 @@ export async function sendBookingEmails(booking: Booking) {
   }
 
   const from = getFromAddress();
-  const adminTo =
-    process.env.BOOKING_NOTIFY_EMAIL ||
-    process.env.NEXT_PUBLIC_CONTACT_EMAIL ||
-    "admin@zev.world";
+  const adminTo = teamInbox();
 
   const { error } = await resend.batch.send([
     {
@@ -216,5 +224,100 @@ export async function sendEstimateEmail(brief: Brief, estimate: Estimate) {
 
   if (error) throw new Error(error.message);
 
+  return { skipped: false };
+}
+
+/* ── Team alert for every estimate request ──────────────────────────────────
+   So a lead is answered while it's warm instead of waiting in the admin. */
+
+function servicesLabel(brief: Brief) {
+  const titles = brief.needs
+    .filter((key) => key !== "other")
+    .map((key) => SERVICES.find((service) => service.key === key)?.title ?? key);
+  if (brief.customNeed) titles.push(`"${brief.customNeed}"`);
+  return titles.join(", ") || "Not specified";
+}
+
+function personaLabel(brief: Brief) {
+  return (
+    brief.customPersona ||
+    PERSONAS.find((persona) => persona.key === brief.persona)?.label ||
+    brief.persona ||
+    "Not specified"
+  );
+}
+
+function stageLabel(stage: string) {
+  if (!stage) return "Not specified";
+  const timeline = Object.values(PERSONA_STAGES).flat().find((s) => s.key === stage);
+  const goal = [...GOALS, ...PROXY_GOALS].find((g) => g.key === stage);
+  return timeline?.title ?? goal?.label ?? stage;
+}
+
+function priceLabel(estimate: Estimate) {
+  return estimate.kind === "from"
+    ? `from ${formatInr(estimate.priceLow)}`
+    : `${formatInr(estimate.priceLow)} – ${formatInr(estimate.priceHigh)}`;
+}
+
+function leadAlertHtml(brief: Brief, estimate: Estimate | null, refined: boolean) {
+  const email = brief.contact?.email;
+  const headline = refined ? "Estimate updated." : "New estimate request.";
+  const verdict = !estimate
+    ? "No standard range fits this one - it needs a conversation."
+    : estimate.kind === "from"
+      ? "Starting price only - the brief was too thin for a precise range."
+      : "Precise range - the brief had the detail to price it.";
+  const questions =
+    estimate?.kind === "from" && estimate.questions?.length
+      ? `<p style="margin:22px 0 8px;font-size:13px;color:#777;">They were asked:</p><ul style="margin:0;padding:0 0 0 20px;">${estimate.questions
+          .map((q) => `<li style="margin:0 0 6px;font-size:14px;line-height:1.55;color:#333;">${escapeHtml(q)}</li>`)
+          .join("")}</ul>`
+      : "";
+
+  return emailShell({
+    preview: `${headline} ${servicesLabel(brief)}${estimate ? ` · ${priceLabel(estimate)}` : ""}`,
+    children: `
+      <h1 style="margin:0 0 10px;font-size:26px;line-height:1.15;font-weight:700;">${headline}</h1>
+      <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#555;">${escapeHtml(verdict)}</p>
+      ${estimate ? `<p style="margin:0 0 6px;font-size:30px;line-height:1.1;font-weight:700;color:#ff4438;">${escapeHtml(priceLabel(estimate))}</p>` : ""}
+      <table role="presentation" style="width:100%;border-collapse:collapse;margin:22px 0;border-top:1px solid #eee;border-bottom:1px solid #eee;">
+        ${detailRow("Services", servicesLabel(brief))}
+        ${detailRow("Who", personaLabel(brief))}
+        ${detailRow("Stage", stageLabel(brief.stage))}
+        ${detailRow("Name", brief.contact?.name || "Not shared")}
+        ${detailRow("Email", email || "Not shared - they skipped contact")}
+        ${estimate?.kind === "range" ? detailRow("Delivery", estimate.timeline) : ""}
+      </table>
+      <p style="margin:0 0 6px;font-size:13px;color:#777;">Their brief</p>
+      <p style="margin:0;font-size:14px;line-height:1.7;color:#333;white-space:pre-line;">${escapeHtml(brief.description || "No brief written.")}</p>
+      ${questions}
+      <p style="margin:26px 0 0;"><a href="${SITE_URL}/admin/estimates" style="display:inline-block;background:#171717;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:11px 20px;border-radius:999px;">Open in admin</a></p>
+      ${email ? `<p style="margin:16px 0 0;font-size:13px;line-height:1.6;color:#888;">Reply to this email to answer ${escapeHtml(brief.contact?.name || "them")} directly.</p>` : ""}
+    `,
+  });
+}
+
+export async function sendLeadAlert(brief: Brief, estimate: Estimate | null, refined = false) {
+  const resend = getResend();
+  if (!resend) {
+    console.info("[email] RESEND_API_KEY missing; skipped lead alert.");
+    return { skipped: true };
+  }
+
+  const what = servicesLabel(brief);
+  const subject = estimate
+    ? `${refined ? "Updated" : "New"} estimate: ${what} · ${priceLabel(estimate)}`
+    : `New lead: ${what} - needs a conversation`;
+
+  const { error } = await resend.emails.send({
+    from: getFromAddress(),
+    to: teamInbox(),
+    subject,
+    html: leadAlertHtml(brief, estimate, refined),
+    ...(brief.contact?.email ? { replyTo: brief.contact.email } : {}),
+  });
+
+  if (error) throw new Error(error.message);
   return { skipped: false };
 }

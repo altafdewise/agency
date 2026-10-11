@@ -48,14 +48,15 @@ function isValidEstimate(data: unknown): data is Estimate {
 }
 
 export function Step7Estimate() {
-  const { brief, next, estimate, setEstimate, update } = usePath();
+  const { brief, next, estimate, setEstimate, update, leadId, setLeadId } = usePath();
   const [error, setError] = useState(false);
   const [showSlowMessage, setShowSlowMessage] = useState(false);
   const [extra, setExtra] = useState("");
   // Snapshot the brief so the fetch body is stable across StrictMode remounts.
   const briefRef = useRef(brief);
-  // The saved lead, so answering the follow-ups updates it instead of adding one.
-  const leadIdRef = useRef(estimate?.leadId);
+  // The saved lead, so answering the follow-ups (or re-pricing changed answers)
+  // updates it instead of adding one.
+  const leadIdRef = useRef(leadId);
   const refiningRef = useRef(false);
 
   useEffect(() => {
@@ -86,6 +87,7 @@ export function Step7Estimate() {
         if (!isValidEstimate(data)) throw new Error("Unparseable estimate.");
         if (active) {
           leadIdRef.current = data.leadId ?? leadIdRef.current;
+          setLeadId(leadIdRef.current);
           refiningRef.current = false;
           setError(false);
           setShowSlowMessage(false);
@@ -111,7 +113,7 @@ export function Step7Estimate() {
       clearTimeout(timer);
       ctrl.abort();
     };
-  }, [estimate, setEstimate]);
+  }, [estimate, setEstimate, setLeadId]);
 
   // Answers to the follow-ups join the brief; clearing the estimate re-prices it.
   const refine = () => {

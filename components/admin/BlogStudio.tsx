@@ -29,6 +29,8 @@ type Draft = {
   id?: string;
   title: string;
   slug: string;
+  /** Once set (by hand, or because the post exists), the title no longer rewrites the slug. */
+  slugLocked: boolean;
   cover_image_url: string;
   status: BlogStatus;
 };
@@ -36,9 +38,37 @@ type Draft = {
 const emptyDraft: Draft = {
   title: "",
   slug: "",
+  slugLocked: false,
   cover_image_url: "",
   status: "draft",
 };
+
+/** `base`, or `base-2`, `base-3`… — the first one no other post uses. */
+async function freeSlug(base: string, postId?: string) {
+  let request = createSupabaseBrowserClient().from("blog_posts").select("slug").like("slug", `${base}%`);
+  if (postId) request = request.neq("id", postId);
+  const { data, error } = await request;
+  if (error) throw error;
+  const taken = new Set((data ?? []).map((row) => row.slug));
+  if (!taken.has(base)) return base;
+  let n = 2;
+  while (taken.has(`${base}-${n}`)) n += 1;
+  return `${base}-${n}`;
+}
+
+/** Refreshes the public blog and home page. Failing only delays the update. */
+async function refreshPublicBlog(slugs: string[]) {
+  try {
+    const res = await fetch("/api/admin/blog/revalidate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slugs }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
 
 export function BlogStudio({ posts }: { posts: BlogPostRow[] }) {
   const [items, setItems] = useState(posts);
@@ -49,6 +79,7 @@ export function BlogStudio({ posts }: { posts: BlogPostRow[] }) {
           id: posts[0].id,
           title: posts[0].title,
           slug: posts[0].slug,
+          slugLocked: true,
           cover_image_url: posts[0].cover_image_url || "",
           status: posts[0].status,
         }
@@ -89,6 +120,7 @@ export function BlogStudio({ posts }: { posts: BlogPostRow[] }) {
       id: selected.id,
       title: selected.title,
       slug: selected.slug,
+      slugLocked: true,
       cover_image_url: selected.cover_image_url || "",
       status: selected.status,
     });
@@ -119,9 +151,27 @@ export function BlogStudio({ posts }: { posts: BlogPostRow[] }) {
     setToast("");
 
     const status = nextStatus || draft.status;
+    const title = draft.title.trim();
+    const base = slugify(draft.slug) || slugify(title);
+    if (!title || !base) {
+      setSaving(false);
+      setToast(title ? "Give the post a slug with letters or numbers." : "Give the post a title first.");
+      return;
+    }
+
+    let slug: string;
+    try {
+      slug = await freeSlug(base, draft.id);
+    } catch (error) {
+      console.error("[admin/blog] slug check failed:", error);
+      setSaving(false);
+      setToast("Could not save the post. Please try again.");
+      return;
+    }
+
     const payload = {
-      title: draft.title.trim(),
-      slug: draft.slug.trim() || slugify(draft.title),
+      title,
+      slug,
       cover_image_url: draft.cover_image_url || null,
       content: editor.getHTML(),
       status,
@@ -145,9 +195,14 @@ export function BlogStudio({ posts }: { posts: BlogPostRow[] }) {
           .select("*")
           .single();
 
-    setSaving(false);
     if (result.error || !result.data) {
-      setToast(result.error?.message || "Could not save post.");
+      setSaving(false);
+      if (result.error) console.error("[admin/blog] save failed:", result.error);
+      setToast(
+        result.error?.code === "23505"
+          ? "Another post just took that slug. Save again to pick a new one."
+          : "Could not save the post. Please try again."
+      );
       return;
     }
 
@@ -159,7 +214,18 @@ export function BlogStudio({ posts }: { posts: BlogPostRow[] }) {
         : [saved, ...current];
     });
     setSelectedId(saved.id);
-    setToast(status === "published" ? "Published." : "Saved draft.");
+    setDraft((current) => ({ ...current, id: saved.id, slug: saved.slug, slugLocked: true }));
+
+    // A renamed post also clears its old address.
+    const refreshed = await refreshPublicBlog(
+      selected && selected.slug !== saved.slug ? [saved.slug, selected.slug] : [saved.slug]
+    );
+    setSaving(false);
+    const done =
+      status === "published"
+        ? saved.slug === base ? "Published." : `Published at /blog/${saved.slug}.`
+        : "Saved draft.";
+    setToast(refreshed ? done : `${done} The public blog may take up to an hour to show it.`);
   };
 
   const remove = async (post: BlogPostRow) => {
@@ -172,10 +238,11 @@ export function BlogStudio({ posts }: { posts: BlogPostRow[] }) {
       .delete()
       .eq("id", post.id);
     if (error) {
+      console.error("[admin/blog] delete failed:", error);
       setItems(previous);
-      setToast(error.message);
+      setToast("Could not delete the post. Please try again.");
     } else {
-      setToast("Deleted.");
+      setToast((await refreshPublicBlog([post.slug])) ? "Deleted." : "Deleted. The public blog may take up to an hour to drop it.");
     }
   };
 
@@ -205,7 +272,7 @@ export function BlogStudio({ posts }: { posts: BlogPostRow[] }) {
     setDraft((current) => ({
       ...current,
       title: value,
-      slug: current.slug || slugify(value),
+      slug: current.slugLocked ? current.slug : slugify(value),
     }));
   };
 
@@ -271,7 +338,15 @@ export function BlogStudio({ posts }: { posts: BlogPostRow[] }) {
                 id="post-slug"
                 value={draft.slug}
                 onChange={(event) =>
-                  setDraft((current) => ({ ...current, slug: event.target.value }))
+                  setDraft((current) => ({
+                    ...current,
+                    slug: event.target.value,
+                    // Clearing a new post's slug hands it back to the title.
+                    slugLocked: Boolean(current.id) || event.target.value.trim() !== "",
+                  }))
+                }
+                onBlur={() =>
+                  setDraft((current) => ({ ...current, slug: slugify(current.slug) || current.slug }))
                 }
                 placeholder="post-url-slug"
               />

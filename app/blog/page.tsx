@@ -4,6 +4,10 @@ import { ArrowUpRight } from "lucide-react";
 import { PageShell } from "@/components/ui/PageShell";
 import { getAllPosts, formatDate } from "@/lib/posts";
 
+// The blog studio refreshes these pages on every save; this catches anything
+// changed outside it (e.g. directly in Supabase) within the hour.
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Blog",
   description: "Notes on building, creating and growing — from the Zev studio.",

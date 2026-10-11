@@ -17,15 +17,27 @@ import {
   type ServiceScope,
 } from "@/lib/pricing";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { sendEstimateEmail } from "@/lib/email";
+import { sendEstimateEmail, sendLeadAlert } from "@/lib/email";
+import { admitEstimateRequest, claimEstimateEmail, clientKey } from "@/lib/estimate-guard";
+import { GOALS, PERSONAS, PERSONA_STAGES, PROXY_GOALS, SERVICES } from "@/lib/content";
 
 export const runtime = "nodejs";
 
 const MODEL = "claude-sonnet-4-6";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_DESCRIPTION_CHARS = 2000;
-const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
-const RATE_LIMIT_MAX = 5;
+// A real brief is a few KB at most; anything bigger is not from the path.
+const MAX_BODY_BYTES = 16 * 1024;
+// The browser gives up at 25s, so the model gets one attempt that ends before it.
+const MODEL_TIMEOUT_MS = 20_000;
+// Only the answers the path can actually produce reach the model and the lead.
+const SERVICE_KEYS = new Set(SERVICES.map((service) => service.key));
+const PERSONA_KEYS = new Set(PERSONAS.map((persona) => persona.key));
+const STAGE_KEYS = new Set([
+  ...Object.values(PERSONA_STAGES).flat().map((stage) => stage.key),
+  ...GOALS.map((goal) => goal.key),
+  ...PROXY_GOALS.map((goal) => goal.key),
+]);
 // A precise range needs real detail: the model has to judge the brief complete,
 // and it has to be more than a line. Without the model, length is all we have.
 const MIN_WORDS_FOR_RANGE = 12;
@@ -33,8 +45,6 @@ const FALLBACK_WORDS_FOR_RANGE = 30;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // A refined brief may update its lead only while that lead is fresh and untouched.
 const REFINE_WINDOW_MS = 2 * 60 * 60 * 1000;
-
-const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 
 async function loadPricingTable(): Promise<PricingTable> {
   const supabase = getSupabaseAdminClient();
@@ -318,29 +328,6 @@ function buildEstimate(
   };
 }
 
-function getClientIp(req: Request) {
-  const forwarded = req.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
-  return req.headers.get("x-real-ip") || "unknown";
-}
-
-function checkRateLimit(ip: string) {
-  const now = Date.now();
-  const current = rateBuckets.get(ip);
-
-  if (!current || current.resetAt <= now) {
-    rateBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return null;
-  }
-
-  if (current.count >= RATE_LIMIT_MAX) {
-    return Math.max(1, Math.ceil((current.resetAt - now) / 1000));
-  }
-
-  current.count += 1;
-  return null;
-}
-
 function validateBrief(input: unknown): { brief: Brief } | { error: string } {
   if (!input || typeof input !== "object") {
     return { error: "Tell us what you need before requesting an estimate." };
@@ -348,9 +335,10 @@ function validateBrief(input: unknown): { brief: Brief } | { error: string } {
 
   const candidate = input as Partial<Brief>;
   const needs = Array.isArray(candidate.needs)
-    ? candidate.needs.filter((need): need is string => typeof need === "string")
+    ? [...new Set(candidate.needs.filter((need): need is string => typeof need === "string"))]
     : [];
   const persona = typeof candidate.persona === "string" ? candidate.persona.trim() : "";
+  const stage = typeof candidate.stage === "string" ? candidate.stage.trim() : "";
   const description =
     typeof candidate.description === "string" ? candidate.description.trim() : "";
   const rawContact =
@@ -368,6 +356,14 @@ function validateBrief(input: unknown): { brief: Brief } | { error: string } {
 
   if (!persona) {
     return { error: "Choose who this is for before requesting an estimate." };
+  }
+
+  if (
+    !needs.every((need) => SERVICE_KEYS.has(need)) ||
+    !PERSONA_KEYS.has(persona) ||
+    (stage && !STAGE_KEYS.has(stage))
+  ) {
+    return { error: "Some answers weren't recognised. Please walk the path again." };
   }
 
   if (description.length > MAX_DESCRIPTION_CHARS) {
@@ -388,7 +384,7 @@ function validateBrief(input: unknown): { brief: Brief } | { error: string } {
         typeof candidate.customPersona === "string"
           ? candidate.customPersona.slice(0, 300)
           : undefined,
-      stage: typeof candidate.stage === "string" ? candidate.stage.trim() : "",
+      stage,
       description,
       contact: EMAIL_RE.test(contactEmail)
         ? { email: contactEmail.slice(0, 254), ...(contactName ? { name: contactName } : {}) }
@@ -438,7 +434,7 @@ async function scopeWithModel(
   apiKey: string
 ): Promise<ModelScope | null> {
   try {
-    const client = new Anthropic({ apiKey });
+    const client = new Anthropic({ apiKey, timeout: MODEL_TIMEOUT_MS, maxRetries: 0 });
     const message = await client.messages.create({
       model: MODEL,
       max_tokens: 800,
@@ -468,15 +464,21 @@ function leadSummary(estimate: Estimate) {
   return `${estimate.summary}\n\nStarting price only - the brief was too thin for a precise range.${open}`;
 }
 
-/** Saves the lead and returns its id. A refined brief (`leadId`) updates the
- *  lead it came from instead of adding a second one. */
+type SavedLead = {
+  id?: string;
+  /** What the lead held before this update, so an unchanged re-price isn't emailed again. */
+  previous?: { email: string | null; tier: string | null; low: number | null; high: number | null };
+};
+
+/** Saves the lead. A refined brief (`leadId`) updates the lead it came from
+ *  instead of adding a second one. */
 async function recordLead(
   brief: Brief,
   estimate: Estimate | null,
   leadId?: string
-): Promise<string | undefined> {
+): Promise<SavedLead> {
   const supabase = getSupabaseAdminClient();
-  if (!supabase) return undefined;
+  if (!supabase) return {};
 
   const row = {
     name: brief.contact?.name ?? null,
@@ -496,15 +498,28 @@ async function recordLead(
 
   try {
     if (leadId) {
-      const { data, error } = await supabase
+      const { data: before, error: readError } = await supabase
         .from("leads")
-        .update(row)
+        .select("contact_email,ai_tier,ai_price_low,ai_price_high")
         .eq("id", leadId)
         .eq("status", "new")
         .gte("created_at", new Date(Date.now() - REFINE_WINDOW_MS).toISOString())
-        .select("id");
-      if (error) throw error;
-      if (data?.length) return leadId;
+        .maybeSingle();
+      if (readError) throw readError;
+
+      if (before) {
+        const { error } = await supabase.from("leads").update(row).eq("id", leadId);
+        if (error) throw error;
+        return {
+          id: leadId,
+          previous: {
+            email: before.contact_email,
+            tier: before.ai_tier,
+            low: before.ai_price_low,
+            high: before.ai_price_high,
+          },
+        };
+      }
     }
 
     const { data, error } = await supabase
@@ -513,41 +528,57 @@ async function recordLead(
       .select("id")
       .single();
     if (error) throw error;
-    return data.id;
+    return { id: data.id };
   } catch (error) {
     console.error("[estimate] lead save failed:", error);
-    return undefined;
+    return {};
   }
 }
 
-async function completeEstimate(brief: Brief, estimate: Estimate, leadId?: string) {
-  const savedId = await recordLead(brief, estimate, leadId);
+async function completeEstimate(
+  brief: Brief,
+  estimate: Estimate,
+  leadId: string | undefined,
+  requestId: string | undefined
+) {
+  const saved = await recordLead(brief, estimate, leadId);
+  const email = brief.contact?.email;
+  const previous = saved.previous;
+  const alreadySent =
+    previous &&
+    previous.email?.toLowerCase() === email?.toLowerCase() &&
+    previous.tier === estimate.tier &&
+    previous.low === estimate.priceLow &&
+    previous.high === estimate.priceHigh;
 
-  try {
-    await sendEstimateEmail(brief, estimate);
-  } catch (error) {
-    // The estimate must still reach the browser even if email delivery is down.
-    console.error("[estimate] estimate email failed:", error);
-  }
+  // The client's copy and the team's alert go out together, and neither is
+  // repeated for a re-price that changed nothing. The estimate must still reach
+  // the browser even if email delivery is down.
+  const clientEmail = async () => {
+    if (!email || alreadySent) return;
+    if (await claimEstimateEmail(email, requestId)) await sendEstimateEmail(brief, estimate);
+    else console.info("[estimate] daily email limit reached for this address; skipped.");
+  };
+  const teamAlert = async () => {
+    if (!alreadySent) await sendLeadAlert(brief, estimate, Boolean(previous));
+  };
+  const [client, team] = await Promise.allSettled([clientEmail(), teamAlert()]);
+  if (client.status === "rejected") console.error("[estimate] estimate email failed:", client.reason);
+  if (team.status === "rejected") console.error("[estimate] lead alert failed:", team.reason);
 
-  return NextResponse.json({ ...estimate, ...(savedId ? { leadId: savedId } : {}) });
+  return NextResponse.json({ ...estimate, ...(saved.id ? { leadId: saved.id } : {}) });
 }
 
 export async function POST(req: Request) {
-  const retryAfter = checkRateLimit(getClientIp(req));
-  if (retryAfter) {
-    return NextResponse.json(
-      {
-        error:
-          "Too many estimate requests from this connection. Please wait a few minutes and try again.",
-      },
-      { status: 429, headers: { "Retry-After": String(retryAfter) } }
-    );
-  }
+  const tooLarge = () =>
+    NextResponse.json({ error: "That brief is too large to send." }, { status: 413 });
+  if (Number(req.headers.get("content-length") || 0) > MAX_BODY_BYTES) return tooLarge();
 
   let body: unknown;
   try {
-    body = await req.json();
+    const raw = await req.text();
+    if (raw.length > MAX_BODY_BYTES) return tooLarge();
+    body = JSON.parse(raw);
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
@@ -555,6 +586,20 @@ export async function POST(req: Request) {
   const validated = validateBrief(body);
   if ("error" in validated) {
     return NextResponse.json({ error: validated.error }, { status: 400 });
+  }
+
+  // Only well-formed briefs count against the limits; refusals cost nothing.
+  const admission = await admitEstimateRequest(clientKey(req));
+  if (!admission.ok) {
+    return NextResponse.json(
+      {
+        error:
+          admission.reason === "client"
+            ? "Too many estimate requests from this connection. Please wait a few minutes and try again."
+            : "We're getting a lot of estimate requests right now. Please try again shortly.",
+      },
+      { status: 429, headers: { "Retry-After": String(admission.retryAfter) } }
+    );
   }
 
   const { brief } = validated;
@@ -573,7 +618,11 @@ export async function POST(req: Request) {
   // Nothing we can price (e.g. "something else" that maps to no service):
   // keep the lead and let the client fall through to "let's talk it through".
   if (!scopes.length) {
-    await recordLead(brief, null, leadId);
+    const saved = await recordLead(brief, null, leadId);
+    // These are the leads most worth a personal reply.
+    await sendLeadAlert(brief, null, Boolean(saved.previous)).catch((error) =>
+      console.error("[estimate] lead alert failed:", error)
+    );
     return NextResponse.json(
       { error: "This one needs a conversation rather than a standard range." },
       { status: 422 }
@@ -590,6 +639,7 @@ export async function POST(req: Request) {
   return completeEstimate(
     brief,
     buildEstimate(scopes, pricingTable, modelScope, precise),
-    leadId
+    leadId,
+    admission.requestId
   );
 }
