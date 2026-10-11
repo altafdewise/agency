@@ -7,6 +7,16 @@ const nextConfig = {
   outputFileTracingIncludes: {
     "/**": ["./content/blog/**/*"],
   },
+  // Blog covers uploaded in admin live in Supabase Storage (public bucket).
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

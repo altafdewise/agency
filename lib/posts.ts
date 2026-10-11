@@ -5,8 +5,9 @@ import html from "remark-html";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 /** Blog posts are plain markdown files in /content/blog with frontmatter:
- *  --- title / date (YYYY-MM-DD) / excerpt --- then the body. Add files to
- *  publish — no code changes needed. */
+ *  --- title / date (YYYY-MM-DD) / excerpt / cover (optional image path, e.g.
+ *  /blog/my-post.jpg) --- then the body. Add files to publish — no code
+ *  changes needed. */
 const DIR = path.join(process.cwd(), "content", "blog");
 
 export interface PostMeta {
@@ -43,6 +44,13 @@ function parseFrontmatter(raw: string): {
   return { data, content };
 }
 
+/** A cover is a site path (/blog/x.jpg) or an https URL; anything else is ignored. */
+function coverFrom(value: unknown) {
+  return typeof value === "string" && (value.startsWith("/") || value.startsWith("https://"))
+    ? value
+    : undefined;
+}
+
 function readMeta(file: string): PostMeta {
   const slug = file.replace(/\.md$/, "");
   const { data } = parseFrontmatter(fs.readFileSync(path.join(DIR, file), "utf8"));
@@ -51,6 +59,7 @@ function readMeta(file: string): PostMeta {
     title: typeof data.title === "string" ? data.title : slug,
     date: typeof data.date === "string" ? data.date : "",
     excerpt: typeof data.excerpt === "string" ? data.excerpt : "",
+    coverImage: coverFrom(data.cover),
   };
 }
 
@@ -136,6 +145,7 @@ export async function getPost(
       title: typeof data.title === "string" ? data.title : slug,
       date: typeof data.date === "string" ? data.date : "",
       excerpt: typeof data.excerpt === "string" ? data.excerpt : "",
+      coverImage: coverFrom(data.cover),
     },
     html: processed.toString(),
   };

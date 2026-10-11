@@ -2,6 +2,7 @@
 title: what a website actually costs in 2026
 date: 2026-10-06
 excerpt: Quotes for "a website" can range from a few thousand rupees to a few lakh. Here is what actually moves the number, and how to know which bracket you are in.
+cover: /blog/what-a-website-actually-costs.jpg
 ---
 
 Ask five studios what a website costs and you will get five answers, often an order of magnitude apart. That is not because anyone is guessing. "A website" covers everything from a single page that explains what you do to a full product with accounts, payments and a content system.

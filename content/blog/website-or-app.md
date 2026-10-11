@@ -2,6 +2,7 @@
 title: website or app? how to decide
 date: 2026-09-24
 excerpt: Most people who ask for an app need a great website first. A few honest questions will tell you which one you actually need.
+cover: /blog/website-or-app.jpg
 ---
 
 "We need an app" is one of the most common things we hear, and one of the most expensive to get wrong. Apps are powerful, but they cost more to build, take longer to ship, and need to be found, downloaded and kept on someone's phone.

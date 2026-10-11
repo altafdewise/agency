@@ -62,8 +62,8 @@ function PostRow({ post, index }: { post: HomePost; index: number }) {
         </span>
 
         {post.image && (
-          <span className="relative hidden h-14 w-14 shrink-0 overflow-hidden rounded-full sm:block">
-            <Image src={post.image} alt="" fill sizes="56px" className="object-cover" />
+          <span className="relative hidden h-14 w-24 shrink-0 overflow-hidden rounded-lg bg-foreground/[0.04] sm:block">
+            <Image src={post.image} alt="" fill sizes="96px" className="object-cover transition-transform duration-500 ease-out-soft group-hover:scale-[1.05]" />
           </span>
         )}
 

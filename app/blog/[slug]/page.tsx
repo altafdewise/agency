@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import sanitizeHtml from "sanitize-html";
 import { PageShell } from "@/components/ui/PageShell";
 import { getPost, getSlugs, formatDate } from "@/lib/posts";
+import { ORG_ID, PERSON_ID, SITE_URL } from "@/lib/site";
 
 function sanitizePostHtml(html: string) {
   return sanitizeHtml(html, {
@@ -63,7 +65,28 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = await getPost(slug);
   if (!post) return { title: "Not found" };
-  return { title: post.meta.title, description: post.meta.excerpt };
+  const { title, excerpt: description, coverImage, date } = post.meta;
+  // The cover doubles as the share preview (WhatsApp, LinkedIn, X...).
+  const images = coverImage ? [{ url: coverImage, alt: title }] : undefined;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/blog/${slug}` },
+    openGraph: {
+      type: "article",
+      title,
+      description,
+      url: `/blog/${slug}`,
+      ...(date ? { publishedTime: date } : {}),
+      ...(images ? { images } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      ...(coverImage ? { images: [coverImage] } : {}),
+    },
+  };
 }
 
 export default async function BlogPost({
@@ -75,9 +98,26 @@ export default async function BlogPost({
   const post = await getPost(slug);
   if (!post) notFound();
   const safeHtml = sanitizePostHtml(post.html);
+  const cover = post.meta.coverImage;
+  const absolute = (src: string) => (src.startsWith("/") ? `${SITE_URL}${src}` : src);
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.meta.title,
+    description: post.meta.excerpt,
+    url: `${SITE_URL}/blog/${slug}`,
+    ...(post.meta.date ? { datePublished: post.meta.date } : {}),
+    ...(cover ? { image: absolute(cover) } : {}),
+    author: { "@id": PERSON_ID },
+    publisher: { "@id": ORG_ID },
+  };
 
   return (
     <PageShell className="max-w-2xl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
       <Link
         href="/blog"
         className="inline-flex items-center gap-2 text-sm font-light text-muted transition-colors hover:text-foreground"
@@ -93,6 +133,19 @@ export default async function BlogPost({
           )}
           <h1 className="headline-md mt-4 text-balance">{post.meta.title}</h1>
         </header>
+
+        {cover && (
+          <div className="relative mt-10 aspect-[16/9] w-full overflow-hidden rounded-2xl bg-foreground/[0.04]">
+            <Image
+              src={cover}
+              alt=""
+              fill
+              priority
+              sizes="(min-width: 768px) 672px, 100vw"
+              className="object-cover"
+            />
+          </div>
+        )}
 
         <div
           className="mt-10 text-base font-light leading-relaxed text-muted [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2 [&_h2]:mt-12 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-foreground [&_h3]:mt-8 [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-foreground [&_li]:mt-2 [&_ol]:mt-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mt-5 [&_strong]:font-medium [&_strong]:text-foreground [&_ul]:mt-5 [&_ul]:list-disc [&_ul]:pl-5"

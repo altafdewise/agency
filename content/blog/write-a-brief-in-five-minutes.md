@@ -2,6 +2,7 @@
 title: how to write a brief in five minutes
 date: 2026-09-12
 excerpt: You do not need a forty-page document to start a project. Five short answers are enough for an accurate estimate.
+cover: /blog/write-a-brief-in-five-minutes.jpg
 ---
 
 A good brief is not long. It is clear. Most of the useful information fits in five answers, and you probably already know all of them.

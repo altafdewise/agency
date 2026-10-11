@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
+import NextImage from "next/image";
 import Link from "@tiptap/extension-link";
 import {
   Bold,
@@ -378,20 +379,49 @@ export function BlogStudio({ posts }: { posts: BlogPostRow[] }) {
               className="hidden"
               onChange={(event) => handleCover(event.target.files?.[0])}
             />
-            <button
-              type="button"
-              onClick={() => coverInputRef.current?.click()}
-              className="flex min-h-36 w-full items-center justify-center rounded-lg border border-dashed border-border bg-background/30 text-sm text-muted transition-colors hover:border-accent/45 hover:text-foreground"
-            >
-              {draft.cover_image_url ? (
-                <span className="text-foreground">Cover uploaded - click to replace</span>
-              ) : (
+            {draft.cover_image_url ? (
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => coverInputRef.current?.click()}
+                  className="group relative block aspect-[16/9] w-full overflow-hidden rounded-lg border border-border bg-background/30"
+                  aria-label="Replace cover image"
+                >
+                  <NextImage
+                    src={draft.cover_image_url}
+                    alt="Cover preview"
+                    fill
+                    sizes="(min-width: 1024px) 480px, 100vw"
+                    className="object-cover"
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-sm font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                    Replace cover
+                  </span>
+                </button>
+                <div className="flex items-center justify-between gap-4 text-xs text-muted">
+                  <span>Shown on the blog, at the top of the post, and in link previews.</span>
+                  <button
+                    type="button"
+                    onClick={() => setDraft((current) => ({ ...current, cover_image_url: "" }))}
+                    className="shrink-0 text-accent hover:text-accent/75"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => coverInputRef.current?.click()}
+                className="flex min-h-36 w-full flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-border bg-background/30 text-sm text-muted transition-colors hover:border-accent/45 hover:text-foreground"
+              >
                 <span className="inline-flex items-center gap-2">
                   <ImageIcon className="h-4 w-4" />
                   Upload cover
                 </span>
-              )}
-            </button>
+                <span className="text-xs text-muted/70">Landscape works best, ideally 1600 × 900</span>
+              </button>
+            )}
           </div>
 
           <div>
