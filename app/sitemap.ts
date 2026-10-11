@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { NICHES } from "@/lib/niches";
 import { getAllPosts } from "@/lib/posts";
 import { SITE_URL } from "@/lib/site";
 
@@ -17,6 +18,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
+  const niches: MetadataRoute.Sitemap = NICHES.map((niche) => ({
+    url: `${SITE_URL}/for/${niche.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: niche.slug === "local-business" ? 0.8 : 0.7,
+  }));
+
   const posts: MetadataRoute.Sitemap = (await getAllPosts()).map((post) => {
     const published = post.date ? new Date(post.date) : now;
     return {
@@ -27,5 +35,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     };
   });
 
-  return [...pages, ...posts];
+  return [...pages, ...niches, ...posts];
 }
