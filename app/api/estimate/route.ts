@@ -15,6 +15,7 @@ import {
 } from "@/lib/pricing";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { loadPricingTable } from "@/lib/pricing-config";
+import { sanitizeAttribution, type Attribution } from "@/lib/attribution";
 import { sendEstimateEmail, sendLeadAlert } from "@/lib/email";
 import { admitEstimateRequest, claimEstimateEmail, clientKey } from "@/lib/estimate-guard";
 import { GOALS, PERSONAS, PERSONA_STAGES, PROXY_GOALS, SERVICES } from "@/lib/content";
@@ -429,10 +430,23 @@ type SavedLead = {
 
 /** Saves the lead. A refined brief (`leadId`) updates the lead it came from
  *  instead of adding a second one. */
+// Until the lead-source migration runs, those columns don't exist yet: the
+// lead is then saved without them rather than not at all.
+function missingSourceColumns(error: { code?: string; message?: string } | null) {
+  const message = error?.message ?? "";
+  return Boolean(
+    error &&
+      (error.code === "PGRST204" ||
+        error.code === "42703" ||
+        (/column/i.test(message) && /\b(source|medium|campaign|referrer|landing_page)\b/i.test(message)))
+  );
+}
+
 async function recordLead(
   brief: Brief,
   estimate: Estimate | null,
-  leadId?: string
+  leadId?: string,
+  attribution?: Attribution | null
 ): Promise<SavedLead> {
   const supabase = getSupabaseAdminClient();
   if (!supabase) return {};
@@ -452,6 +466,17 @@ async function recordLead(
     ai_timeline: estimate?.timeline ?? null,
     ai_included: estimate?.included ?? null,
   };
+  // Where the lead came from. Left out (not blanked) when unknown, so a
+  // refinement never erases the source recorded on the first estimate.
+  const sourceFields = attribution
+    ? {
+        source: attribution.source,
+        medium: attribution.medium ?? null,
+        campaign: attribution.campaign ?? null,
+        referrer: attribution.referrer ?? null,
+        landing_page: attribution.landing ?? null,
+      }
+    : {};
 
   try {
     if (leadId) {
@@ -465,7 +490,8 @@ async function recordLead(
       if (readError) throw readError;
 
       if (before) {
-        const { error } = await supabase.from("leads").update(row).eq("id", leadId);
+        let { error } = await supabase.from("leads").update({ ...row, ...sourceFields }).eq("id", leadId);
+        if (missingSourceColumns(error)) ({ error } = await supabase.from("leads").update(row).eq("id", leadId));
         if (error) throw error;
         return {
           id: leadId,
@@ -479,13 +505,16 @@ async function recordLead(
       }
     }
 
-    const { data, error } = await supabase
+    let inserted = await supabase
       .from("leads")
-      .insert({ ...row, status: "new" })
+      .insert({ ...row, ...sourceFields, status: "new" })
       .select("id")
       .single();
-    if (error) throw error;
-    return { id: data.id };
+    if (missingSourceColumns(inserted.error)) {
+      inserted = await supabase.from("leads").insert({ ...row, status: "new" }).select("id").single();
+    }
+    if (inserted.error) throw inserted.error;
+    return { id: inserted.data.id };
   } catch (error) {
     console.error("[estimate] lead save failed:", error);
     return {};
@@ -496,9 +525,10 @@ async function completeEstimate(
   brief: Brief,
   estimate: Estimate,
   leadId: string | undefined,
-  requestId: string | undefined
+  requestId: string | undefined,
+  attribution: Attribution | null
 ) {
-  const saved = await recordLead(brief, estimate, leadId);
+  const saved = await recordLead(brief, estimate, leadId, attribution);
   const email = brief.contact?.email;
   const previous = saved.previous;
   const alreadySent =
@@ -517,7 +547,7 @@ async function completeEstimate(
     else console.info("[estimate] daily email limit reached for this address; skipped.");
   };
   const teamAlert = async () => {
-    if (!alreadySent) await sendLeadAlert(brief, estimate, Boolean(previous));
+    if (!alreadySent) await sendLeadAlert(brief, estimate, Boolean(previous), attribution);
   };
   const [client, team] = await Promise.allSettled([clientEmail(), teamAlert()]);
   if (client.status === "rejected") console.error("[estimate] estimate email failed:", client.reason);
@@ -562,6 +592,7 @@ export async function POST(req: Request) {
   const { brief } = validated;
   const rawLeadId = (body as { leadId?: unknown }).leadId;
   const leadId = typeof rawLeadId === "string" && UUID_RE.test(rawLeadId) ? rawLeadId : undefined;
+  const attribution = sanitizeAttribution((body as { attribution?: unknown }).attribution);
   const apiKey = process.env.ANTHROPIC_API_KEY;
   const pricingTable = await loadPricingTable();
 
@@ -575,9 +606,9 @@ export async function POST(req: Request) {
   // Nothing we can price (e.g. "something else" that maps to no service):
   // keep the lead and let the client fall through to "let's talk it through".
   if (!scopes.length) {
-    const saved = await recordLead(brief, null, leadId);
+    const saved = await recordLead(brief, null, leadId, attribution);
     // These are the leads most worth a personal reply.
-    await sendLeadAlert(brief, null, Boolean(saved.previous)).catch((error) =>
+    await sendLeadAlert(brief, null, Boolean(saved.previous), attribution).catch((error) =>
       console.error("[estimate] lead alert failed:", error)
     );
     return NextResponse.json(
@@ -597,6 +628,7 @@ export async function POST(req: Request) {
     brief,
     buildEstimate(scopes, pricingTable, modelScope, precise),
     leadId,
-    admission.requestId
+    admission.requestId,
+    attribution
   );
 }

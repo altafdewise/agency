@@ -8,6 +8,23 @@ import { canEditLeads } from "@/lib/admin/permissions";
 import { inr, shortDate } from "@/lib/admin/format";
 import { ConfirmDeleteDialog } from "@/components/admin/ConfirmDeleteDialog";
 import { cn } from "@/lib/cn";
+import { describeAttribution } from "@/lib/attribution";
+
+/** "instagram · bio · launch", plus how they arrived, for a lead's source. */
+function leadSource(lead: LeadRow) {
+  if (!lead.source) return null;
+  return {
+    label: describeAttribution({
+      source: lead.source,
+      medium: lead.medium ?? undefined,
+      campaign: lead.campaign ?? undefined,
+    }),
+    detail: [lead.referrer && `via ${lead.referrer}`, lead.landing_page && `landed on ${lead.landing_page}`]
+      .filter(Boolean)
+      .join(" · "),
+  };
+}
+
 
 const STATUSES: LeadStatus[] = ["new", "contacted", "qualified", "proposal", "won", "converted", "lost"];
 const STATUS_CLASS: Record<LeadStatus, string> = {
@@ -102,6 +119,7 @@ export function LeadsInbox({ leads, role, page, total, query, status, sort }: {
       <aside className="min-w-0 border border-border bg-[#141414]/72 p-5 xl:sticky xl:top-24 xl:self-start">
         {selected ? <><div className="flex items-start justify-between gap-4"><div><p className="eyebrow">Lead detail</p><h2 className="mt-3 font-display text-3xl text-foreground">{selected.name || "Unnamed"}</h2></div><span className={cn("border px-2 py-1 text-xs", STATUS_CLASS[selected.status] || STATUS_CLASS.new)}>{selected.status}</span></div>
           <div className="mt-6 space-y-3 text-sm">{selected.contact_email && <p className="flex items-center gap-2 break-all text-foreground"><Mail className="h-4 w-4 shrink-0 text-muted" />{selected.contact_email}</p>}{selected.contact_phone && <p className="flex items-center gap-2 text-muted"><Phone className="h-4 w-4" />{selected.contact_phone}</p>}{selected.company && <p className="text-muted">Company: {selected.company}</p>}<p className="text-muted">Project: {selected.needs?.join(", ") || selected.persona || "Not specified"}</p><p className="text-muted">Created {shortDate(selected.created_at)} · Updated {shortDate(selected.updated_at || selected.created_at)}</p></div>
+          {leadSource(selected) && <div className="mt-7"><p className="eyebrow">Came from</p><p className="mt-3 text-sm text-foreground">{leadSource(selected)?.label}</p>{leadSource(selected)?.detail && <p className="mt-1 text-xs text-muted">{leadSource(selected)?.detail}</p>}</div>}
           <div className="mt-7"><p className="eyebrow">Brief</p><p className="mt-3 whitespace-pre-wrap text-sm font-light leading-relaxed text-muted">{selected.brief_text || "No brief captured."}</p></div>
           <div className="mt-7"><p className="eyebrow">Estimate</p><p className="mt-3 font-display text-2xl text-accent">{selected.ai_price_low != null && selected.ai_price_high != null ? `${inr(selected.ai_price_low)}–${inr(selected.ai_price_high)}` : "Not requested"}</p><p className="mt-3 text-sm leading-relaxed text-muted">{selected.ai_summary || "No estimate summary captured."}</p></div>
           <div className="mt-7"><label htmlFor="lead-status" className="eyebrow mb-3 block">Status</label><select id="lead-status" value={selected.status} disabled={!canEdit || saving === selected.id} onChange={(event) => updateStatus(selected, event.target.value as LeadStatus)} className="h-11 w-full border border-border bg-background px-3 text-sm text-foreground disabled:opacity-50">{STATUSES.map((item) => <option key={item} value={item}>{item}</option>)}</select>{!canEdit && <p className="mt-2 text-xs text-muted">Viewer access is read-only.</p>}</div>

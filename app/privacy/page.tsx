@@ -45,6 +45,11 @@ const SECTIONS: LegalSection[] = [
             when you book a call.
           </li>
           <li>
+            <strong>How you found us.</strong> The link, campaign or site that brought you here
+            (for example an Instagram post or a Google search), saved with your brief if you ask for
+            an estimate.
+          </li>
+          <li>
             <strong>Anonymous feedback.</strong> The message and type you choose. We don&apos;t ask for
             a name or email.
           </li>

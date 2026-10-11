@@ -11,6 +11,7 @@ import { usePath } from "@/components/PathProvider";
 import { whatsappHref, mailtoHref } from "@/lib/contact";
 import { SERVICES } from "@/lib/content";
 import type { Estimate } from "@/lib/brief";
+import { readAttribution } from "@/lib/attribution-client";
 
 const ESTIMATE_TIMEOUT_MS = 25000;
 const SLOW_MESSAGE_MS = 6000;
@@ -79,7 +80,11 @@ export function Step7Estimate() {
         const res = await fetch("/api/estimate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...briefRef.current, leadId: leadIdRef.current }),
+          body: JSON.stringify({
+            ...briefRef.current,
+            leadId: leadIdRef.current,
+            attribution: readAttribution(),
+          }),
           signal: ctrl.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

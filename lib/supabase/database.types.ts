@@ -43,6 +43,12 @@ export interface LeadRow {
   updated_at: string;
   company: string | null;
   estimate_status: EstimateStatus | null;
+  /** Where the lead came from (added 2026-10-11; absent until migrated). */
+  source?: string | null;
+  medium?: string | null;
+  campaign?: string | null;
+  referrer?: string | null;
+  landing_page?: string | null;
 }
 
 export interface ProjectRow {

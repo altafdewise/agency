@@ -3,6 +3,7 @@ import type { Booking } from "@/lib/bookings";
 import type { Brief, Estimate } from "@/lib/brief";
 import { GOALS, PERSONAS, PERSONA_STAGES, PROXY_GOALS, SERVICES } from "@/lib/content";
 import { SITE_URL } from "@/lib/site";
+import { describeAttribution, type Attribution } from "@/lib/attribution";
 
 const DEFAULT_FROM = "Zev's Agency <admin@zev.world>";
 
@@ -260,7 +261,12 @@ function priceLabel(estimate: Estimate) {
     : `${formatInr(estimate.priceLow)} – ${formatInr(estimate.priceHigh)}`;
 }
 
-function leadAlertHtml(brief: Brief, estimate: Estimate | null, refined: boolean) {
+function leadAlertHtml(
+  brief: Brief,
+  estimate: Estimate | null,
+  refined: boolean,
+  attribution?: Attribution | null
+) {
   const email = brief.contact?.email;
   const headline = refined ? "Estimate updated." : "New estimate request.";
   const verdict = !estimate
@@ -288,6 +294,8 @@ function leadAlertHtml(brief: Brief, estimate: Estimate | null, refined: boolean
         ${detailRow("Name", brief.contact?.name || "Not shared")}
         ${detailRow("Email", email || "Not shared - they skipped contact")}
         ${estimate?.kind === "range" ? detailRow("Delivery", estimate.timeline) : ""}
+        ${attribution ? detailRow("Came from", describeAttribution(attribution)) : ""}
+        ${attribution?.landing && attribution.landing !== "/" ? detailRow("Landed on", attribution.landing) : ""}
       </table>
       <p style="margin:0 0 6px;font-size:13px;color:#777;">Their brief</p>
       <p style="margin:0;font-size:14px;line-height:1.7;color:#333;white-space:pre-line;">${escapeHtml(brief.description || "No brief written.")}</p>
@@ -298,7 +306,12 @@ function leadAlertHtml(brief: Brief, estimate: Estimate | null, refined: boolean
   });
 }
 
-export async function sendLeadAlert(brief: Brief, estimate: Estimate | null, refined = false) {
+export async function sendLeadAlert(
+  brief: Brief,
+  estimate: Estimate | null,
+  refined = false,
+  attribution?: Attribution | null
+) {
   const resend = getResend();
   if (!resend) {
     console.info("[email] RESEND_API_KEY missing; skipped lead alert.");
@@ -314,7 +327,7 @@ export async function sendLeadAlert(brief: Brief, estimate: Estimate | null, ref
     from: getFromAddress(),
     to: teamInbox(),
     subject,
-    html: leadAlertHtml(brief, estimate, refined),
+    html: leadAlertHtml(brief, estimate, refined, attribution),
     ...(brief.contact?.email ? { replyTo: brief.contact.email } : {}),
   });
 
