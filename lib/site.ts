@@ -21,8 +21,9 @@ export const FOUNDER = {
   url: `${SITE_URL}/portfolio`,
 } as const;
 
-/** Instagram profile URL (set NEXT_PUBLIC_INSTAGRAM_URL in Vercel to change). */
-export const INSTAGRAM_URL = process.env.NEXT_PUBLIC_INSTAGRAM_URL || "";
+/** Instagram profile (NEXT_PUBLIC_INSTAGRAM_URL in Vercel overrides it). */
+export const INSTAGRAM_URL =
+  process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://www.instagram.com/thyzevv/";
 
 const ORG_ID = `${SITE_URL}/#organization`;
 const PERSON_ID = `${SITE_URL}/portfolio#person`;
