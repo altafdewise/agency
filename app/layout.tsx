@@ -4,6 +4,7 @@ import "./globals.css";
 import { PathProvider } from "@/components/PathProvider";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { SiteChrome } from "@/components/SiteChrome";
+import { SITE_URL, siteJsonLd } from "@/lib/site";
 
 // Inter — the open stand-in for Apple's SF Pro. Used for everything (display +
 // body); on Apple devices the CSS stack prefers the real SF Pro / -apple-system.
@@ -22,19 +23,25 @@ const mono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
-const TITLE = "Zev — for brands ready to move.";
+const TITLE = "Zev's Agency — for brands ready to move.";
 const DESCRIPTION =
-  "For brands ready to move — websites, apps, AI, brand and more. Tell us what you're building and get an instant, grounded estimate.";
+  "Zev's Agency is a creative and technology studio founded by Mohammad Altaf. Websites, apps, AI, brand and more — tell us what you're building and get an instant, grounded estimate.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://zev.world"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: TITLE,
-    template: "%s · Zev",
+    template: "%s · Zev's Agency",
   },
   description: DESCRIPTION,
-  applicationName: "Zev",
+  applicationName: "Zev's Agency",
+  authors: [{ name: "Mohammad Altaf", url: `${SITE_URL}/portfolio` }],
+  creator: "Mohammad Altaf",
   keywords: [
+    "Zev",
+    "Zev's Agency",
+    "Zev Agency",
+    "Mohammad Altaf",
     "creative studio",
     "web design",
     "app development",
@@ -52,8 +59,8 @@ export const metadata: Metadata = {
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
-    url: "https://zev.world",
-    siteName: "Zev",
+    url: SITE_URL,
+    siteName: "Zev's Agency",
     type: "website",
     locale: "en_US",
   },
@@ -78,6 +85,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable}`}>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd()) }}
+        />
         {/* Flow state lives at the root so it survives visiting other pages. */}
         <PathProvider>
           <AnalyticsTracker />

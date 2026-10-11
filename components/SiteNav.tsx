@@ -12,7 +12,6 @@ import { tick } from "@/lib/haptics";
 import { cn } from "@/lib/cn";
 
 const NAV_LINKS = [
-  { label: "Work", href: "/about#work" },
   { label: "About", href: "/about" },
   { label: "Blog", href: "/blog" },
   { label: "Legal", href: "/legal" },

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CONTACT } from "@/lib/contact";
+import { INSTAGRAM_URL } from "@/lib/site";
 
 /** The "7." brand mark (bone, via mask) — same asset the nav uses. */
 function FooterMark() {
@@ -39,6 +40,31 @@ export function SiteFooter() {
         >
           <FooterMark />
         </Link>
+
+        <nav aria-label="Footer" className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-light text-muted">
+          <Link href="/portfolio" className="transition-colors duration-200 hover:text-foreground">
+            Story
+          </Link>
+          <Link href="/blog" className="transition-colors duration-200 hover:text-foreground">
+            Blog
+          </Link>
+          {INSTAGRAM_URL && (
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer me"
+              className="transition-colors duration-200 hover:text-foreground"
+            >
+              Instagram
+            </a>
+          )}
+          <Link href="/privacy" className="transition-colors duration-200 hover:text-foreground">
+            Privacy
+          </Link>
+          <Link href="/terms" className="transition-colors duration-200 hover:text-foreground">
+            Terms
+          </Link>
+        </nav>
 
         <div className="flex flex-col items-center gap-1.5 text-xs font-light text-muted/60">
           <p>&copy; {year} Zev&rsquo;s Agency for brands ready to move.</p>
