@@ -4,12 +4,9 @@ import type { Brief, Estimate, EstimateTier } from "@/lib/brief";
 import {
   BRIEF_PROMPTS,
   GENERAL_PROMPTS,
-  PRICING_TABLE,
   SCOPE_INCLUDES,
   isEstimateTier,
   isPricingKey,
-  isValidPriceRange,
-  pricingFallback,
   quote,
   startingPrice,
   type PricingKey,
@@ -17,6 +14,7 @@ import {
   type ServiceScope,
 } from "@/lib/pricing";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { loadPricingTable } from "@/lib/pricing-config";
 import { sendEstimateEmail, sendLeadAlert } from "@/lib/email";
 import { admitEstimateRequest, claimEstimateEmail, clientKey } from "@/lib/estimate-guard";
 import { GOALS, PERSONAS, PERSONA_STAGES, PROXY_GOALS, SERVICES } from "@/lib/content";
@@ -45,47 +43,6 @@ const FALLBACK_WORDS_FOR_RANGE = 30;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // A refined brief may update its lead only while that lead is fresh and untouched.
 const REFINE_WINDOW_MS = 2 * 60 * 60 * 1000;
-
-async function loadPricingTable(): Promise<PricingTable> {
-  const supabase = getSupabaseAdminClient();
-  if (!supabase) return PRICING_TABLE;
-
-  try {
-    const { data, error } = await supabase
-      .from("pricing_config")
-      .select("service_key,tier,price_low,price_high");
-
-    if (error || !data?.length) return PRICING_TABLE;
-
-    const table = JSON.parse(JSON.stringify(PRICING_TABLE)) as Record<
-      PricingKey,
-      Record<EstimateTier, [number, number]>
-    >;
-
-    for (const row of data) {
-      if (!isPricingKey(row.service_key) || !isEstimateTier(row.tier)) {
-        continue;
-      }
-
-      if (isValidPriceRange(row.price_low, row.price_high)) {
-        table[row.service_key][row.tier] = [
-          Number(row.price_low),
-          Number(row.price_high),
-        ];
-      } else {
-        table[row.service_key][row.tier] = pricingFallback(
-          row.service_key,
-          row.tier
-        );
-      }
-    }
-
-    return table as PricingTable;
-  } catch (error) {
-    console.error("[estimate] pricing_config read failed:", error);
-    return PRICING_TABLE;
-  }
-}
 
 /* ── The estimator's brief (system prompt) ──────────────────────────────────
    The model only judges scope and writes the client-facing copy. Prices and
