@@ -80,7 +80,7 @@ export default async function NichePage({ params }: Props) {
     },
     {
       q: `are you in ${LOCATION.city}?`,
-      a: `Yes, we're based in ${LOCATION.city}. Most of the work happens over WhatsApp and one short call, so it fits around your day.`,
+      a: `Yes, our office is in ${LOCATION.area}, ${LOCATION.city}. Most of the work happens over WhatsApp and one short call, so it fits around your day.`,
     },
     {
       q: "is the price fixed?",

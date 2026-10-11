@@ -14,6 +14,7 @@ import { ImpactStatSection } from "@/components/impact/ImpactStatSection";
 import { WorkTeaserSection } from "@/components/home/WorkTeaserSection";
 import { FaqSection } from "@/components/faq/FaqSection";
 import { AnonymousFeedbackSection } from "@/components/feedback/AnonymousFeedbackSection";
+import { LocationSection } from "@/components/home/LocationSection";
 import { SiteFooter } from "@/components/SiteFooter";
 
 // Proof sections wait until there are real clients, numbers and work to show.
@@ -84,6 +85,8 @@ export function Step1Needs({ posts = [] }: { posts?: HomePost[] }) {
       {!HIDDEN_HOME_SECTIONS.faq && <FaqSection />}
 
       <AnonymousFeedbackSection />
+
+      <LocationSection />
 
       <SiteFooter />
     </>

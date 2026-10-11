@@ -117,6 +117,11 @@ const SECTIONS: LegalSection[] = [
           <li>
             <strong>Anthropic</strong> runs the AI that scopes estimates.
           </li>
+          <li>
+            <strong>Google Maps</strong> shows where our office is, on the home page. When the map
+            loads, Google receives your IP address and may set its own cookies, under Google&apos;s
+            privacy policy.
+          </li>
         </ul>
         <p>
           Some of these providers process data outside India. We may also disclose data where the law

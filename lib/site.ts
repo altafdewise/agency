@@ -21,11 +21,20 @@ export const FOUNDER = {
   url: `${SITE_URL}/portfolio`,
 } as const;
 
-/** Where the studio is. Used in structured data and the local landing pages. */
+/** Where the studio is. Used in structured data, the local landing pages and
+ *  the map on the home page. */
 export const LOCATION = {
+  building: "Sri Residency, 92",
+  street: "East Balaji Hill Colony, Mallikarjuna Nagar",
+  area: "Boduppal",
   city: "Hyderabad",
   region: "Telangana",
+  postalCode: "500092",
   country: "IN",
+  lat: 17.4141709,
+  lng: 78.5786001,
+  /** The office's Google Maps place. */
+  mapsUrl: "https://maps.app.goo.gl/RevJnAJ7P15a2BS17",
 } as const;
 
 /** Instagram profile (NEXT_PUBLIC_INSTAGRAM_URL in Vercel overrides it). */
@@ -56,10 +65,14 @@ export function siteJsonLd() {
           "A creative and technology studio in Hyderabad for websites, apps, AI, brand and security, founded by Mohammad Altaf.",
         address: {
           "@type": "PostalAddress",
+          streetAddress: `${LOCATION.building}, ${LOCATION.street}, ${LOCATION.area}`,
           addressLocality: LOCATION.city,
           addressRegion: LOCATION.region,
+          postalCode: LOCATION.postalCode,
           addressCountry: LOCATION.country,
         },
+        geo: { "@type": "GeoCoordinates", latitude: LOCATION.lat, longitude: LOCATION.lng },
+        hasMap: LOCATION.mapsUrl,
         areaServed: [
           { "@type": "City", name: LOCATION.city },
           { "@type": "Country", name: "India" },
