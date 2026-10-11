@@ -5,6 +5,8 @@
   --ink-soft: #636159;
   --line: rgba(23, 23, 19, 0.16);
   --accent: #f24b3f;
+  /* The accent at small sizes: deep enough to read on every paper tone (AA). */
+  --accent-ink: #b42a19;
   --page-gutter: clamp(1.25rem, 5vw, 5rem);
   --display-gutter: clamp(1.25rem, 8vw, 9.5rem);
   --rail-gutter: clamp(6.5rem, 12vw, 11rem);
@@ -310,7 +312,7 @@
 
 .chapterLabel span:first-child {
   min-width: 1.7rem;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .curiosityChapter {
@@ -3774,5 +3776,42 @@
 
   .paperGrain {
     display: none;
+  }
+}
+
+/* The dark chapters keep the bright red; it's the one that reads on black. */
+.cybersecurityChapter,
+.voidChapter {
+  --accent-ink: var(--accent);
+}
+
+/* The human chapter's paper is darker; a deeper red keeps its line legible. */
+.humanSentence em {
+  color: #d93a2d;
+}
+
+/* Phones: no text below 11px (12px for running copy), so captions, labels and
+   footnotes stay readable. Selectors mirror the rules that set each size. */
+@media (max-width: 640px) {
+  .chapterLabel,
+  .chapterKicker,
+  .designFrameGrid .mediaCaption,
+  .closingColophon,
+  .voidFooter p,
+  .metricsFootnote,
+  .securityDisciplineList li,
+  .gameProjectCopy > p,
+  .gameProjectCopy > span,
+  .gameProjectMedia > p,
+  .voidReveal > p,
+  .voidReveal > span,
+  .maggieReveal > div:last-child > p {
+    font-size: 11px;
+  }
+
+  .agencyOverviewLead > p:last-child,
+  .gameSkillGrid p,
+  .voidPipeline li p {
+    font-size: 12px;
   }
 }

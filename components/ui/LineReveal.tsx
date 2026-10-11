@@ -103,8 +103,9 @@ type Tag = "h1" | "h2" | "h3" | "p";
 
 /**
  * Renders `lines` as stacked lines whose words focus in one by one. With
- * `dot`, the last line ends in a <RedDot> instead of a typed full stop
- * (screen readers still get the plain sentence via aria-label).
+ * `dot`, the last line ends in a <RedDot> instead of a typed full stop.
+ * Screen readers get the plain sentence from a visually hidden copy (an
+ * aria-label isn't allowed on every element, e.g. a <p>).
  */
 export function LineReveal({
   as = "h2",
@@ -133,12 +134,12 @@ export function LineReveal({
   return (
     <Component
       id={id}
-      aria-label={label}
       className={className}
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, amount }}
     >
+      <span className="sr-only">{label}</span>
       {lines.map((line, i) => (
         <span
           key={i}
