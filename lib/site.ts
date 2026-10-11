@@ -21,6 +21,13 @@ export const FOUNDER = {
   url: `${SITE_URL}/portfolio`,
 } as const;
 
+/** Where the studio is. Used in structured data and the local landing pages. */
+export const LOCATION = {
+  city: "Hyderabad",
+  region: "Telangana",
+  country: "IN",
+} as const;
+
 /** Instagram profile (NEXT_PUBLIC_INSTAGRAM_URL in Vercel overrides it). */
 export const INSTAGRAM_URL =
   process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://www.instagram.com/thyzevv/";
@@ -46,7 +53,17 @@ export function siteJsonLd() {
         logo: `${SITE_URL}/icon.png`,
         email: CONTACT.email,
         description:
-          "A creative and technology studio for websites, apps, AI, brand and security, founded by Mohammad Altaf.",
+          "A creative and technology studio in Hyderabad for websites, apps, AI, brand and security, founded by Mohammad Altaf.",
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: LOCATION.city,
+          addressRegion: LOCATION.region,
+          addressCountry: LOCATION.country,
+        },
+        areaServed: [
+          { "@type": "City", name: LOCATION.city },
+          { "@type": "Country", name: "India" },
+        ],
         founder: { "@id": PERSON_ID },
         ...(sameAs.length ? { sameAs } : {}),
       },

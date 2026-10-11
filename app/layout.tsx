@@ -25,7 +25,7 @@ const mono = JetBrains_Mono({
 
 const TITLE = "Zev's Agency — for brands ready to move.";
 const DESCRIPTION =
-  "Zev's Agency is a creative and technology studio founded by Mohammad Altaf. Websites, apps, AI, brand and more — tell us what you're building and get an instant, grounded estimate.";
+  "Zev's Agency is a creative and technology studio in Hyderabad, founded by Mohammad Altaf. Websites, apps, AI, brand and more — tell us what you're building and get an instant, grounded estimate.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

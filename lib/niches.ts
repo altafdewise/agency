@@ -1,3 +1,5 @@
+import { LOCATION } from "@/lib/site";
+
 /**
  * Landing pages for local businesses, one per kind of business, at
  * /for/<slug>. Made for outreach links and ads: each speaks to one kind of
@@ -41,7 +43,7 @@ export const NICHES: Niche[] = [
     whatsapp: "Hi Zev, I run a local business and I'd like a website.",
     briefStarter: "A website for my business: ",
     metaDescription:
-      "A website for your local business, live in 24 hours: what you offer, where you are, your hours and one-tap call and WhatsApp. See your price in two minutes.",
+      `A website for your local business in ${LOCATION.city}, live in 24 hours: what you offer, where you are, your hours and one-tap call and WhatsApp. See your price in two minutes.`,
   },
   {
     slug: "clinics",
@@ -59,7 +61,7 @@ export const NICHES: Niche[] = [
     whatsapp: "Hi Zev, I run a clinic and I'd like a website.",
     briefStarter: "A website for our clinic: ",
     metaDescription:
-      "A website for your clinic, live in 24 hours: your doctors, timings, location and one-tap booking by call or WhatsApp. See your price in two minutes.",
+      `A website for your clinic in ${LOCATION.city}, live in 24 hours: your doctors, timings, location and one-tap booking by call or WhatsApp. See your price in two minutes.`,
   },
   {
     slug: "cafes",
@@ -77,7 +79,7 @@ export const NICHES: Niche[] = [
     whatsapp: "Hi Zev, I run a café and I'd like a website.",
     briefStarter: "A website for our café: ",
     metaDescription:
-      "A website for your café or restaurant, live in 24 hours: your menu, photos, hours, location and one-tap reservations. See your price in two minutes.",
+      `A website for your café or restaurant in ${LOCATION.city}, live in 24 hours: your menu, photos, hours, location and one-tap reservations. See your price in two minutes.`,
   },
   {
     slug: "salons",
@@ -95,7 +97,7 @@ export const NICHES: Niche[] = [
     whatsapp: "Hi Zev, I run a salon and I'd like a website.",
     briefStarter: "A website for our salon: ",
     metaDescription:
-      "A website for your salon or spa, live in 24 hours: your work, services and prices, location and one-tap booking. See your price in two minutes.",
+      `A website for your salon or spa in ${LOCATION.city}, live in 24 hours: your work, services and prices, location and one-tap booking. See your price in two minutes.`,
   },
   {
     slug: "gyms",
@@ -113,7 +115,7 @@ export const NICHES: Niche[] = [
     whatsapp: "Hi Zev, I run a gym and I'd like a website.",
     briefStarter: "A website for our gym: ",
     metaDescription:
-      "A website for your gym or fitness studio, live in 24 hours: your space, trainers, plans and a one-tap way to book a trial. See your price in two minutes.",
+      `A website for your gym or fitness studio in ${LOCATION.city}, live in 24 hours: your space, trainers, plans and a one-tap way to book a trial. See your price in two minutes.`,
   },
   {
     slug: "coaching",
@@ -131,7 +133,7 @@ export const NICHES: Niche[] = [
     whatsapp: "Hi Zev, I run a coaching centre and I'd like a website.",
     briefStarter: "A website for our coaching centre: ",
     metaDescription:
-      "A website for your coaching or tuition centre, live in 24 hours: courses, batches, faculty, results and one-tap enquiries. See your price in two minutes.",
+      `A website for your coaching or tuition centre in ${LOCATION.city}, live in 24 hours: courses, batches, faculty, results and one-tap enquiries. See your price in two minutes.`,
   },
 ];
 

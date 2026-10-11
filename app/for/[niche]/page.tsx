@@ -11,7 +11,7 @@ import { NICHES, getNiche } from "@/lib/niches";
 import { loadPricingTable } from "@/lib/pricing-config";
 import { SCOPE_INCLUDES, TIMELINES } from "@/lib/pricing";
 import { whatsappHref } from "@/lib/contact";
-import { ORG_ID, SITE_URL } from "@/lib/site";
+import { LOCATION, ORG_ID, SITE_URL } from "@/lib/site";
 
 // The rate card can be edited in admin; pick up changes within the hour.
 export const revalidate = 3600;
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const niche = getNiche((await params).niche);
   if (!niche) return {};
   return {
-    title: `Websites for ${niche.audience}, live in 24 hours`,
+    title: `Websites for ${niche.audience} in ${LOCATION.city}, live in 24 hours`,
     description: niche.metaDescription,
     alternates: { canonical: `/for/${niche.slug}` },
   };
@@ -79,6 +79,10 @@ export default async function NichePage({ params }: Props) {
       a: "You do, once it's paid for. We hand over the files and the access.",
     },
     {
+      q: `are you in ${LOCATION.city}?`,
+      a: `Yes, we're based in ${LOCATION.city}. Most of the work happens over WhatsApp and one short call, so it fits around your day.`,
+    },
+    {
       q: "is the price fixed?",
       a: "Your estimate comes from a two-minute brief, from the same rates for everyone. The final price is agreed in writing before any work starts, and doesn't change unless you change what we're making.",
     },
@@ -89,12 +93,12 @@ export default async function NichePage({ params }: Props) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Service",
-    name: `Websites for ${niche.audience}`,
+    name: `Websites for ${niche.audience} in ${LOCATION.city}`,
     serviceType: "Website design and development",
     url: `${SITE_URL}/for/${niche.slug}`,
     description: niche.metaDescription,
     provider: { "@id": ORG_ID },
-    areaServed: { "@type": "Country", name: "India" },
+    areaServed: { "@type": "City", name: LOCATION.city },
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "INR",
@@ -108,7 +112,9 @@ export default async function NichePage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* Hero */}
-      <p className="eyebrow">for {niche.audience}</p>
+      <p className="eyebrow">
+        for {niche.audience} in {LOCATION.city}
+      </p>
       <LineReveal
         as="h1"
         lines={[niche.yours, "online by tomorrow"]}
