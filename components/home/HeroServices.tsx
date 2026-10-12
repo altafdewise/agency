@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  AnimatePresence,
   motion,
   useMotionValue,
   useMotionValueEvent,
@@ -9,6 +10,7 @@ import {
   useTransform,
   type MotionValue,
 } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 import Logo, { LOGO_GEOMETRY } from "@/components/Logo";
 import { usePath } from "@/components/PathProvider";
 import { OtherInput } from "@/components/ui/OtherInput";
@@ -388,20 +390,29 @@ function PinnedHero({ onChoose, showOther, other, setOther, submitOther }: HeroS
           </div>
         </div>
 
-        {/* Phones: say what the wheel wants, until the first move. */}
+        {/* Phones and tablets: a quiet line saying what the wheel wants, all
+            the way through, and that the page carries on after the last one. */}
         <motion.div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-[max(1.75rem,4svh)] flex justify-center lg:hidden"
           style={{ opacity: servicesOpacity }}
         >
-          <motion.span
-            initial={false}
-            animate={{ opacity: focused === 0 ? 1 : 0 }}
-            transition={{ duration: 0.5, ease: EASE_OUT }}
-            className="text-[0.65rem] font-medium uppercase tracking-eyebrow text-muted"
-          >
-            swipe to browse · tap to choose
-          </motion.span>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={focused === 0 ? "start" : focused === N - 1 ? "end" : "middle"}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.35, ease: EASE_OUT }}
+              className="flex items-center gap-2 text-[0.65rem] font-medium uppercase tracking-eyebrow text-muted"
+            >
+              {focused === 0
+                ? "swipe up to browse · tap to choose"
+                : focused === N - 1
+                  ? "tap to choose · or keep scrolling"
+                  : "tap to choose · swipe for more"}
+            </motion.span>
+          </AnimatePresence>
         </motion.div>
 
         {/* ── The dot ── */}
@@ -489,6 +500,15 @@ function WheelRow({
         <span className="whitespace-nowrap font-display text-[clamp(1.5rem,6.6vw,2.25rem)] font-semibold leading-none tracking-tightest text-foreground lg:text-[clamp(2rem,3.3vw,3.1rem)]">
           {title}
         </span>
+        {/* Phones: the focused row says it's a button. */}
+        <ArrowRight
+          aria-hidden
+          strokeWidth={2}
+          className={cn(
+            "h-5 w-5 shrink-0 self-center text-accent transition-all duration-300 lg:hidden",
+            focused ? "translate-x-0 opacity-100" : "-translate-x-1 opacity-0"
+          )}
+        />
       </button>
       {subtitle && (
         <motion.p
