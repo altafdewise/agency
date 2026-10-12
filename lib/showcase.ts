@@ -38,4 +38,18 @@ export const SHOWCASE: ShowcaseSite[] = [
     blurb: "Function halls, lawns and caterers: spaces, capacities, packages and a date check.",
     image: "/showcase/events/hero.jpg",
   },
+  {
+    slug: "fitness",
+    industry: "Fitness",
+    business: "Forge",
+    blurb: "Gyms, yoga and martial arts studios: programs, coaches, membership plans and a free trial.",
+    image: "/showcase/fitness/hero.jpg",
+  },
+  {
+    slug: "beauty",
+    industry: "Beauty",
+    business: "Maison Noor Salon & Spa",
+    blurb: "Salons, spas and bridal studios: a service menu with prices, bridal packages and booking.",
+    image: "/showcase/beauty/hero.jpg",
+  },
 ];
