@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { passcodeMatches, sessionCookie, sessionTokenForAttempt } from "@/lib/leads-list/auth";
+import { roleForPasscode, sessionCookie, sessionTokenFor } from "@/lib/leads-list/auth";
 
 export const runtime = "nodejs";
 
@@ -23,12 +23,13 @@ export async function POST(request: Request) {
   } catch {
     /* fall through */
   }
-  if (!passcode || !passcodeMatches(passcode)) {
+  const role = passcode ? roleForPasscode(passcode) : null;
+  if (!role) {
     return NextResponse.json({ error: "That passcode isn't right." }, { status: 401 });
   }
 
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(sessionCookie.name, sessionTokenForAttempt(), sessionCookie.options);
+  res.cookies.set(sessionCookie.name, sessionTokenFor(role), sessionCookie.options);
   return res;
 }
 
