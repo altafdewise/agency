@@ -17,4 +17,11 @@ export const SHOWCASE: ShowcaseSite[] = [
     blurb: "Clinics, dentists, labs and physios: services, doctors, timings and booking.",
     image: "/showcase/health/hero.jpg",
   },
+  {
+    slug: "food",
+    industry: "Food",
+    business: "Kaapi & Crumb",
+    blurb: "Cafés, restaurants and bakeries: menu, story, delivery and table bookings.",
+    image: "/showcase/food/hero.jpg",
+  },
 ];
