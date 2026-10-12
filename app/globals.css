@@ -48,6 +48,33 @@
     color: #171713;
   }
 
+  /* The leads desk is a light working tool for the calling team. */
+  body.leads-theme {
+    --l-bg: #f6f6f3;
+    --l-surface: #ffffff;
+    --l-surface-2: #efeeea;
+    --l-fg: #111110;
+    --l-muted: #5f5d57;
+    --l-line: #e1dfd9;
+    --l-accent: #d8301f;
+    --l-amber: #9a5b00;
+    --l-amber-bg: #fbebd0;
+    --l-blue: #1f4fb8;
+    --l-blue-bg: #e2eafb;
+    --l-green: #17703a;
+    --l-green-bg: #ddf1e4;
+    background: var(--l-bg);
+    color: var(--l-fg);
+    color-scheme: light;
+  }
+  body.leads-theme ::selection {
+    background: var(--l-accent);
+    color: #fff;
+  }
+  body.leads-theme .grain {
+    display: none;
+  }
+
   body.portfolio-theme ::selection {
     background: #ff4d3d;
     color: #171713;
@@ -87,6 +114,124 @@
   .body-muted {
     @apply font-sans text-base font-light leading-relaxed text-muted sm:text-lg;
   }
+
+  /* ── Leads desk (light) ─────────────────────────────────────────────── */
+  .leads-label {
+    @apply font-mono text-[11px] uppercase tracking-[0.14em];
+    color: var(--l-muted);
+  }
+  .leads-input {
+    @apply w-full rounded-[10px] px-3 py-2.5 text-[15px] outline-none;
+    min-height: 44px;
+    border: 1px solid var(--l-line);
+    background: var(--l-surface);
+    color: var(--l-fg);
+  }
+  .leads-input:focus-visible {
+    outline: 2px solid var(--l-accent);
+    outline-offset: 1px;
+  }
+  .leads-input::placeholder {
+    color: var(--l-muted);
+  }
+  .leads-btn {
+    @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-[10px] px-3.5 text-sm font-medium transition-colors duration-150;
+    min-height: 40px;
+    border: 1px solid var(--l-line);
+    background: var(--l-surface);
+    color: var(--l-fg);
+    cursor: pointer;
+  }
+  .leads-btn:hover {
+    border-color: var(--l-muted);
+  }
+  .leads-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .leads-btn-primary {
+    background: var(--l-accent);
+    border-color: var(--l-accent);
+    color: #fff;
+  }
+  .leads-btn-primary:hover {
+    filter: brightness(1.06);
+    border-color: var(--l-accent);
+  }
+  .leads-chip {
+    @apply inline-flex flex-none items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150;
+    min-height: 36px;
+    border: 1px solid var(--l-line);
+    background: var(--l-surface);
+    color: var(--l-muted);
+    cursor: pointer;
+  }
+  .leads-chip:hover {
+    border-color: var(--l-muted);
+    color: var(--l-fg);
+  }
+  .leads-tab {
+    min-height: 40px;
+    font-size: 14px;
+    color: var(--l-fg);
+  }
+  .leads-chip[aria-pressed="true"] {
+    background: var(--l-fg);
+    border-color: var(--l-fg);
+    color: var(--l-bg);
+  }
+  .leads-card {
+    @apply flex flex-col gap-3.5 rounded-[14px] p-4;
+    border: 1px solid var(--l-line);
+    background: var(--l-surface);
+  }
+  .leads-card[data-due="true"] {
+    border-color: var(--l-amber);
+  }
+  .leads-pill {
+    @apply inline-flex flex-none items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium;
+    background: var(--l-surface-2);
+    color: var(--l-muted);
+  }
+  .leads-pill[data-tone="amber"] { background: var(--l-amber-bg); color: var(--l-amber); }
+  .leads-pill[data-tone="blue"] { background: var(--l-blue-bg); color: var(--l-blue); }
+  .leads-pill[data-tone="green"] { background: var(--l-green-bg); color: var(--l-green); }
+  .leads-pill[data-tone="red"] { background: #fbe3e0; color: var(--l-accent); }
+  .leads-pill[data-tone="off"] { text-decoration: line-through; }
+  .leads-out {
+    @apply rounded-full px-3 text-[13px] font-medium transition-colors duration-150;
+    min-height: 38px;
+    border: 1px solid var(--l-line);
+    background: transparent;
+    color: var(--l-fg);
+    cursor: pointer;
+  }
+  .leads-out:hover { border-color: var(--l-muted); }
+  .leads-out[aria-pressed="true"] {
+    background: var(--l-fg);
+    border-color: var(--l-fg);
+    color: var(--l-bg);
+  }
+  .leads-scroll {
+    @apply flex gap-1.5 overflow-x-auto pb-0.5;
+    scrollbar-width: none;
+  }
+  .leads-scroll::-webkit-scrollbar { display: none; }
+  .leads-panel {
+    @apply rounded-[14px];
+    border: 1px solid var(--l-line);
+    background: var(--l-surface);
+  }
+  .leads-panel > summary {
+    @apply flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-[15px] font-semibold;
+  }
+  .leads-panel > summary::-webkit-details-marker { display: none; }
+  .leads-panel > summary::after {
+    content: "+";
+    @apply font-mono text-lg font-normal;
+    color: var(--l-muted);
+  }
+  .leads-panel[open] > summary::after { content: "–"; }
 }
 
 @layer utilities {

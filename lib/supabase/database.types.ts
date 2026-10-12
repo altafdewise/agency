@@ -142,6 +142,31 @@ export interface EstimateRequestRow {
   emailed: boolean;
 }
 
+/** The outreach list at /leads (see lib/leads-list/model.ts for the choices). */
+export interface ProspectRow {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  phone: string;
+  phone_key: string;
+  city: string;
+  area: string | null;
+  category: string;
+  subtype: string | null;
+  need: string;
+  website_status: string;
+  website_url: string | null;
+  source_url: string | null;
+  notes: string | null;
+  status: string;
+  attempts: number;
+  last_called_at: string | null;
+  follow_up_on: string | null;
+  added_by: string | null;
+  called_by: string | null;
+}
+
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row & Record<string, unknown>;
   Insert: Insert & Record<string, unknown>;
@@ -173,6 +198,11 @@ export interface Database {
         Partial<BlogPostRow>
       >;
       page_views: Table<PageViewRow, Partial<PageViewRow>, Partial<PageViewRow>>;
+      prospects: Table<
+        ProspectRow,
+        Partial<ProspectRow> & Pick<ProspectRow, "name" | "phone" | "phone_key">,
+        Partial<ProspectRow>
+      >;
       funnel_events: Table<
         FunnelEventRow,
         Partial<FunnelEventRow> & Pick<FunnelEventRow, "session_id" | "step_name" | "action">,
