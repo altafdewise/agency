@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { motion, useScroll, useSpring } from "framer-motion";
 import { Moon, Sparkles, Sun, Pause } from "lucide-react";
 
 /**
@@ -79,6 +80,7 @@ export function ShowcaseShell({
         data-dynamic={mode.dynamic}
       >
         {children}
+        {mode.dynamic && <ScrollProgress />}
         <div className="h-24" aria-hidden />
         <ModeSwitch mode={mode} onChange={update} zevHref={zevHref} />
       </div>
@@ -133,5 +135,18 @@ function ModeSwitch({
         </a>
       </div>
     </div>
+  );
+}
+
+/** Dynamic only: a thin bar in the site's accent that fills as you scroll. */
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: 0.4 });
+  return (
+    <motion.div
+      aria-hidden
+      className="fixed inset-x-0 top-0 z-[60] h-[3px] origin-left bg-[var(--s-accent)]"
+      style={{ scaleX }}
+    />
   );
 }
