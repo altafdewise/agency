@@ -48,6 +48,16 @@
     color: #171713;
   }
 
+  /* Showcase sites bring their own palette (ShowcaseShell sets the body
+     background to match); drop the agency's fixed radial wash. */
+  body.showcase-theme {
+    background-image: none;
+  }
+  body.showcase-theme ::selection {
+    background: var(--s-accent, #ff4438);
+    color: var(--s-on-accent, #fff);
+  }
+
   /* The leads desk is a light working tool for the calling team. */
   body.leads-theme {
     --l-bg: #f6f6f3;
