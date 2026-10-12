@@ -52,4 +52,18 @@ export const SHOWCASE: ShowcaseSite[] = [
     blurb: "Salons, spas and bridal studios: a service menu with prices, bridal packages and booking.",
     image: "/showcase/beauty/hero.jpg",
   },
+  {
+    slug: "shops",
+    industry: "Shops",
+    business: "Neelambari Handlooms",
+    blurb: "Boutiques, jewellers and stores: collections, a featured product and WhatsApp ordering.",
+    image: "/showcase/shops/hero.jpg",
+  },
+  {
+    slug: "realestate",
+    industry: "Real estate & interiors",
+    business: "Aaranya Homes",
+    blurb: "Builders, agents and interior studios: homes by type, amenities, interiors and an EMI calculator.",
+    image: "/showcase/realestate/interior.jpg",
+  },
 ];
