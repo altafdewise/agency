@@ -24,4 +24,18 @@ export const SHOWCASE: ShowcaseSite[] = [
     blurb: "Cafés, restaurants and bakeries: menu, story, delivery and table bookings.",
     image: "/showcase/food/hero.jpg",
   },
+  {
+    slug: "education",
+    industry: "Education",
+    business: "Little Banyan Play School",
+    blurb: "Play schools, tuition and coaching centres: programs, a day at school and admissions.",
+    image: "/showcase/education/hero.jpg",
+  },
+  {
+    slug: "events",
+    industry: "Events",
+    business: "Rajmahal Gardens",
+    blurb: "Function halls, lawns and caterers: spaces, capacities, packages and a date check.",
+    image: "/showcase/events/hero.jpg",
+  },
 ];
