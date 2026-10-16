@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useTransform } from "framer-motion";
 import { useShowcaseMode } from "@/components/showcase/ShowcaseShell";
+import { useScrollProgress } from "@/lib/use-scroll-progress";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -60,7 +61,7 @@ export function Parallax({
   const { dynamic } = useShowcaseMode();
   const ref = useRef<HTMLDivElement>(null);
   const fullBleed = className?.includes("absolute") ?? false;
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const scrollYProgress = useScrollProgress(ref, ["start end", "end start"]);
   const y = useTransform(scrollYProgress, [0, 1], [-distance * 1.4, distance * 1.4]);
   const scale = useTransform(scrollYProgress, [0, 0.45, 1], [1.28, 1.08, 1.18]);
   const clipPath = useTransform(

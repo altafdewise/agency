@@ -40,7 +40,7 @@ const dark = {
 
 export default function FitnessShowcase() {
   return (
-    <ShowcaseShell light={light} dark={dark} fontClass={`${display.variable} ${body.variable}`} zevHref="/for/gyms?utm_source=showcase&utm_medium=fitness">
+    <ShowcaseShell light={light} dark={dark} fontClass={`${display.variable} ${body.variable}`} zevHref="/for/gyms?utm_source=showcase&utm_medium=fitness" defaultDark>
       <FitnessSite />
     </ShowcaseShell>
   );

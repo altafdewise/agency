@@ -24,6 +24,7 @@ export function ShowcaseShell({
   dark,
   fontClass,
   zevHref,
+  defaultDark = false,
   children,
 }: {
   light: Palette;
@@ -31,27 +32,31 @@ export function ShowcaseShell({
   fontClass: string;
   /** Where "Get a site like this" goes (the landing page for this kind of business). */
   zevHref: string;
+  /** Open in dark mode (the fitness samples); light otherwise. Always Dynamic. */
+  defaultDark?: boolean;
   children: React.ReactNode;
 }) {
-  const [mode, setMode] = useState<Mode>({ dark: false, dynamic: true });
+  const [mode, setMode] = useState<Mode>({ dark: defaultDark, dynamic: true });
 
-  // Restore the visitor's last choice; start static for reduced-motion users.
+  // Restore the visitor's last choice on this sample; start static for
+  // reduced-motion users. Each sample remembers its own choice, so picking
+  // light on one doesn't change how the next one opens.
   useEffect(() => {
     let saved: Partial<Mode> = {};
     try {
-      saved = JSON.parse(localStorage.getItem(KEY) || "{}");
+      saved = JSON.parse(localStorage.getItem(`${KEY}:${window.location.pathname}`) || "{}");
     } catch {
       /* private mode */
     }
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setMode({ dark: saved.dark ?? false, dynamic: saved.dynamic ?? !reduce });
-  }, []);
+    setMode({ dark: saved.dark ?? defaultDark, dynamic: saved.dynamic ?? !reduce });
+  }, [defaultDark]);
 
   const update = (patch: Partial<Mode>) =>
     setMode((m) => {
       const next = { ...m, ...patch };
       try {
-        localStorage.setItem(KEY, JSON.stringify(next));
+        localStorage.setItem(`${KEY}:${window.location.pathname}`, JSON.stringify(next));
       } catch {
         /* private mode */
       }

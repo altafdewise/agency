@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
+import { motion, useTransform, type MotionValue } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { Parallax, Reveal } from "@/components/showcase/motion";
 import { useShowcaseMode } from "@/components/showcase/ShowcaseShell";
+import { useScrollProgress } from "@/lib/use-scroll-progress";
 
 /* A sample site for a private strength & wellness club. The club is
    fictional; membership buttons lead to Zev's page for gyms.
@@ -99,7 +100,7 @@ export function FitnessSite() {
 function HeroDynamic() {
   const ref = useRef<HTMLElement>(null);
   const narrow = useIsNarrow();
-  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const p = useScrollProgress(ref, ["start start", "end end"]);
 
   const width = useTransform(p, [0, 0.7], [narrow ? "80vw" : "42vw", "100vw"]);
   const height = useTransform(p, [0, 0.7], [narrow ? "44svh" : "54svh", "100svh"]);
@@ -177,7 +178,7 @@ function HeroStatic() {
 
 function Manifesto({ dynamic }: { dynamic: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start 0.85", "end 0.45"] });
+  const p = useScrollProgress(ref, ["start 0.85", "end 0.45"]);
   const words = MANIFESTO.split(" ");
 
   return (
@@ -254,7 +255,7 @@ function DisciplinesDynamic() {
     return () => window.removeEventListener("resize", measure);
   }, []);
 
-  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const p = useScrollProgress(ref, ["start start", "end end"]);
   const x = useTransform(p, (v) => -distRef.current * Math.min(1, Math.max(0, (v - 0.04) / 0.92)));
   const bar = useTransform(p, [0.04, 0.96], [0, 1]);
 
@@ -294,7 +295,7 @@ function DisciplinesStatic() {
 
 function Numbers({ dynamic }: { dynamic: boolean }) {
   const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start 0.9", "center 0.5"] });
+  const p = useScrollProgress(ref, ["start 0.9", "center 0.5"]);
   return (
     <section ref={ref} className="border-y border-[var(--s-line)] bg-[var(--s-surface)] transition-colors duration-500">
       <dl className="mx-auto grid max-w-7xl grid-cols-2 lg:grid-cols-4">
@@ -350,7 +351,7 @@ function Coaching() {
 
 function Membership({ dynamic }: { dynamic: boolean }) {
   const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start end", "center 0.55"] });
+  const p = useScrollProgress(ref, ["start end", "center 0.55"]);
   return (
     <section id="membership" ref={ref} className="bg-[var(--s-surface)] transition-colors duration-500">
       <div className="mx-auto max-w-7xl px-5 py-28 sm:px-10 md:py-40">
@@ -403,7 +404,7 @@ function TierCard({ tier, index, progress, dynamic }: { tier: (typeof TIERS)[num
 
 function Closing({ dynamic }: { dynamic: boolean }) {
   const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start end", "end end"] });
+  const p = useScrollProgress(ref, ["start end", "end end"]);
   const scale = useTransform(p, [0, 1], [0.86, 1]);
   const opacity = useTransform(p, [0.2, 0.8], [0, 1]);
   return (
