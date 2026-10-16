@@ -1,41 +1,41 @@
 import type { Metadata } from "next";
-import { Archivo, Bebas_Neue } from "next/font/google";
+import { Gilda_Display, Hanken_Grotesk } from "next/font/google";
 import { ShowcaseShell } from "@/components/showcase/ShowcaseShell";
 import { FitnessSite } from "@/components/showcase/sites/FitnessSite";
 
-const display = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--font-display" });
-const body = Archivo({ subsets: ["latin"], variable: "--font-body" });
+const display = Gilda_Display({ subsets: ["latin"], weight: "400", variable: "--font-display" });
+const body = Hanken_Grotesk({ subsets: ["latin"], variable: "--font-body" });
 
 export const metadata: Metadata = {
-  title: "Sample gym website",
-  description: "A sample website for a gym, designed by Zev's Agency. Flip light/dark and static/dynamic.",
+  title: "Sample fitness club website",
+  description: "A sample website for a private strength & wellness club, designed by Zev's Agency. Flip light/dark and static/dynamic.",
   robots: { index: false, follow: true },
 };
 
-// Concrete and signal orange.
+// Ivory, ink and bronze; warm charcoal and champagne for dark.
 const light = {
-  "--s-bg": "#F4F3F1",
-  "--s-surface": "#FFFFFF",
-  "--s-soft": "#ECEAE6",
-  "--s-fg": "#111111",
-  "--s-muted": "#5E5C58",
-  "--s-line": "#DEDBD5",
-  "--s-accent": "#FF6A1A",
-  "--s-accent-ink": "#D9520A",
-  "--s-on-accent": "#111111",
-  "--s-shadow": "rgba(0,0,0,0.35)",
+  "--s-bg": "#F4F0E8",
+  "--s-surface": "#FAF7F1",
+  "--s-soft": "#E9E2D5",
+  "--s-fg": "#1A1714",
+  "--s-muted": "#6A6258",
+  "--s-line": "#DCD3C4",
+  "--s-accent": "#8A6A45",
+  "--s-accent-ink": "#7A5C3A",
+  "--s-on-accent": "#F4F0E8",
+  "--s-shadow": "rgba(26,23,20,0.3)",
 };
 const dark = {
-  "--s-bg": "#0E0E0E",
-  "--s-surface": "#171717",
-  "--s-soft": "#1F1F1F",
-  "--s-fg": "#F4F3F1",
-  "--s-muted": "#A3A09A",
-  "--s-line": "#2A2A2A",
-  "--s-accent": "#FF7A2E",
-  "--s-accent-ink": "#FF8A45",
-  "--s-on-accent": "#111111",
-  "--s-shadow": "rgba(0,0,0,0.8)",
+  "--s-bg": "#12100E",
+  "--s-surface": "#191613",
+  "--s-soft": "#221E1A",
+  "--s-fg": "#EEE8DE",
+  "--s-muted": "#A2998D",
+  "--s-line": "#2D2823",
+  "--s-accent": "#C9A57C",
+  "--s-accent-ink": "#D4B38D",
+  "--s-on-accent": "#12100E",
+  "--s-shadow": "rgba(0,0,0,0.7)",
 };
 
 export default function FitnessShowcase() {

@@ -41,9 +41,9 @@ export const SHOWCASE: ShowcaseSite[] = [
   {
     slug: "fitness",
     industry: "Fitness",
-    business: "Forge",
-    blurb: "Gyms, yoga and martial arts studios: programs, coaches, membership plans and a free trial.",
-    image: "/showcase/fitness/hero.jpg",
+    business: "Élan Strength & Wellness Club",
+    blurb: "Gyms, studios and wellness clubs: disciplines, coaching, membership and visits, with scroll-driven motion.",
+    image: "/showcase/fitness/club.jpg",
   },
   {
     slug: "beauty",

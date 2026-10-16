@@ -73,9 +73,9 @@ export function Parallax({
     <motion.div
       ref={ref}
       className={`${fullBleed ? "" : "relative "}overflow-hidden ${className ?? ""}`}
-      style={dynamic && !fullBleed ? { clipPath } : undefined}
+      style={{ clipPath: dynamic && !fullBleed ? clipPath : "none" }}
     >
-      <motion.div className="absolute inset-[-10%]" style={dynamic ? { y, scale } : undefined}>
+      <motion.div className="absolute inset-[-10%]" style={dynamic ? { y, scale } : { y: 0, scale: 1 }}>
         {children}
       </motion.div>
     </motion.div>
