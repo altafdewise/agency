@@ -2,16 +2,30 @@
 
 import { useRef } from "react";
 import Image from "next/image";
-import { motion, useTransform } from "framer-motion";
+import {
+  motion,
+  useAnimationFrame,
+  useMotionValue,
+  useScroll,
+  useSpring,
+  useTransform,
+  useVelocity,
+  type MotionValue,
+} from "framer-motion";
+import { ArrowUpRight, Clock, Flame, Users } from "lucide-react";
 import { useShowcaseMode } from "@/components/showcase/ShowcaseShell";
 import { useScrollProgress } from "@/lib/use-scroll-progress";
 
 /* A bold sample site for a hardcore strength & combat gym. The gym is
    fictional; join buttons lead to Zev's page for gyms.
 
-   Built in steps. Step 1: header and hero. Dynamic: the headline slams in,
-   then splits and skews as you scroll while the photo pushes in and the
-   red rises; HAVOC fills the screen at the end. Static: the same hero, still. */
+   Dynamic mode:
+   - Hero: the headline slams in, then splits and skews as you scroll while
+     the photo pushes in and the red rises; HAVOC fills the screen.
+   - Marquee: runs faster and leans harder the faster you scroll.
+   - Programs: full-height cards pin and stack, each pushing the last back.
+   - Numbers: slam in, one after another.
+   Static: the same page, still. */
 
 const JOIN = "/for/gyms?utm_source=showcase&utm_medium=fitness-bold";
 
@@ -23,7 +37,7 @@ export function FitnessBoldSite() {
 
   return (
     <div className="font-[family-name:var(--font-body)]">
-      <header className="fixed inset-x-0 top-0 z-40">
+      <header className="fixed inset-x-0 top-0 z-40 bg-gradient-to-b from-black/75 to-transparent">
         <div className="mx-auto flex h-20 max-w-[1500px] items-center justify-between px-5 sm:px-10">
           <a href="#top" className={`${display} flex items-center gap-2 text-[28px] leading-none tracking-wide text-white`}>
             HAVOC<span className="inline-block h-6 w-2 -skew-x-[18deg] bg-[var(--s-accent)]" aria-hidden />
@@ -44,8 +58,12 @@ export function FitnessBoldSite() {
 
       {dynamic ? <HeroDynamic /> : <HeroStatic />}
 
-      <section id="programs" className="flex min-h-[60svh] items-center justify-center border-t border-[var(--s-line)] px-6 text-center">
-        <p className={`${display} text-[clamp(1.4rem,3vw,2.2rem)] text-[var(--s-muted)]`}>Programs, coaches & pricing land in the next steps.</p>
+      <Marquee dynamic={dynamic} />
+      <Programs dynamic={dynamic} />
+      <Numbers dynamic={dynamic} />
+
+      <section id="coaches" className="flex min-h-[40svh] items-center justify-center border-t border-[var(--s-line)] px-6 text-center">
+        <p className={`${display} text-[clamp(1.4rem,3vw,2.2rem)] text-[var(--s-muted)]`}>Coaches, schedule & pricing land in the next step.</p>
       </section>
 
       <footer className="border-t border-[var(--s-line)]">
@@ -149,6 +167,197 @@ function HeroStatic() {
           <span className="skew-x-[12deg]">Claim your free session</span>
         </a>
       </div>
+    </section>
+  );
+}
+
+/* ── Marquee: speed and lean follow your scroll ──────────────────────────── */
+
+const wrap = (min: number, max: number, v: number) => {
+  const range = max - min;
+  return ((((v - min) % range) + range) % range) + min;
+};
+
+function useScrollVelocityFactor() {
+  const { scrollY } = useScroll();
+  const velocity = useVelocity(scrollY);
+  const smooth = useSpring(velocity, { damping: 50, stiffness: 400 });
+  return useTransform(smooth, [-2500, 0, 2500], [-6, 0, 6], { clamp: false });
+}
+
+function MarqueeRow({
+  text,
+  baseSpeed,
+  factor,
+  outline = false,
+}: {
+  text: string;
+  baseSpeed: number;
+  factor: MotionValue<number> | null;
+  outline?: boolean;
+}) {
+  const baseX = useMotionValue(0);
+  const direction = useRef(1);
+  const x = useTransform(baseX, (v) => `${wrap(-50, 0, v)}%`);
+  const skewX = useTransform(factor ?? baseX, (f) => (factor ? Math.max(-18, Math.min(18, f * -3)) : 0));
+
+  useAnimationFrame((_, delta) => {
+    if (!factor) return;
+    const f = factor.get();
+    if (f < 0) direction.current = -1;
+    else if (f > 0) direction.current = 1;
+    const move = direction.current * baseSpeed * (delta / 1000) * (1 + Math.abs(f));
+    baseX.set(baseX.get() + move);
+  });
+
+  const items = Array.from({ length: 8 }, (_, i) => (
+    <span key={i} className="flex shrink-0 items-center gap-[0.35em] pr-[0.35em]">
+      {text}
+      <span className="inline-block h-[0.42em] w-[0.42em] -skew-x-[18deg] bg-[var(--s-accent)]" aria-hidden />
+    </span>
+  ));
+
+  return (
+    <div className="overflow-hidden">
+      <motion.div
+        className={`${display} flex w-max whitespace-nowrap text-[clamp(4rem,12vw,10rem)] leading-[0.95] ${outline ? "text-transparent [-webkit-text-stroke:2px_var(--s-fg)]" : "text-[var(--s-fg)]"}`}
+        style={factor ? { x, skewX } : { x: "0%", skewX: 0 }}
+      >
+        {items}
+        {items}
+      </motion.div>
+    </div>
+  );
+}
+
+function Marquee({ dynamic }: { dynamic: boolean }) {
+  const factor = useScrollVelocityFactor();
+  return (
+    <section aria-label="No excuses" className="border-y border-[var(--s-line)] bg-[var(--s-bg)] py-10 transition-colors duration-500 sm:py-14">
+      <MarqueeRow text="No excuses" baseSpeed={-3.2} factor={dynamic ? factor : null} />
+      <MarqueeRow text="No shortcuts" baseSpeed={3.2} factor={dynamic ? factor : null} outline />
+    </section>
+  );
+}
+
+/* ── Programs: cards that pin and stack ──────────────────────────────────── */
+
+const PROGRAMS = [
+  {
+    n: "01",
+    title: "Strength",
+    img: "/showcase/fitness-bold/hero.jpg",
+    body: "Barbell-first training on a floor built for heavy. Squat, bench, deadlift, and the accessories that make them move.",
+    meta: [["Mon · Wed · Fri", Clock], ["6 per coach", Users], ["All levels", Flame]] as const,
+  },
+  {
+    n: "02",
+    title: "Combat",
+    img: "/showcase/fitness-bold/fight.jpg",
+    body: "Boxing, kickboxing and MMA fundamentals. Bag work, pads, technique and controlled sparring when you're ready.",
+    meta: [["Daily, 7 am & 7 pm", Clock], ["Fight coaches", Users], ["Gloves provided", Flame]] as const,
+  },
+  {
+    n: "03",
+    title: "Conditioning",
+    img: "/showcase/fitness-bold/ropes.jpg",
+    body: "Ropes, sleds, bikes and carries. Forty-five minutes that build an engine you can actually use.",
+    meta: [["Tue · Thu · Sat", Clock], ["12 per class", Users], ["Brutal, scaled", Flame]] as const,
+  },
+  {
+    n: "04",
+    title: "Hybrid",
+    img: "/showcase/fitness-bold/sled.jpg",
+    body: "Strength and conditioning in one plan, for people who want to be strong and fast. Built for HYROX-style races.",
+    meta: [["4 days a week", Clock], ["Coached plan", Users], ["Race-ready", Flame]] as const,
+  },
+];
+
+function ProgramCard({ prog, index, progress, dynamic }: { prog: (typeof PROGRAMS)[number]; index: number; progress: MotionValue<number>; dynamic: boolean }) {
+  const n = PROGRAMS.length;
+  // Each card shrinks and dims as the ones after it pile on top.
+  const scale = useTransform(progress, [index / n, 1], [1, 1 - (n - 1 - index) * 0.06]);
+  const dim = useTransform(progress, [index / n, 1], [0, (n - 1 - index) * 0.18]);
+
+  return (
+    <div className={dynamic ? "sticky h-[100svh]" : ""} style={dynamic ? { top: `calc(5.5rem + ${index * 22}px)` } : undefined}>
+      <motion.article
+        className="relative mx-auto grid h-[min(80svh,680px)] max-w-[1400px] grid-rows-[26svh_1fr] md:grid-rows-1 origin-top overflow-hidden border border-[var(--s-line)] bg-[var(--s-surface)] md:grid-cols-[1.05fr_1fr]"
+        style={dynamic ? { scale } : { scale: 1 }}
+      >
+        <div className="relative">
+          <Image src={prog.img} alt={prog.title} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:bg-gradient-to-r" aria-hidden />
+          <span className={`${display} absolute left-5 top-4 text-[clamp(4rem,9vw,8rem)] leading-none text-transparent [-webkit-text-stroke:2px_rgba(255,255,255,0.85)]`}>{prog.n}</span>
+        </div>
+        <div className="flex flex-col justify-center gap-4 p-5 sm:gap-6 sm:p-10 lg:p-14">
+          <div className="h-1.5 w-16 -skew-x-[18deg] bg-[var(--s-accent)]" aria-hidden />
+          <h3 className={`${display} text-[clamp(2.6rem,7vw,6.5rem)] leading-[0.9] text-[var(--s-fg)]`}>{prog.title}</h3>
+          <p className="max-w-md text-[15px] font-medium leading-relaxed text-[var(--s-muted)] sm:text-[17px]">{prog.body}</p>
+          <ul className="flex flex-wrap gap-2">
+            {prog.meta.map(([label, Icon]) => (
+              <li key={label} className="flex items-center gap-2 border border-[var(--s-line)] px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--s-fg)] sm:px-3 sm:py-2 sm:text-[13px] sm:tracking-[0.12em]">
+                <Icon className="h-4 w-4 text-[var(--s-accent-ink)]" strokeWidth={2.4} /> {label}
+              </li>
+            ))}
+          </ul>
+          <a href={JOIN} className="inline-flex h-12 w-fit -skew-x-[12deg] items-center gap-2 bg-[var(--s-fg)] px-7 text-[13px] font-bold uppercase tracking-[0.2em] text-[var(--s-bg)] transition-colors hover:bg-[var(--s-accent)] hover:text-white">
+            <span className="flex skew-x-[12deg] items-center gap-2">Book a trial <ArrowUpRight className="h-4 w-4" strokeWidth={2.4} /></span>
+          </a>
+        </div>
+        <motion.div className="pointer-events-none absolute inset-0 bg-black" style={{ opacity: dynamic ? dim : 0 }} aria-hidden />
+      </motion.article>
+    </div>
+  );
+}
+
+function Programs({ dynamic }: { dynamic: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const p = useScrollProgress(ref, ["start start", "end end"]);
+  return (
+    <section id="programs" className="px-3 pb-10 pt-24 sm:px-8 sm:pt-32">
+      <div className="mx-auto mb-10 flex max-w-[1400px] flex-wrap items-end justify-between gap-6 sm:mb-14">
+        <h2 className={`${display} text-[clamp(3.4rem,9vw,8.5rem)] leading-[0.86] text-[var(--s-fg)]`}>
+          Pick your<br /><span className="text-[var(--s-accent-ink)]">weapon.</span>
+        </h2>
+        <p className="max-w-sm text-[17px] font-medium text-[var(--s-muted)]">Four programs. One membership. Train all of them or go all-in on one.</p>
+      </div>
+      <div ref={ref} className={dynamic ? "" : "flex flex-col gap-6"}>
+        {PROGRAMS.map((prog, i) => (
+          <ProgramCard key={prog.n} prog={prog} index={i} progress={p} dynamic={dynamic} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ── Numbers: slam in ────────────────────────────────────────────────────── */
+
+const NUMBERS = [
+  { v: "24/7", l: "Open, every day" },
+  { v: "40+", l: "Classes a week" },
+  { v: "12", l: "Fight & strength coaches" },
+  { v: "0", l: "Excuses accepted" },
+];
+
+function Numbers({ dynamic }: { dynamic: boolean }) {
+  return (
+    <section className="overflow-hidden border-y border-[var(--s-line)] bg-[var(--s-accent)] text-white">
+      <dl className="mx-auto grid max-w-[1500px] grid-cols-2 lg:grid-cols-4">
+        {NUMBERS.map((n, i) => (
+          <motion.div
+            key={n.l}
+            className={`px-5 py-12 sm:px-10 sm:py-16 ${i % 2 ? "border-l border-white/25" : ""} ${i > 1 ? "border-t border-white/25 lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}
+            initial={dynamic ? { opacity: 0, scale: 2.2, rotate: -6, filter: "blur(12px)" } : false}
+            whileInView={{ opacity: 1, scale: 1, rotate: 0, filter: "blur(0px)" }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={dynamic ? { duration: 0.45, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] } : { duration: 0 }}
+          >
+            <dd className={`${display} text-[clamp(3.6rem,8vw,7rem)] leading-none`}>{n.v}</dd>
+            <dt className="mt-3 text-[13px] font-bold uppercase tracking-[0.2em] text-white/85">{n.l}</dt>
+          </motion.div>
+        ))}
+      </dl>
     </section>
   );
 }
