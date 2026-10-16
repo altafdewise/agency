@@ -46,6 +46,13 @@ export const SHOWCASE: ShowcaseSite[] = [
     image: "/showcase/fitness/club.jpg",
   },
   {
+    slug: "fitness-bold",
+    industry: "Fitness · bold",
+    business: "HAVOC Strength & Combat",
+    blurb: "Hardcore gyms and fight clubs: programs that stack, coaches, a weekly schedule and pricing, loud and fast.",
+    image: "/showcase/fitness-bold/hero.jpg",
+  },
+  {
     slug: "beauty",
     industry: "Beauty",
     business: "Maison Noor Salon & Spa",

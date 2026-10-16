@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import {
   motion,
@@ -10,6 +10,8 @@ import {
   useSpring,
   useTransform,
   useVelocity,
+  AnimatePresence,
+  useInView,
   type MotionValue,
 } from "framer-motion";
 import { ArrowUpRight, Clock, Flame, Users } from "lucide-react";
@@ -25,6 +27,10 @@ import { useScrollProgress } from "@/lib/use-scroll-progress";
    - Marquee: runs faster and leans harder the faster you scroll.
    - Programs: full-height cards pin and stack, each pushing the last back.
    - Numbers: slam in, one after another.
+   - Coaches: names slide across as you pass; portraits tear open.
+   - Schedule: day tabs with the classes swapping in.
+   - Pricing: plans kick up and straighten as they arrive.
+   - Finale: the call to action zooms out of giant type as red floods in.
    Static: the same page, still. */
 
 const JOIN = "/for/gyms?utm_source=showcase&utm_medium=fitness-bold";
@@ -62,9 +68,10 @@ export function FitnessBoldSite() {
       <Programs dynamic={dynamic} />
       <Numbers dynamic={dynamic} />
 
-      <section id="coaches" className="flex min-h-[40svh] items-center justify-center border-t border-[var(--s-line)] px-6 text-center">
-        <p className={`${display} text-[clamp(1.4rem,3vw,2.2rem)] text-[var(--s-muted)]`}>Coaches, schedule & pricing land in the next step.</p>
-      </section>
+      <Coaches dynamic={dynamic} />
+      <Schedule dynamic={dynamic} />
+      <Pricing dynamic={dynamic} />
+      <Finale dynamic={dynamic} />
 
       <footer className="border-t border-[var(--s-line)]">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-[var(--s-muted)] sm:px-10">
@@ -341,16 +348,20 @@ const NUMBERS = [
 ];
 
 function Numbers({ dynamic }: { dynamic: boolean }) {
+  // One trigger for the whole band, so a fast scroll can't skip a number.
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.15 });
+  const shown = { opacity: 1, scale: 1, rotate: 0, filter: "blur(0px)" };
+  const hidden = { opacity: 0, scale: 2.2, rotate: -6, filter: "blur(12px)" };
   return (
-    <section className="overflow-hidden border-y border-[var(--s-line)] bg-[var(--s-accent)] text-white">
+    <section ref={ref} className="overflow-hidden border-y border-[var(--s-line)] bg-[var(--s-accent)] text-white">
       <dl className="mx-auto grid max-w-[1500px] grid-cols-2 lg:grid-cols-4">
         {NUMBERS.map((n, i) => (
           <motion.div
             key={n.l}
             className={`px-5 py-12 sm:px-10 sm:py-16 ${i % 2 ? "border-l border-white/25" : ""} ${i > 1 ? "border-t border-white/25 lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}
-            initial={dynamic ? { opacity: 0, scale: 2.2, rotate: -6, filter: "blur(12px)" } : false}
-            whileInView={{ opacity: 1, scale: 1, rotate: 0, filter: "blur(0px)" }}
-            viewport={{ once: true, amount: 0.6 }}
+            initial={dynamic ? hidden : false}
+            animate={!dynamic || inView ? shown : hidden}
             transition={dynamic ? { duration: 0.45, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] } : { duration: 0 }}
           >
             <dd className={`${display} text-[clamp(3.6rem,8vw,7rem)] leading-none`}>{n.v}</dd>
@@ -358,6 +369,246 @@ function Numbers({ dynamic }: { dynamic: boolean }) {
           </motion.div>
         ))}
       </dl>
+    </section>
+  );
+}
+
+/* ── Coaches ─────────────────────────────────────────────────────────────── */
+
+const COACHES = [
+  { img: "/showcase/fitness-bold/coach.jpg", name: "Vikram Rao", role: "Head of strength", note: "Former national powerlifter. 270 kg deadlift. Teaches the lift before the load." },
+  { img: "/showcase/fitness-bold/fight.jpg", name: "Arjun Das", role: "Head of combat", note: "Pro MMA record 9–2. Runs the fight floor and every sparring session." },
+  { img: "/showcase/fitness-bold/ropes.jpg", name: "Sana Qureshi", role: "Conditioning", note: "HYROX podium finisher. Builds engines that don't quit at minute forty." },
+];
+
+function CoachRow({ coach, index, dynamic }: { coach: (typeof COACHES)[number]; index: number; dynamic: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const p = useScrollProgress(ref, ["start end", "end start"]);
+  const dir = index % 2 ? 1 : -1;
+  const nameX = useTransform(p, [0, 1], [`${-dir * 18}%`, `${dir * 18}%`]);
+  const clip = useTransform(p, [0.05, 0.4], ["inset(0% 0% 100% 0%)", "inset(0% 0% 0% 0%)"]);
+  const imgScale = useTransform(p, [0, 1], [1.25, 1]);
+
+  return (
+    <div ref={ref} className="relative overflow-hidden border-t border-[var(--s-line)] py-14 sm:py-20">
+      <motion.p
+        aria-hidden
+        className={`${display} pointer-events-none whitespace-nowrap text-[clamp(5rem,16vw,15rem)] leading-none text-transparent [-webkit-text-stroke:2px_var(--s-line)]`}
+        style={dynamic ? { x: nameX } : { x: "0%" }}
+      >
+        {coach.name} · {coach.name}
+      </motion.p>
+      <div className={`relative mx-auto -mt-[clamp(3rem,9vw,8rem)] grid max-w-[1400px] items-end gap-8 px-5 sm:px-10 md:grid-cols-[0.8fr_1fr] ${index % 2 ? "md:[&>*:first-child]:order-2" : ""}`}>
+        <motion.div className="relative aspect-[4/5] max-w-[440px] overflow-hidden" style={{ clipPath: dynamic ? clip : "none" }}>
+          <motion.div className="absolute inset-0" style={dynamic ? { scale: imgScale } : { scale: 1 }}>
+            <Image src={coach.img} alt={coach.name} fill sizes="(min-width: 768px) 440px, 90vw" className="object-cover grayscale contrast-125" />
+          </motion.div>
+          <span className="absolute left-0 top-0 h-2 w-24 bg-[var(--s-accent)]" aria-hidden />
+        </motion.div>
+        <div className="pb-4">
+          <p className="text-[13px] font-bold uppercase tracking-[0.24em] text-[var(--s-accent-ink)]">{coach.role}</p>
+          <h3 className={`${display} mt-3 text-[clamp(3rem,6vw,5.5rem)] leading-[0.9] text-[var(--s-fg)]`}>{coach.name}</h3>
+          <p className="mt-5 max-w-md text-[17px] font-medium leading-relaxed text-[var(--s-muted)]">{coach.note}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Coaches({ dynamic }: { dynamic: boolean }) {
+  return (
+    <section id="coaches" className="pt-24 sm:pt-32">
+      <div className="mx-auto max-w-[1400px] px-5 pb-12 sm:px-10">
+        <h2 className={`${display} text-[clamp(3.4rem,9vw,8.5rem)] leading-[0.86] text-[var(--s-fg)]`}>
+          Coached by people<br /><span className="text-[var(--s-accent-ink)]">who&apos;ve done it.</span>
+        </h2>
+      </div>
+      {COACHES.map((c, i) => (
+        <CoachRow key={c.name} coach={c} index={i} dynamic={dynamic} />
+      ))}
+    </section>
+  );
+}
+
+/* ── Schedule ────────────────────────────────────────────────────────────── */
+
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+type Day = (typeof DAYS)[number];
+type Slot = { t: string; c: string; who: string; heat: 1 | 2 | 3 };
+const STRENGTH: Slot = { t: "06:30", c: "Strength: heavy lower", who: "Vikram", heat: 3 };
+const BOX_AM: Slot = { t: "07:00", c: "Boxing fundamentals", who: "Arjun", heat: 2 };
+const COND: Slot = { t: "18:00", c: "Conditioning: engine", who: "Sana", heat: 3 };
+const MMA: Slot = { t: "19:00", c: "MMA & sparring", who: "Arjun", heat: 3 };
+const HYB: Slot = { t: "20:00", c: "Hybrid: race prep", who: "Sana", heat: 2 };
+const MOB: Slot = { t: "08:00", c: "Mobility reset", who: "Vikram", heat: 1 };
+const SCHEDULE: Record<Day, Slot[]> = {
+  Mon: [STRENGTH, BOX_AM, COND, MMA],
+  Tue: [BOX_AM, { ...STRENGTH, c: "Strength: heavy upper" }, HYB, MMA],
+  Wed: [STRENGTH, BOX_AM, COND, MMA],
+  Thu: [BOX_AM, { ...STRENGTH, c: "Strength: heavy upper" }, HYB, MMA],
+  Fri: [STRENGTH, BOX_AM, COND, { ...MMA, c: "Fight night: open sparring" }],
+  Sat: [{ ...COND, t: "08:00", c: "Saturday sled & rope" }, { ...HYB, t: "10:00" }, { ...MMA, t: "17:00", c: "Open mat" }],
+  Sun: [MOB, { ...STRENGTH, t: "10:00", c: "Open floor: lift what you like", heat: 1 }],
+};
+
+function Heat({ level }: { level: 1 | 2 | 3 }) {
+  return (
+    <span className="flex gap-1" aria-label={`Intensity ${level} of 3`}>
+      {[1, 2, 3].map((n) => (
+        <span key={n} className={`h-3 w-1.5 -skew-x-[18deg] ${n <= level ? "bg-[var(--s-accent)]" : "bg-[var(--s-line)]"}`} />
+      ))}
+    </span>
+  );
+}
+
+function Schedule({ dynamic }: { dynamic: boolean }) {
+  const [day, setDay] = useState<Day>("Mon");
+  return (
+    <section className="border-t border-[var(--s-line)] bg-[var(--s-surface)] transition-colors duration-500">
+      <div className="mx-auto max-w-[1400px] px-5 py-24 sm:px-10 sm:py-32">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <h2 className={`${display} text-[clamp(3.4rem,8vw,7rem)] leading-[0.86] text-[var(--s-fg)]`}>This week</h2>
+          <div role="tablist" aria-label="Day" className="flex flex-wrap gap-1">
+            {DAYS.map((d) => (
+              <button
+                key={d}
+                role="tab"
+                aria-selected={day === d}
+                onClick={() => setDay(d)}
+                className={`relative h-11 min-w-[3.25rem] -skew-x-[12deg] px-3 text-[13px] font-bold uppercase tracking-[0.14em] transition-colors ${day === d ? "text-white" : "text-[var(--s-muted)] hover:text-[var(--s-fg)]"}`}
+              >
+                {day === d && <motion.span layoutId={dynamic ? "day-pill" : undefined} className="absolute inset-0 bg-[var(--s-accent)]" transition={{ type: "spring", stiffness: 500, damping: 34 }} />}
+                <span className="relative inline-block skew-x-[12deg]">{d}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.ul
+            key={day}
+            role="tabpanel"
+            className="mt-12 border-t border-[var(--s-line)]"
+            initial={dynamic ? { opacity: 0, x: 40 } : false}
+            animate={{ opacity: 1, x: 0 }}
+            exit={dynamic ? { opacity: 0, x: -40 } : { opacity: 1 }}
+            transition={{ duration: dynamic ? 0.25 : 0, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {SCHEDULE[day].map((slot) => (
+              <li key={slot.t + slot.c} className="grid grid-cols-[4.5rem_1fr_auto] items-center gap-4 border-b border-[var(--s-line)] py-5 sm:grid-cols-[7rem_1fr_10rem_auto] sm:gap-8">
+                <span className={`${display} text-[clamp(1.6rem,3vw,2.4rem)] leading-none text-[var(--s-accent-ink)]`}>{slot.t}</span>
+                <span className={`${display} text-[clamp(1.3rem,2.6vw,2.2rem)] leading-tight text-[var(--s-fg)]`}>{slot.c}</span>
+                <span className="hidden text-[14px] font-bold uppercase tracking-[0.16em] text-[var(--s-muted)] sm:block">{slot.who}</span>
+                <Heat level={slot.heat} />
+              </li>
+            ))}
+          </motion.ul>
+        </AnimatePresence>
+      </div>
+    </section>
+  );
+}
+
+/* ── Pricing ─────────────────────────────────────────────────────────────── */
+
+const PLANS = [
+  { name: "Open gym", price: "₹2,999", perks: ["Floor access, 24/7", "Locker & showers", "Day-one assessment"] },
+  { name: "Unlimited", price: "₹4,999", perks: ["Everything in Open gym", "Every class, every day", "Monthly progress check"], featured: true },
+  { name: "Fight camp", price: "₹7,999", perks: ["Everything in Unlimited", "8 private fight sessions", "Sparring & fight-night entry"] },
+];
+
+function PlanCard({ plan, index, progress, dynamic }: { plan: (typeof PLANS)[number]; index: number; progress: MotionValue<number>; dynamic: boolean }) {
+  const y = useTransform(progress, [0, 1], [180 + index * 70, 0]);
+  const rotate = useTransform(progress, [0, 1], [index === 1 ? -6 : index === 0 ? -10 : 10, 0]);
+  return (
+    <motion.div
+      style={dynamic ? { y, rotate } : { y: 0, rotate: 0 }}
+      className={`relative flex flex-col p-8 sm:p-10 ${plan.featured ? "bg-[var(--s-accent)] text-white" : "border border-[var(--s-line)] bg-[var(--s-bg)] text-[var(--s-fg)]"}`}
+    >
+      {plan.featured && (
+        <span className="absolute -top-4 left-8 -skew-x-[12deg] bg-[var(--s-fg)] px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.2em] text-[var(--s-bg)]">
+          <span className="inline-block skew-x-[12deg]">Most picked</span>
+        </span>
+      )}
+      <h3 className={`${display} text-[2.4rem] leading-none`}>{plan.name}</h3>
+      <p className="mt-6 flex items-baseline gap-2">
+        <span className={`${display} text-[clamp(3.6rem,6vw,5rem)] leading-none`}>{plan.price}</span>
+        <span className={`text-sm font-bold uppercase tracking-[0.14em] ${plan.featured ? "text-white/80" : "text-[var(--s-muted)]"}`}>/ month</span>
+      </p>
+      <ul className={`mt-8 flex flex-1 flex-col border-t ${plan.featured ? "border-white/30" : "border-[var(--s-line)]"}`}>
+        {plan.perks.map((perk) => (
+          <li key={perk} className={`border-b py-4 text-[15px] font-semibold ${plan.featured ? "border-white/30" : "border-[var(--s-line)]"}`}>{perk}</li>
+        ))}
+      </ul>
+      <a
+        href={JOIN}
+        className={`mt-8 inline-flex h-12 -skew-x-[12deg] items-center justify-center text-[13px] font-bold uppercase tracking-[0.2em] transition-colors ${plan.featured ? "bg-white text-[#0A0A0A] hover:bg-black hover:text-white" : "bg-[var(--s-fg)] text-[var(--s-bg)] hover:bg-[var(--s-accent)] hover:text-white"}`}
+      >
+        <span className="skew-x-[12deg]">Start {plan.name}</span>
+      </a>
+    </motion.div>
+  );
+}
+
+function Pricing({ dynamic }: { dynamic: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const p = useScrollProgress(ref, ["start end", "center 0.6"]);
+  return (
+    <section id="pricing" className="overflow-hidden border-t border-[var(--s-line)]">
+      <div className="mx-auto max-w-[1400px] px-5 py-24 sm:px-10 sm:py-32">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <h2 className={`${display} text-[clamp(3.4rem,8vw,7rem)] leading-[0.86] text-[var(--s-fg)]`}>
+            No contracts.<br /><span className="text-[var(--s-accent-ink)]">No mercy.</span>
+          </h2>
+          <p className="max-w-sm text-[17px] font-medium text-[var(--s-muted)]">Monthly plans. Cancel any time. Your first session is free.</p>
+        </div>
+        <div ref={ref} className="mt-16 grid gap-6 md:grid-cols-3">
+          {PLANS.map((plan, i) => (
+            <PlanCard key={plan.name} plan={plan} index={i} progress={p} dynamic={dynamic} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── Finale ──────────────────────────────────────────────────────────────── */
+
+function Finale({ dynamic }: { dynamic: boolean }) {
+  const ref = useRef<HTMLElement>(null);
+  const p = useScrollProgress(ref, ["start start", "end end"]);
+  const scale = useTransform(p, [0, 0.6], [4.5, 1]);
+  const flood = useTransform(p, [0.35, 0.75], ["0%", "100%"]);
+  const ctaOpacity = useTransform(p, [0.65, 0.85], [0, 1]);
+  const ctaY = useTransform(p, [0.65, 0.85], [30, 0]);
+
+  if (!dynamic) {
+    return (
+      <section ref={ref} className="flex min-h-[80svh] flex-col items-center justify-center bg-[var(--s-accent)] px-6 py-24 text-center text-white">
+        <h2 className={`${display} text-[clamp(4rem,13vw,12rem)] leading-[0.86]`}>No excuses.<br />Start Monday.</h2>
+        <a href={JOIN} className="mt-10 inline-flex h-14 -skew-x-[12deg] items-center bg-white px-10 text-[14px] font-bold uppercase tracking-[0.2em] text-[#0A0A0A]">
+          <span className="skew-x-[12deg]">Claim your free session</span>
+        </a>
+      </section>
+    );
+  }
+
+  return (
+    <section ref={ref} className="relative h-[220svh] bg-black">
+      <div className="sticky top-0 flex h-[100svh] items-center justify-center overflow-hidden">
+        <motion.div className="absolute inset-x-0 bottom-0 bg-[var(--s-accent)]" style={{ height: flood }} aria-hidden />
+        <div className="relative flex flex-col items-center px-6 text-center text-white">
+          <motion.h2 className={`${display} text-[clamp(4rem,13vw,12rem)] leading-[0.86]`} style={{ scale }}>
+            No excuses.<br />Start Monday.
+          </motion.h2>
+          <motion.a
+            href={JOIN}
+            className="mt-10 inline-flex h-14 -skew-x-[12deg] items-center bg-white px-10 text-[14px] font-bold uppercase tracking-[0.2em] text-[#0A0A0A] transition-colors hover:bg-black hover:text-white"
+            style={{ opacity: ctaOpacity, y: ctaY }}
+          >
+            <span className="skew-x-[12deg]">Claim your free session</span>
+          </motion.a>
+        </div>
+      </div>
     </section>
   );
 }
