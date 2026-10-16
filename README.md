@@ -30,7 +30,7 @@ npm run build && npm start         # production
 | **Pricing ranges** | `PRICING_TABLE` in [`app/api/estimate/route.ts`](app/api/estimate/route.ts) | ✅ pre-filled with 2026 INR rates — adjust freely |
 | **Cal.com link** | `.env.local` → `NEXT_PUBLIC_CAL_LINK` | placeholder |
 | **WhatsApp number** | `.env.local` → `NEXT_PUBLIC_WHATSAPP` (digits + country code) | placeholder |
-| **Contact email** | `.env.local` → `NEXT_PUBLIC_CONTACT_EMAIL` | placeholder |
+| **Contact email** | `lib/contact.ts` (admin@zev.world, Google Workspace) | set |
 | **Work images** | drop files at `public/work/*.jpg` (names in [`lib/content.ts`](lib/content.ts)) | elegant placeholders until added |
 | **Logo** | `public/Logo/logo.png` | ✅ done (see below) |
 

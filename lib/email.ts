@@ -5,7 +5,11 @@ import { GOALS, PERSONAS, PERSONA_STAGES, PROXY_GOALS, SERVICES } from "@/lib/co
 import { SITE_URL } from "@/lib/site";
 import { describeAttribution, type Attribution } from "@/lib/attribution";
 
-const DEFAULT_FROM = "Zev's Agency <admin@zev.world>";
+// zev.world is verified on Resend and admin@zev.world is the Google
+// Workspace inbox, so mail goes from and to it. (The old EMAIL_FROM /
+// BOOKING_* env vars pointed at maggie.agency and are no longer read.)
+const FROM = "Zev's Agency <admin@zev.world>";
+const TEAM_INBOX = "admin@zev.world";
 
 let resendClient: Resend | null = null;
 
@@ -19,19 +23,11 @@ function getResend() {
 
 /** Where the team hears about bookings and new leads. */
 function teamInbox() {
-  return (
-    process.env.BOOKING_NOTIFY_EMAIL ||
-    process.env.NEXT_PUBLIC_CONTACT_EMAIL ||
-    "admin@zev.world"
-  );
+  return TEAM_INBOX;
 }
 
 function getFromAddress() {
-  return (
-    process.env.EMAIL_FROM ||
-    process.env.BOOKING_EMAIL_FROM ||
-    DEFAULT_FROM
-  );
+  return FROM;
 }
 
 function escapeHtml(value: string) {
