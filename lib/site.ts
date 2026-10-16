@@ -26,15 +26,15 @@ export const FOUNDER = {
 export const LOCATION = {
   building: "Sri Residency, 92",
   street: "East Balaji Hill Colony, Mallikarjuna Nagar",
-  area: "Boduppal",
+  area: "Uppal",
   city: "Hyderabad",
   region: "Telangana",
   postalCode: "500092",
   country: "IN",
   lat: 17.4141709,
   lng: 78.5786001,
-  /** The office's Google Maps place. */
-  mapsUrl: "https://maps.app.goo.gl/RevJnAJ7P15a2BS17",
+  /** The studio's Google Business listing ("Zev's Agency" on Google Maps). */
+  mapsUrl: "https://maps.app.goo.gl/XTrMmffai6cs31K2A",
 } as const;
 
 /** Instagram profile (NEXT_PUBLIC_INSTAGRAM_URL in Vercel overrides it). */
